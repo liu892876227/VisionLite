@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:VisionLite"
         xmlns:ha="http://schemas.mvtec.com/halcondotnet" x:Class="VisionLite.MainWindow"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="VisionLite" Height="450" Width="800"
         Closing="Window_Closing">
     <!--首界面布局，共两行，第一行共两列；第二行共三列；第一行第二列分为两行-->
 

@@ -24,6 +24,7 @@ namespace VisionLite
     public partial class MainWindow : Window
     {
         // 声明一个Halcon图像对象变量，用于存储加载的图像
+
         private HObject ho_Image = null;
         public MainWindow()
         {
@@ -53,7 +54,7 @@ namespace VisionLite
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)
             };
 
-            // 2. 显示文件对话框，并检查用户是否点击了“打开”
+            // 显示文件对话框，并检查用户是否点击了“打开”
             if (openFileDialog.ShowDialog() == true)
             {
                 try
@@ -64,10 +65,10 @@ namespace VisionLite
                     // 释放之前可能加载的图像，防止内存泄漏
                     ho_Image.Dispose();
 
-                    // 3. 使用Halcon的算子从路径读取图像
+                    // 使用Halcon的算子从路径读取图像
                     HOperatorSet.ReadImage(out ho_Image, filePath);
 
-                    // 4. 在HSmartWindowControlWPF控件中显示图像
+                    // 在HSmartWindowControlWPF控件中显示图像
                     HWindow window = HSmart.HalconWindow; // 获取控件内的Halcon窗口
 
                     // 获取图像的宽度和高度
@@ -98,9 +99,12 @@ namespace VisionLite
 
         }
 
+
+
         /// <summary>
         /// 窗口关闭事件，用于释放资源
         /// </summary>
+        
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // 确保在程序退出时释放Halcon图像对象占用的内存
