@@ -17,3 +17,12 @@ E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CoreCompileI
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CopyComplete
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.exe
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.pdb
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.DirectShow.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.DirectShow.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.pdb
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.xml
