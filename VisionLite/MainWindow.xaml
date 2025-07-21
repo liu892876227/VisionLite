@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:VisionLite"
         xmlns:ha="http://schemas.mvtec.com/halcondotnet" x:Class="VisionLite.MainWindow"
         mc:Ignorable="d"
-        Title="VisionLite" Height="450" Width="800"
-        Closing="Window_Closing">
+        Title="VisionLite" Height="900" Width="1600"
+        Closing="Window_Closing"
+        WindowStartupLocation="CenterScreen">
     <!--首界面布局，共两行，第一行共两列；第二行共三列；第一行第二列分为两行-->
 
     <Grid ShowGridLines="True">
@@ -93,9 +94,9 @@
                             
                             <!--组合框选择可以连接的设备-->
                             <ComboBox x:Name = "comboBox" HorizontalAlignment = "Center" 
-                                       VerticalAlignment = "Center" Width = "60"
+                                       VerticalAlignment = "Center" Width = "150"
                                       />
-
+                            
                             <!--查找设备按钮-->
                             <Button x:Name="FindCamButton" Grid.Row="0" Grid.Column="0" 
                                 Content="查找设备" 
@@ -117,6 +118,28 @@
                                 Foreground="White" 
                                 Click="OpenCamButtonClick" 
                                 ToolTip="点击打开设备"/>
+
+                            <!--关闭设备按钮-->
+                            <Button x:Name="CloseCamButton" Grid.Row="0" Grid.Column="0" 
+                                Content="关闭设备" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="CloseCamButtonClick" 
+                                ToolTip="点击关闭设备"/>
+
+                            <!--查看设备参数按钮-->
+                            <Button x:Name="ViewCamParaButton" Grid.Row="0" Grid.Column="0" 
+                                Content="设备参数" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="ViewCamParaButtonClick" 
+                                ToolTip="点击查看设备参数"/>
 
                             <!--单次触发图像采集按钮-->
                             <Button x:Name="SingleCaptureButton" Grid.Row="0" Grid.Column="0" 
@@ -140,7 +163,7 @@
                                 Click="ContinueCaptureButtonClick" 
                                 ToolTip="点击触发连续图像采集"/>
 
-                            <!--读取相机画面按钮-->
+                            <!--读取相机画面按钮--><!--
                             <Button x:Name="LoadCamButton" Grid.Row="0" Grid.Column="0" 
                                 Content="读取相机画面" 
                                 Width="Auto"  
@@ -149,8 +172,10 @@
                                 Background="Gray" 
                                 Foreground="White" 
                                 Click="LoadCamButtonClick" 
-                                ToolTip="点击读取相机画面"/>
+                                ToolTip="点击读取相机画面"/>-->
+
                             
+
                             <!--加载图像路径按钮-->
                             <Button x:Name="LoadImgButton" Grid.Row="0" Grid.Column="0" 
                                 Content="加载本地图像" 
