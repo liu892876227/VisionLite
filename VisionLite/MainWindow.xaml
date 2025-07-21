@@ -67,9 +67,38 @@
                         <RowDefinition Height="3.5*"/>
                     </Grid.RowDefinitions>
                     
-                    <!--图像显示控件-->
-                    <ha:HSmartWindowControlWPF x:Name="HSmart" Grid.Row="2"/>
+                    <!--图像显示控件--><!--
+                    <ha:HSmartWindowControlWPF x:Name="HSmart" Grid.Row="2"/>-->
                     
+                    <!--实现固定四个图像显示窗口-->
+                    <Grid ShowGridLines="True" Grid.Row="2" Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="5*"/>
+                            <RowDefinition Height="5*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="5*"/>
+                                <ColumnDefinition Width="5*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ha:HSmartWindowControlWPF x:Name="HSmart1" Grid.Column="0"/>
+                            <ha:HSmartWindowControlWPF x:Name="HSmart2" Grid.Column="1"/>
+                        </Grid>
+
+                        <Grid ShowGridLines="True" Grid.Row="1" Grid.Column="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="5*"/>
+                                <ColumnDefinition Width="5*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ha:HSmartWindowControlWPF x:Name="HSmart3" Grid.Column="0"/>
+                            <ha:HSmartWindowControlWPF x:Name="HSmart4" Grid.Column="1"/>
+                        </Grid>
+
+                        
+                    </Grid>
                     
 
                     <Grid ShowGridLines="True" Grid.Row="3" Grid.Column="0">
@@ -94,7 +123,7 @@
                             
                             <!--组合框选择可以连接的设备-->
                             <ComboBox x:Name = "comboBox" HorizontalAlignment = "Center" 
-                                       VerticalAlignment = "Center" Width = "150"
+                                       VerticalAlignment = "Center" Width = "250"
                                       />
                             
                             <!--查找设备按钮-->

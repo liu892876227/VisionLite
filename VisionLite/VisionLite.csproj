@@ -81,6 +81,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CameraDevice.cs" />
     <Compile Include="SaveMainWindowXamlCs.cs" />
     <Compile Include="SaveMainWindowXamlCsAForgeOK.cs" />
     <Page Include="MainWindow.xaml">
