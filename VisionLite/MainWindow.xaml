@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VisionLite"
-        xmlns:ha="http://schemas.mvtec.com/halcondotnet" x:Class="VisionLite.MainWindow"
+        xmlns:ha="clr-namespace:HalconDotNet;assembly=halcondotnet" x:Class="VisionLite.MainWindow"
         mc:Ignorable="d"
         Title="VisionLite" Height="900" Width="1600"
         Closing="Window_Closing"
@@ -83,8 +83,10 @@
                                 <ColumnDefinition Width="5*"/>
                             </Grid.ColumnDefinitions>
 
-                            <ha:HSmartWindowControlWPF x:Name="HSmart1" Grid.Column="0"/>
-                            <ha:HSmartWindowControlWPF x:Name="HSmart2" Grid.Column="1"/>
+                            <ha:HSmartWindowControlWPF x:Name="HSmart1" Grid.Column="0"
+                                                       HKeepAspectRatio="True"/>
+                            <ha:HSmartWindowControlWPF x:Name="HSmart2" Grid.Column="1"
+                                                       HKeepAspectRatio="True"/>
                         </Grid>
 
                         <Grid ShowGridLines="True" Grid.Row="1" Grid.Column="0">
@@ -93,8 +95,10 @@
                                 <ColumnDefinition Width="5*"/>
                             </Grid.ColumnDefinitions>
 
-                            <ha:HSmartWindowControlWPF x:Name="HSmart3" Grid.Column="0"/>
-                            <ha:HSmartWindowControlWPF x:Name="HSmart4" Grid.Column="1"/>
+                            <ha:HSmartWindowControlWPF x:Name="HSmart3" Grid.Column="0"
+                                                       HKeepAspectRatio="True"/>
+                            <ha:HSmartWindowControlWPF x:Name="HSmart4" Grid.Column="1"
+                                                       HKeepAspectRatio="True"/>
                         </Grid>
 
                         
@@ -191,19 +195,17 @@
                                 Foreground="White" 
                                 Click="ContinueCaptureButtonClick" 
                                 ToolTip="点击触发连续图像采集"/>
-
-                            <!--读取相机画面按钮--><!--
-                            <Button x:Name="LoadCamButton" Grid.Row="0" Grid.Column="0" 
-                                Content="读取相机画面" 
+                            
+                            <!--停止连续图像采集按钮-->
+                            <Button x:Name="StopContinueCaptureButton" Grid.Row="0" Grid.Column="0" 
+                                Content="停止触发" 
                                 Width="Auto"  
                                 FontSize="12" 
                                 Margin="1"
                                 Background="Gray" 
                                 Foreground="White" 
-                                Click="LoadCamButtonClick" 
-                                ToolTip="点击读取相机画面"/>-->
-
-                            
+                                Click="StopContinueCaptureButtonClick" 
+                                ToolTip="停止触发连续图像采集"/>
 
                             <!--加载图像路径按钮-->
                             <Button x:Name="LoadImgButton" Grid.Row="0" Grid.Column="0" 

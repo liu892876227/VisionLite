@@ -31,6 +31,9 @@ namespace VisionLite
 
         // 将四个显示窗口放入一个列表中，方便按顺序访问。
         private List<HSmartWindowControlWPF> displayWindows;
+
+        
+
         public MainWindow()
         {
             InitializeComponent();
@@ -58,8 +61,6 @@ namespace VisionLite
 
                 // 使用MVision接口查找所有可用的设备
                 HOperatorSet.InfoFramegrabber("MVision", "device", out HTuple info, out HTuple deviceList);
-
-               
 
                 if (deviceList != null && deviceList.Length > 0)
                 {
@@ -117,7 +118,7 @@ namespace VisionLite
         /// </summary>
         private void OpenCamButtonClick(object sender, RoutedEventArgs e)
         {
-            // 如果已经有相机打开，先提示用户关闭
+            
             if (comboBox.SelectedIndex < 0)
             {
                 MessageBox.Show("请先选择一个要打开的设备。", "提示");
@@ -219,7 +220,15 @@ namespace VisionLite
 
             if (openCameras.TryGetValue(selectedDeviceID, out CameraDevice cameraToGrab))
             {
-                // 对选中的相机执行采集和显示操作
+                // 在执行采集前，先检查该相机是否正处于连续采集模式
+                if (cameraToGrab.IsContinuousGrabbing())
+                {
+                    // 如果是，则弹窗提示用户，并终止本次操作
+                    MessageBox.Show("设备正在连续采集中，请先停止。", "操作冲突");
+                    return;
+                }
+
+                // 如果没有在连续采集，则正常执行单次采集和显示操作
                 cameraToGrab.GrabAndDisplay();
             }
             else
@@ -235,7 +244,65 @@ namespace VisionLite
         /// </summary>
         private void ContinueCaptureButtonClick(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("连续触发功能待实现。");
+            // 首先确保用户在下拉框中选择了一个设备
+            if (comboBox.SelectedIndex < 0)
+            {
+                MessageBox.Show("请选择一个要操作的设备。", "提示");
+                return;
+            }
+            string selectedDeviceID = comboBox.SelectedItem.ToString();
+
+            // 检查这个设备是否已经打开
+            if (openCameras.TryGetValue(selectedDeviceID, out CameraDevice camera))
+            {
+                // 检查这个特定的相机是否已经在连续采集中
+                if (camera.IsContinuousGrabbing())
+                {
+                    MessageBox.Show($"设备 {selectedDeviceID} 已经在连续采集中。", "提示");
+                    return;
+                }
+
+                // 命令选中的相机开始连续采集
+                camera.StartContinuousGrab();
+
+            }
+            else
+            {
+                MessageBox.Show($"设备 {selectedDeviceID} 未打开，无法开始连续采集。", "提示");
+            }
+        }
+
+        /// <summary>
+        /// "停止连续图像采集"按钮的点击事件处理程序
+        /// </summary>
+        private void StopContinueCaptureButtonClick(object sender, RoutedEventArgs e)
+        {
+            if (comboBox.SelectedIndex < 0)
+            {
+                MessageBox.Show("请选择一个要停止采集的设备。", "提示");
+                return;
+            }
+
+            string selectedDeviceID = comboBox.SelectedItem.ToString();
+
+            // 检查这个设备是否已经打开
+            if (openCameras.TryGetValue(selectedDeviceID, out CameraDevice camera))
+            {
+                // 检查这个特定的相机是否真的在连续采集中
+                if (!camera.IsContinuousGrabbing())
+                {
+                    MessageBox.Show($"设备 {selectedDeviceID} 并未处于连续采集模式。", "提示");
+                    return;
+                }
+
+                // 命令选中的相机停止连续采集
+                camera.StopContinuousGrab();
+                Console.WriteLine($"设备 {selectedDeviceID} 已停止连续采集。");
+            }
+            else
+            {
+                MessageBox.Show($"设备 {selectedDeviceID} 未打开，无法操作。", "提示");
+            }
         }
 
         /// <summary>
@@ -243,7 +310,30 @@ namespace VisionLite
         /// </summary>
         private void ViewCamParaButtonClick(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("查看设备参数功能待实现。");
+            if (comboBox.SelectedIndex < 0)
+            {
+                MessageBox.Show("请选择一个要查看参数的设备。", "提示");
+                return;
+            }
+            string selectedDeviceID = comboBox.SelectedItem.ToString();
+
+            // 检查这个设备是否已经打开
+            if (openCameras.TryGetValue(selectedDeviceID, out CameraDevice camera))
+            {
+                // 创建参数窗口的实例，并将选中的相机对象传递给它
+                ParametersWindow paramWindow = new ParametersWindow(camera);
+
+                // 将主窗口设置为参数窗口的所有者，这样参数窗口会显示在主窗口前面
+                paramWindow.Owner = this;
+
+                // 以模态对话框的形式显示窗口。
+                // 这意味着在关闭参数窗口前，用户无法操作主窗口。
+                paramWindow.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show($"设备 {selectedDeviceID} 未打开，无法查看参数。", "提示");
+            }
         }
 
         /// <summary>
@@ -351,36 +441,7 @@ namespace VisionLite
             window.DispObj(imageToShow);
         }
 
-        ///// <summary>
-        ///// 封装的关闭相机方法
-        ///// </summary>
-        //private void CloseCamera()
-        //{
-        //    if (hv_AcqHandle != null)
-        //    {
-        //        try
-        //        {
-        //            // 在关闭设备前，先确保采集已停止。
-        //            // 对于MVision接口，直接调用CloseFramegrabber通常就足够了，
-        //            // 它会隐式地停止采集。
-        //            HOperatorSet.CloseFramegrabber(hv_AcqHandle);
-        //        }
-        //        catch (HalconException)
-        //        {
-        //            // 即使关闭失败，我们也要继续执行，以确保UI状态被更新
-        //        }
-        //        finally
-        //        {
-        //            // 无论成功还是失败，都将句柄设为null并更新UI状态
-        //            hv_AcqHandle = null;
-        //            OpenCamButton.IsEnabled = true;
-        //            CloseCamButton.IsEnabled = false;
-        //            SingleCaptureButton.IsEnabled = false;
-        //            ContinueCaptureButton.IsEnabled = false;
-        //        }
-               
-        //    }
-        //}
+        
 
         /// <summary>
         /// 窗口关闭事件，用于释放资源
@@ -395,11 +456,6 @@ namespace VisionLite
             }
         }
 
-
-        
-
-        
-
-        
+       
     }
 }
