@@ -28,3 +28,5 @@ E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.pdb
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.xml
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ParametersWindow.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ParametersWindow.baml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\MvCameraControl.Net.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\MvCameraControl.Net.xml
