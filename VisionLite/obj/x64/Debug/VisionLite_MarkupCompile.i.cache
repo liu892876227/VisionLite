@@ -10,11 +10,11 @@ none
 false
 
 E:\mySoftware\VisionLite\VisionLite\App.xaml
-2-1258873981
+3-541506146
 
-11464430106
+151503257502
 22-1449437027
-MainWindow.xaml;ParametersWindow.xaml;
+HikvisionParametersWindow.xaml;MainWindow.xaml;HalconParametersWindow.xaml;
 
 True
 

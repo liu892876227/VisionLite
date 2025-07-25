@@ -85,12 +85,23 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="CameraDevice.cs" />
-    <Compile Include="ParametersWindow.xaml.cs">
-      <DependentUpon>ParametersWindow.xaml</DependentUpon>
+    <Compile Include="HalconCameraDevice.cs" />
+    <Compile Include="DeviceInfo.cs" />
+    <Compile Include="HikvisionCameraDevice.cs" />
+    <Compile Include="HikvisionParametersWindow.xaml.cs">
+      <DependentUpon>HikvisionParametersWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ICameraDevice.cs" />
+    <Compile Include="HalconParametersWindow.xaml.cs">
+      <DependentUpon>HalconParametersWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ParameterTranslator.cs" />
     <Compile Include="SaveMainWindowXamlCs.cs" />
     <Compile Include="SaveMainWindowXamlCsAForgeOK.cs" />
+    <Page Include="HikvisionParametersWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -99,12 +110,11 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CameraService.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="ParametersWindow.xaml">
+    <Page Include="HalconParametersWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
