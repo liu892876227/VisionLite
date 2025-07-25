@@ -14,19 +14,27 @@ using MvCamCtrl.NET;
 
 namespace VisionLite
 {
+    /// <summary>
+    /// ICameraDevice接口的具体实现，使用海康MVS SDK来控制相机。
+    /// </summary>
     public class HikvisionCameraDevice : ICameraDevice
     {
-        // --- 添加一个公共属性以暴露内部SDK对象 ---
+        /// <summary>
+        /// 公共属性，暴露底层的海康SDK对象，以便参数窗口可以查询参数列表。
+        /// </summary>
         public MyCamera CameraSdkObject { get; private set; }
+
+        // --- 接口属性实现 ---
         public string DeviceID { get; private set; }
         public HSmartWindowControlWPF DisplayWindow { get; private set; }
 
-        
+        // --- 私有成员变量 ---
         private MyCamera.MV_CC_DEVICE_INFO m_deviceInfo;
         private HObject m_Ho_Image;
-        private volatile bool m_bGrabbing = false;
-        private MyCamera.cbOutputdelegate ImageCallback;
+        private volatile bool m_bGrabbing = false;                              // 标记采集流是否已启动
+        private MyCamera.cbOutputdelegate ImageCallback;                        // 图像回调委托
 
+        // 定义了哪些参数在设置前需要先停止采集
         private readonly List<string> criticalParameters = new List<string>
         {
             "Width", "Height", "OffsetX", "OffsetY", "PixelFormat"
@@ -38,50 +46,15 @@ namespace VisionLite
             this.DisplayWindow = window;
             CameraSdkObject = new MyCamera();
             m_deviceInfo = new MyCamera.MV_CC_DEVICE_INFO();
+
+            // 将 ProcessImageCallback 方法绑定到回调委托上
             ImageCallback = new MyCamera.cbOutputdelegate(ProcessImageCallback);
             HOperatorSet.GenEmptyObj(out m_Ho_Image);
         }
-        // --- 新增点 2: 实现统一的 SetParameter 接口方法 ---
-        public bool SetParameter(string paramName, object value)
-        {
-            if (CameraSdkObject == null || !CameraSdkObject.MV_CC_IsDeviceConnected_NET()) return false;
-            try
-            {
-                if (criticalParameters.Contains(paramName))
-                {
-                    bool wasGrabbing = m_bGrabbing;
-                    bool wasContinuous = IsContinuousGrabbing();
-                    if (wasGrabbing) { CameraSdkObject.MV_CC_StopGrabbing_NET(); m_bGrabbing = false; }
-                    SetSdkParameter(paramName, value);
-                    if (wasGrabbing)
-                    {
-                        CameraSdkObject.MV_CC_StartGrabbing_NET();
-                        m_bGrabbing = true;
-                        if (wasContinuous) { StartContinuousGrab(); }
-                    }
-                }
-                else { SetSdkParameter(paramName, value); }
-                return true;
-            }
-            catch (Exception ex) { MessageBox.Show($"[HIK] 设置参数 '{paramName}' 失败: {ex.Message}", "错误"); return false; }
-        }
 
-        // 辅助方法，用于根据值的类型调用不同的SDK Set函数
-        private void SetSdkParameter(string paramName, object value)
-        {
-            if (value is long intVal) CameraSdkObject.MV_CC_SetIntValueEx_NET(paramName, intVal);
-            else if (value is float floatVal) CameraSdkObject.MV_CC_SetFloatValue_NET(paramName, floatVal);
-            else if (value is string stringVal) CameraSdkObject.MV_CC_SetEnumValueByString_NET(paramName, stringVal);
-            // Add bool handling if needed
-        }
-
-        public Window ShowParametersWindow(Window owner)
-        {
-            var paramWindow = new HikvisionParametersWindow(this, this.CameraSdkObject);
-            paramWindow.Owner = owner;
-            return paramWindow;
-        }
-
+        /// <summary>
+        /// 实现接口的Open方法，完成设备连接和初始化。
+        /// </summary>
         public bool Open()
         {
             try
@@ -128,7 +101,7 @@ namespace VisionLite
                     MessageBox.Show($"[HIK] 打开设备失败！错误码: 0x{nRet:X}", "打开失败");
                     return false;
                 }
-                // 5. 为GigE相机设置最佳网络包大小
+                // 为GigE相机设置最佳网络包大小
                 if (m_deviceInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
                 {
                     int nPacketSize = CameraSdkObject.MV_CC_GetOptimalPacketSize_NET();
@@ -144,6 +117,103 @@ namespace VisionLite
                 MessageBox.Show($"[HIK] 打开设备时发生未知异常: {ex.Message}", "严重错误");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 实现接口的SetParameter方法，提供安全设置参数的逻辑。
+        /// </summary>
+        public bool SetParameter(string paramName, object value)
+        {
+            if (CameraSdkObject == null || !CameraSdkObject.MV_CC_IsDeviceConnected_NET()) return false;
+            try
+            {
+                // 如果是“关键参数”，则执行“停止-设置-重启”的原子操作
+                if (criticalParameters.Contains(paramName))
+                {
+                    bool wasGrabbing = m_bGrabbing;
+                    bool wasContinuous = IsContinuousGrabbing();                                        // 记录下在停止前是否是连续模式
+                    if (wasGrabbing) { CameraSdkObject.MV_CC_StopGrabbing_NET(); m_bGrabbing = false; }
+                    SetSdkParameter(paramName, value);
+
+                    // 如果之前在采集，则恢复采集状态
+                    if (wasGrabbing)
+                    {
+                        CameraSdkObject.MV_CC_StartGrabbing_NET();
+                        m_bGrabbing = true;
+
+                        // 特别地，如果之前是连续模式，需要重新调用StartContinuousGrab来恢复正确的触发模式
+                        if (wasContinuous) { StartContinuousGrab(); }
+                    }
+                }
+                else { SetSdkParameter(paramName, value); }
+                return true;
+            }
+            catch (Exception ex) { MessageBox.Show($"[HIK] 设置参数 '{paramName}' 失败: {ex.Message}", "错误"); return false; }
+        }
+
+        // 根据值的类型调用不同的海康SDK函数
+        private void SetSdkParameter(string paramName, object value)
+        {
+            if (value is long intVal) CameraSdkObject.MV_CC_SetIntValueEx_NET(paramName, intVal);
+            else if (value is float floatVal) CameraSdkObject.MV_CC_SetFloatValue_NET(paramName, floatVal);
+            else if (value is string stringVal) CameraSdkObject.MV_CC_SetEnumValueByString_NET(paramName, stringVal);
+            // Add bool handling if needed
+        }
+
+        /// <summary>
+        /// 实现接口的ShowParametersWindow方法，创建并返回海康专属的参数窗口。
+        /// </summary>
+        public Window ShowParametersWindow(Window owner)
+        {
+            var paramWindow = new HikvisionParametersWindow(this, this.CameraSdkObject);
+            paramWindow.Owner = owner;
+            return paramWindow;
+        }
+
+        /// <summary>
+        /// 当SDK内部线程捕获到一帧图像时，此回调方法会被调用。
+        /// **注意：此方法运行在非UI线程上。**
+        /// </summary>
+        private void ProcessImageCallback(IntPtr pData, ref MyCamera.MV_FRAME_OUT_INFO pFrameInfo, IntPtr pUser)
+        {
+            m_Ho_Image?.Dispose();                              // 释放上一帧的Halcon图像内存
+
+            // --- 核心转换逻辑: 将海康的图像数据(IntPtr)转换为Halcon的HObject ---
+            int width = pFrameInfo.nWidth;
+            int height = pFrameInfo.nHeight;
+            string channelType = "";
+
+
+            switch (pFrameInfo.enPixelType)
+            {
+                case MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8:
+                    HOperatorSet.GenImage1(out m_Ho_Image, "byte", width, height, pData);
+                    break;
+                case MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed:
+                    channelType = "bgr";
+
+                    HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
+                    break;
+                case MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed:
+                    channelType = "rgb";
+
+                    HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
+                    break;
+                // Add more conversions if needed (e.g., for Bayer patterns)
+                case MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8:
+                    HOperatorSet.GenImage1(out HObject bayerImage, "byte", width, height, pData);
+                    HOperatorSet.CfaToRgb(bayerImage, out m_Ho_Image, "bayer_rg", "bilinear");
+                    bayerImage.Dispose();
+                    break;
+                default:
+                    // For unsupported formats, create an empty image
+                    HOperatorSet.GenEmptyObj(out m_Ho_Image);
+                    break;
+            }
+
+            // --- 线程安全地更新UI ---
+            // 使用BeginInvoke将显示任务“派发”给UI线程，当前后台线程无需等待，可以立刻返回去接收下一帧
+            DisplayWindow.Dispatcher.BeginInvoke(new Action(Display));
         }
 
         private string GetSerialNumber(MyCamera.MV_CC_DEVICE_INFO devInfo)
@@ -191,46 +261,7 @@ namespace VisionLite
             if (nRet == 0) m_bGrabbing = false;
         }
 
-        private void ProcessImageCallback(IntPtr pData, ref MyCamera.MV_FRAME_OUT_INFO pFrameInfo, IntPtr pUser)
-        {
-            m_Ho_Image?.Dispose(); // Dispose previous image
-
-            // Convert raw data to HObject
-            int width = pFrameInfo.nWidth;
-            int height = pFrameInfo.nHeight;
-            string channelType = "";
-            
-
-            switch (pFrameInfo.enPixelType)
-            {
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8:
-                    HOperatorSet.GenImage1(out m_Ho_Image, "byte", width, height, pData);
-                    break;
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed:
-                    channelType = "bgr";
-                    
-                    HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
-                    break;
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed:
-                    channelType = "rgb";
-                    
-                    HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
-                    break;
-                // Add more conversions if needed (e.g., for Bayer patterns)
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8:
-                    HOperatorSet.GenImage1(out HObject bayerImage, "byte", width, height, pData);
-                    HOperatorSet.CfaToRgb(bayerImage, out m_Ho_Image, "bayer_rg", "bilinear");
-                    bayerImage.Dispose();
-                    break;
-                default:
-                    // For unsupported formats, create an empty image
-                    HOperatorSet.GenEmptyObj(out m_Ho_Image);
-                    break;
-            }
-
-            // 使用 BeginInvoke 进行异步UI更新，解除后台线程的等待，从而避免死锁
-            DisplayWindow.Dispatcher.BeginInvoke(new Action(Display));
-        }
+        
 
         private void Display()
         {

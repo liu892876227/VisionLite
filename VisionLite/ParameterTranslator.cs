@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 namespace VisionLite
 {
     /// <summary>
-    /// 提供一个全局静态方法来翻译相机参数名称
+    /// 提供一个全局静态方法来翻译相机参数名称。
+    /// 这是一个“服务类”，将翻译逻辑从UI窗口中分离出来，使得代码更整洁，
+    /// 并且允许多个不同的参数窗口共享同一套翻译词典，保证了UI的一致性。
     /// </summary>
     public static class ParameterTranslator
     {
-        // 将翻译词典移至此处，并设为私有
+        // 使用一个静态只读字典来存储所有的翻译条目，确保它只被初始化一次。
         private static readonly Dictionary<string, string> Translations = new Dictionary<string, string>
         {
             // --- 基本信息 (Device Information) ---

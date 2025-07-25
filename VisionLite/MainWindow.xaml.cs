@@ -23,15 +23,31 @@ using System.Runtime.InteropServices;
 namespace VisionLite
 {
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// 应用程序的主窗口，负责UI交互和整体逻辑协调
     /// </summary>
     public partial class MainWindow : Window
     {
 
-        // --- 使用接口来管理所有相机 ---
+        /// <summary>
+        /// 管理所有已打开的相机设备。
+        /// 使用字典可以快速通过唯一的设备ID（如序列号）找到对应的相机对象。
+        /// 键(Key): 设备的唯一ID字符串。
+        /// 值(Value): 实现ICameraDevice接口的相机对象实例。
+        /// </summary>
         private Dictionary<string, ICameraDevice> openCameras = new Dictionary<string, ICameraDevice>();
+
+        /// <summary>
+        /// 管理所有用于显示图像的WPF控件。
+        /// 使用列表可以方便地按顺序查找空闲窗口。
+        /// </summary>
         private List<HSmartWindowControlWPF> displayWindows;
-        // --- 创建一个字典来管理已打开的参数窗口 ---
+
+        /// <summary>
+        /// 管理所有已打开的、非模态的参数窗口。
+        /// 这是为了防止重复打开同一个相机的参数窗口，并确保在关闭相机时能同步关闭其参数窗口。
+        /// 键(Key): 设备的唯一ID字符串。
+        /// 值(Value): 该设备对应的参数窗口实例。
+        /// </summary>
         private Dictionary<string, Window> openParameterWindows = new Dictionary<string, Window>();
 
         public MainWindow()
@@ -48,16 +64,21 @@ namespace VisionLite
             FindAndPopulateDevices();
         }
 
+        #region 设备查找与管理
+
         /// <summary>
-        /// 混合查找设备：先用海康SDK，再用Halcon MVision，并去重
+        /// 查找并填充设备列表。采用混合驱动模式，先查找海康SDK支持的设备，再查找Halcon支持的设备，并进行去重
         /// </summary>
+        /// /// <param name="showSuccessMessage">如果为true，则在查找结束后弹窗提示结果。</param>
         private void FindAndPopulateDevices(bool showSuccessMessage = false)
         {
             comboBox.Items.Clear();
             var foundDevices = new List<DeviceInfo>();
+
+            // 使用HashSet来存储已发现的设备序列号，以实现高效去重
             var foundSerialNumbers = new HashSet<string>();
 
-            // --- 1. 使用海康SDK查找 ---
+            // --- 使用海康SDK查找 ---
             var hikDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
             int nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref hikDeviceList);
 
@@ -69,18 +90,20 @@ namespace VisionLite
                     string serialNumber = GetHikSerialNumber(stDevInfo);
                     if (!string.IsNullOrEmpty(serialNumber))
                     {
+                        // 为每个找到的设备创建一个DeviceInfo对象，并标记其SDK类型为Hikvision
                         foundDevices.Add(new DeviceInfo
                         {
                             DisplayName = $"[HIK] {GetHikDisplayName(stDevInfo)} ({serialNumber})",
                             UniqueID = serialNumber,
                             SdkType = CameraSdkType.Hikvision
                         });
+                        // 将序列号添加到HashSet中，用于后续去重
                         foundSerialNumbers.Add(serialNumber);
                     }
                 }
             }
 
-            // --- 2. 使用Halcon MVision查找 ---
+            // --- 使用Halcon的MVision接口查找设备 ---
             try
             {
                 HOperatorSet.InfoFramegrabber("MVision", "device", out _, out HTuple halconDeviceList);
@@ -88,29 +111,32 @@ namespace VisionLite
                 {
                     foreach (string deviceId in halconDeviceList.SArr)
                     {
-                        
-                        // 尝试从Halcon的设备ID中提取序列号来进行去重
+
+                        // 尝试从Halcon返回的设备ID字符串中解析出序列号
                         string serialNumber = deviceId.Split(' ').LastOrDefault()?.Trim('\'');
+
+                        // 如果解析成功，并且这个序列号之前没有被海康SDK发现过
                         if (!string.IsNullOrEmpty(serialNumber) && !foundSerialNumbers.Contains(serialNumber))
                         {
+                            // 才将这个设备作为一个新的、由Halcon驱动的设备添加进列表
                             foundDevices.Add(new DeviceInfo
                             {
                                 DisplayName = $"[HAL] {deviceId}",
-                                UniqueID = deviceId, // Halcon直接使用完整的ID
+                                UniqueID = deviceId,                    // Halcon设备使用其完整的ID字符串作为唯一标识
                                 SdkType = CameraSdkType.HalconMVision
                             });
                         }
                     }
                 }
             }
-            catch (HalconException) { /* 忽略Halcon查找错误 */ }
+            catch (HalconException) { /* 忽略Halcon查找时可能发生的异常，例如接口未安装等 */ }
 
-            // --- 3. 填充ComboBox ---
+            // --- 将最终的设备列表填充到UI的ComboBox中 ---
             if (foundDevices.Any())
             {
                 foreach (var dev in foundDevices)
                 {
-                    comboBox.Items.Add(dev);
+                    comboBox.Items.Add(dev);            // ComboBox会自动调用DeviceInfo的ToString()方法来显示
                 }
                 comboBox.SelectedIndex = 0;
                 OpenCamButton.IsEnabled = true;
@@ -124,7 +150,7 @@ namespace VisionLite
             
         }
 
-        // 辅助方法：从海康设备信息中获取序列号和显示名
+        // 从海康设备信息结构体中提取序列号
         private string GetHikSerialNumber(MyCamera.MV_CC_DEVICE_INFO devInfo)
         {
             if (devInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
@@ -133,6 +159,8 @@ namespace VisionLite
                 return ((MyCamera.MV_USB3_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stUsb3VInfo, typeof(MyCamera.MV_USB3_DEVICE_INFO))).chSerialNumber;
             return null;
         }
+
+        // 从海康设备信息结构体中提取用户自定义名称或型号名称
         private string GetHikDisplayName(MyCamera.MV_CC_DEVICE_INFO devInfo)
         {
             if (devInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
@@ -148,13 +176,16 @@ namespace VisionLite
             return "Unknown Device";
         }
 
+        #endregion
+
+
+        #region UI事件处理
         /// <summary>
         /// "查找设备"按钮的点击事件处理程序
         /// </summary>
         private void FindCamButtonClick(object sender, RoutedEventArgs e)
         {
-            // 再次调用查找和填充方法
-            //MessageBox.Show("正在重新查找设备...");
+           
             FindAndPopulateDevices(true);
         }
 
@@ -185,6 +216,7 @@ namespace VisionLite
 
             // 找到一个空闲的显示窗口
             HSmartWindowControlWPF freeWindow = displayWindows.FirstOrDefault(w => w.Tag == null);
+
             // 如果循环结束后，一个空闲窗口都没找到
             if (freeWindow == null)
             {
@@ -205,15 +237,17 @@ namespace VisionLite
 
             if (newCamera.Open())
             {
-                // 获取分配到的窗口的索引 (0, 1, 2, or 3)
+               
                 int windowIndex = displayWindows.IndexOf(freeWindow);
-                // 将设备和窗口进行绑定
+                // 将新打开的相机添加到管理字典中
                 openCameras.Add(selectedDevice.UniqueID, newCamera);
+                // 使用Tag属性将窗口标记为“被占用”，并记录下占用它的设备ID
                 freeWindow.Tag = selectedDevice.UniqueID;
-                // 创建并显示包含窗口编号的提示信息 (索引+1 得到 1, 2, 3, 4)
+                
                 string successMessage = $"设备 {selectedDevice.DisplayName} 打开成功，并绑定到窗口 {windowIndex + 1}。";
                 MessageBox.Show(successMessage, "成功");
-                newCamera.GrabAndDisplay(); // 自动采集一帧
+                // 打开后自动采集一帧图像，提供即时反馈
+                newCamera.GrabAndDisplay(); 
             }
 
         }
@@ -232,16 +266,18 @@ namespace VisionLite
             // 尝试从已打开的相机字典中获取设备
             if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice cameraToClose))
             {
-                // **检查是否有对应的参数窗口，并关闭它**
+                // 如果该相机有打开的参数窗口，先将其关闭
                 if (openParameterWindows.TryGetValue(cameraToClose.DeviceID, out Window paramWindow))
                 {
                     // 这会自动触发之前订阅的 Closed 事件，将其从字典中移除
                     paramWindow.Close();
                 }
 
-                // **关闭相机设备本身**
+                // 释放窗口占用
                 cameraToClose.DisplayWindow.Tag = null;
+                // 调用相机的关闭方法
                 cameraToClose.Close();
+                // 从管理字典中移除相机
                 openCameras.Remove(selectedDevice.UniqueID);
                 MessageBox.Show($"设备 {selectedDevice.DisplayName} 已关闭。", "成功");
             }
@@ -260,6 +296,7 @@ namespace VisionLite
             if (!(comboBox.SelectedItem is DeviceInfo selectedDevice)) return;
             if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice camera))
             {
+                // 进行状态检查，防止在连续采集中进行单次触发
                 if (camera.IsContinuousGrabbing())
                 {
                     MessageBox.Show("设备正在连续采集中，请先停止。", "操作冲突");
@@ -267,6 +304,7 @@ namespace VisionLite
                 }
                 camera.GrabAndDisplay();
             }
+            else { MessageBox.Show("设备未打开，无法采集。", "提示"); }
         }
 
         /// <summary>
@@ -279,6 +317,7 @@ namespace VisionLite
             {
                 camera.StartContinuousGrab();
             }
+            else { MessageBox.Show("设备未打开，无法开始连续采集。", "提示"); }
         }
 
         /// <summary>
@@ -291,6 +330,7 @@ namespace VisionLite
             {
                 camera.StopContinuousGrab();
             }
+            else { MessageBox.Show("设备未打开，无法停止。", "提示"); }
         }
 
         /// <summary>
@@ -305,10 +345,10 @@ namespace VisionLite
             }
             if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice camera))
             {
-                // **检查该相机的参数窗口是否已经打开**
+                // 检查参数窗口是否已存在
                 if (openParameterWindows.TryGetValue(camera.DeviceID, out Window existingWindow))
                 {
-                    // 如果已打开，则激活它并带到最前，然后返回
+                    // 如果存在，则激活它，而不是创建新的
                     existingWindow.Activate();
                     return;
                 }
@@ -320,15 +360,18 @@ namespace VisionLite
                 // 根据相机类型决定是模态还是非模态显示
                 if (camera is HalconCameraDevice)
                 {
-                    // Halcon设备强制使用模态对话框
+                    // Halcon设备强制使用模态对话框，因为设置关键参数需要暂停程序流程
                     paramWindow.ShowDialog();
                 }
                 else // Hikvision设备使用非模态
                 {
+                    // 订阅窗口的Closed事件，以便在它关闭时，我们能将它从管理字典中移除
                     paramWindow.Closed += (s, args) => {
                         openParameterWindows.Remove(camera.DeviceID);
                     };
+                    // 将新窗口添加到管理字典中
                     openParameterWindows.Add(camera.DeviceID, paramWindow);
+                    // 以非模态方式显示窗口
                     paramWindow.Show();
                 }
 
@@ -452,19 +495,19 @@ namespace VisionLite
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            // 在关闭所有相机之前或之后，关闭所有还开着的参数窗口
-            // 由于 CloseCamButtonClick 已经处理了同步关闭，这里作为双保险
-            foreach (var window in openParameterWindows.Values.ToList()) // 使用 ToList() 避免在迭代时修改集合
+            // 先关闭所有还开着的参数窗口
+            foreach (var window in openParameterWindows.Values.ToList()) 
             {
                 window.Close();
             }
 
+            // 再关闭所有相机
             foreach (var camera in openCameras.Values)
             {
                 camera.Close();
             }
         }
+        #endregion
 
-       
     }
 }
