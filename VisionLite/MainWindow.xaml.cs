@@ -62,7 +62,7 @@ namespace VisionLite
         private enum InteractionMode
         {
             None,      // 无操作
-            
+
             Moving,    // 正在移动选中的ROI
             Resizing   // 正在缩放选中的ROI
         }
@@ -80,7 +80,7 @@ namespace VisionLite
             {
                 HSmart1, HSmart2, HSmart3, HSmart4
             };
-            
+
             // 在窗口启动时，自动调用查找设备方法，不显示成功提示
             FindAndPopulateDevices();
         }
@@ -225,8 +225,8 @@ namespace VisionLite
 
             // 设置坐标系
             HOperatorSet.GetImageSize(imageToDisplay, out HTuple width, out HTuple height);
-            hWindow.SetPart(0, 0, height.I - 1, width.I - 1);   
-            
+            hWindow.SetPart(0, 0, height.I - 1, width.I - 1);
+
             hWindow.DispObj(imageToDisplay);
 
             // 绘制ROI
@@ -568,7 +568,7 @@ namespace VisionLite
             activeRoiWindow.Show();
         }
 
-       
+
 
         // --- 新增代码：步骤5 ---
         /// <summary>

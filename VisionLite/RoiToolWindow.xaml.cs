@@ -23,7 +23,7 @@ namespace VisionLite
     {
         private HObject SourceImage;    // 持有主窗口的完整图像
         private RoiBase AssociatedRoi;  // 持有在主窗口上绘制的那个ROI对象
-        
+
         /// <summary>
         /// 当ROI形状需要被替换时触发的事件。
         /// 它会向外传递一个新创建的ROI对象。
@@ -55,41 +55,94 @@ namespace VisionLite
             UpdatePreview();
         }
 
+        //public void UpdatePreview()
+        //{
+        //    if (SourceImage == null || !SourceImage.IsInitialized() || AssociatedRoi == null || !this.IsLoaded)
+        //    {
+        //        return;
+        //    }
+
+        //    // 清空预览窗口
+        //    RoiPreviewWindow.HalconWindow.ClearWindow();
+
+        //    try
+        //    {
+        //        // 这是一个通用的方法，但对于不同ROI类型，需要不同处理
+        //        // 这里我们先只实现矩形的情况
+        //        if (AssociatedRoi is RectangleRoi rectRoi)
+        //        {
+        //            // 使用ReduceDomain来获取ROI区域的图像
+        //            HOperatorSet.ReduceDomain(SourceImage, rectRoi.GetRegion(), out HObject imageReduced);
+
+
+        //            // 在预览窗口中显示裁剪后的图像
+        //            HWindow preview = RoiPreviewWindow.HalconWindow;
+        //            preview.SetPart(rectRoi.Row1, rectRoi.Column1, rectRoi.Row2, rectRoi.Column2); // 设置显示区域
+        //            preview.DispObj(imageReduced);
+
+        //            imageReduced.Dispose(); // 释放临时对象
+        //        }
+        //        // 在这里可以为其他ROI类型添加预览逻辑
+        //        // else if (AssociatedRoi is CircleRoi circleRoi) { ... }
+        //    }
+        //    catch (HalconException)
+        //    {
+        //        // 忽略错误，例如ROI超出图像范围时
+        //    }
+        //}
+
+        // In RoiToolWindow.xaml.cs
+
+        // In RoiToolWindow.xaml.cs
+
+        // In RoiToolWindow.xaml.cs
+
         public void UpdatePreview()
         {
+            // 检查输入数据是否有效
             if (SourceImage == null || !SourceImage.IsInitialized() || AssociatedRoi == null || !this.IsLoaded)
             {
                 return;
             }
 
-            // 清空预览窗口
-            RoiPreviewWindow.HalconWindow.ClearWindow();
+            HWindow preview = RoiPreviewWindow.HalconWindow;
+            if (preview == null) return;
+
+            preview.ClearWindow();
 
             try
             {
-                // 这是一个通用的方法，但对于不同ROI类型，需要不同处理
-                // 这里我们先只实现矩形的情况
                 if (AssociatedRoi is RectangleRoi rectRoi)
                 {
-                    // 使用ReduceDomain来获取ROI区域的图像
-                    HOperatorSet.ReduceDomain(SourceImage, rectRoi.GetRegion(), out HObject imageReduced);
+                    // --- 使用最直接的 CropRectangle1 算子 ---
 
-                    // 在预览窗口中显示裁剪后的图像
-                    HWindow preview = RoiPreviewWindow.HalconWindow;
-                    preview.SetPart(rectRoi.Row1, rectRoi.Column1, rectRoi.Row2, rectRoi.Column2); // 设置显示区域
-                    preview.DispObj(imageReduced);
+                    // 步骤 1: 直接从原始图像(SourceImage)中，根据ROI的四个坐标，
+                    //         裁剪出一个全新的、独立的小图像(croppedImage)。
+                    //         这个方法不需要任何 ReduceDomain 的预处理。
+                    HOperatorSet.CropRectangle1(SourceImage, out HObject croppedImage,
+                                                rectRoi.Row1, rectRoi.Column1, rectRoi.Row2, rectRoi.Column2);
 
-                    imageReduced.Dispose(); // 释放临时对象
+                    // 步骤 2: 获取这个新裁剪出的小图像的尺寸。
+                    HOperatorSet.GetImageSize(croppedImage, out HTuple width, out HTuple height);
+
+                    // 步骤 3: 设置预览窗口的视野(SetPart)以完美匹配这个小图像。
+                    //         因为小图像的坐标总是从(0,0)开始，所以SetPart也从(0,0)开始。
+                    preview.SetPart(0, 0, height.I - 1, width.I - 1);
+
+                    // 步骤 4: 显示这张干净、独立的小图像。
+                    preview.DispObj(croppedImage);
+
+                    // 步骤 5: 释放临时的裁剪图像，防止内存泄漏。
+                    croppedImage.Dispose();
                 }
-                // 在这里可以为其他ROI类型添加预览逻辑
-                // else if (AssociatedRoi is CircleRoi circleRoi) { ... }
             }
-            catch (HalconException)
+            catch (HalconException ex)
             {
-                // 忽略错误，例如ROI超出图像范围时
+                // 如果这里还出错，说明ROI的坐标可能超出了图像范围。
+                // 可以在这里加一个消息框来查看具体的错误信息。
+                // MessageBox.Show("Halcon Error in UpdatePreview: " + ex.GetErrorMessage());
             }
         }
-
         /// <summary>
         /// 当用户在下拉框中选择新的ROI形状时调用。
         /// </summary>
