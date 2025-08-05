@@ -1,0 +1,252 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VisionLite"
+        xmlns:ha="clr-namespace:HalconDotNet;assembly=halcondotnet" x:Class="VisionLite.MainWindow"
+        mc:Ignorable="d"
+        Title="VisionLite" Height="900" Width="1700"
+        Closing="Window_Closing"
+        WindowStartupLocation="CenterScreen">
+    <!--首界面布局，共两行，第一行共两列；第二行共三列；第一行第二列分为两行-->
+
+    <Grid ShowGridLines="True">
+        <Grid.RowDefinitions>
+            <!--软件图标、菜单栏和快捷工具条-->
+            <RowDefinition Height="0.5*"/>
+            <!--模块箱、流程编辑区域和图像显示区域-->
+            <RowDefinition Height="9.5*"/>
+        </Grid.RowDefinitions>
+
+        <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <!--软件图标-->
+                <ColumnDefinition Width="13*"/>
+                <!--菜单栏和快捷工具条-->
+                <ColumnDefinition Width="87*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <!--菜单栏-->
+                    <RowDefinition/>
+                    <!--快捷工具条-->
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+            </Grid>
+        </Grid>
+
+        <Grid ShowGridLines="True" Grid.Row="1" Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <!--模块箱-->
+                <ColumnDefinition Width="6*"/>
+                <!--流程编辑区域和流程耗时统计区域-->
+                <ColumnDefinition Width="44*"/>
+                <!--图像显示区域和结果显示区域-->
+                <ColumnDefinition Width="50*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <!--图像显示区域-->
+                    <RowDefinition Height="7*"/>
+                    <!--结果显示区域-->
+                    <RowDefinition Height="3*"/>
+                </Grid.RowDefinitions>
+
+                <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <!--图像显示区域的菜单栏-->
+                        <RowDefinition Height="0.5*"/>
+                        <!--图像显示区域的图像缩放控制栏-->
+                        <RowDefinition Height="0.5*"/>
+                        <!--图像显示区域的图像显示区域-->
+                        <RowDefinition Height="5.5*"/>
+                        <!--图像显示区域的图像采集控制区域和图像缩放图-->
+                        <RowDefinition Height="3.5*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!--图像显示控件--><!--
+                    <ha:HSmartWindowControlWPF x:Name="HSmart" Grid.Row="2"/>-->
+                    
+                    <!--实现固定四个图像显示窗口-->
+                    <Grid ShowGridLines="True" Grid.Row="2" Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="5*"/>
+                            <RowDefinition Height="5*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="5*"/>
+                                <ColumnDefinition Width="5*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ha:HSmartWindowControlWPF x:Name="HSmart1" Grid.Column="0"
+                                                       HKeepAspectRatio="True"
+                                                       HMouseDown="HSmart1_MouseDown" 
+                                                       HMouseMove="HSmart1_MouseMove"
+                                                       HMouseUp="HSmart1_MouseUp"/>
+                            <ha:HSmartWindowControlWPF x:Name="HSmart2" Grid.Column="1"
+                                                       HKeepAspectRatio="True"/>
+                        </Grid>
+
+                        <Grid ShowGridLines="True" Grid.Row="1" Grid.Column="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="5*"/>
+                                <ColumnDefinition Width="5*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ha:HSmartWindowControlWPF x:Name="HSmart3" Grid.Column="0"
+                                                       HKeepAspectRatio="True"/>
+                            <ha:HSmartWindowControlWPF x:Name="HSmart4" Grid.Column="1"
+                                                       HKeepAspectRatio="True"/>
+                        </Grid>
+
+                        
+                    </Grid>
+                    
+
+                    <Grid ShowGridLines="True" Grid.Row="3" Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <!--图像采集控制区域-->
+                            <RowDefinition Height="2*"/>
+                            <!--图像缩放图-->
+                            <RowDefinition Height="8*"/>
+                        </Grid.RowDefinitions>
+
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+
+                            
+                            <!--文本框-->
+                            <TextBlock Text="视频输入设备:"
+                                       FontSize="12"
+                                       Foreground="Black"
+                                       TextAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Padding="1"/>
+                            
+                            <!--组合框选择可以连接的设备-->
+                            <ComboBox x:Name = "comboBox" HorizontalAlignment = "Center" 
+                                       VerticalAlignment = "Center" Width = "250"
+                                      />
+                            
+                            <!--查找设备按钮-->
+                            <Button x:Name="FindCamButton" Grid.Row="0" Grid.Column="0" 
+                                Content="查找设备" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="FindCamButtonClick" 
+                                ToolTip="点击查找设备"/>
+
+                            <!--打开设备按钮-->
+                            <Button x:Name="OpenCamButton" Grid.Row="0" Grid.Column="0" 
+                                Content="打开设备" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="OpenCamButtonClick" 
+                                ToolTip="点击打开设备"/>
+
+                            <!--关闭设备按钮-->
+                            <Button x:Name="CloseCamButton" Grid.Row="0" Grid.Column="0" 
+                                Content="关闭设备" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="CloseCamButtonClick" 
+                                ToolTip="点击关闭设备"/>
+
+                            <!--查看设备参数按钮-->
+                            <Button x:Name="ViewCamParaButton" Grid.Row="0" Grid.Column="0" 
+                                Content="设备参数" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="ViewCamParaButtonClick" 
+                                ToolTip="点击查看设备参数"/>
+
+                            <!--单次触发图像采集按钮-->
+                            <Button x:Name="SingleCaptureButton" Grid.Row="0" Grid.Column="0" 
+                                Content="单次触发" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="SingleCaptureButtonClick" 
+                                ToolTip="点击触发单次图像采集"/>
+
+                            <!--连续触发图像采集按钮-->
+                            <Button x:Name="ContinueCaptureButton" Grid.Row="0" Grid.Column="0" 
+                                Content="连续触发" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="ContinueCaptureButtonClick" 
+                                ToolTip="点击触发连续图像采集"/>
+                            
+                            <!--停止连续图像采集按钮-->
+                            <Button x:Name="StopContinueCaptureButton" Grid.Row="0" Grid.Column="0" 
+                                Content="停止触发" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="StopContinueCaptureButtonClick" 
+                                ToolTip="停止触发连续图像采集"/>
+
+                            <!--加载图像路径按钮-->
+                            <Button x:Name="LoadImgButton" Grid.Row="0" Grid.Column="0" 
+                                Content="加载本地图像" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="LoadImgButtonClick" 
+                                ToolTip="点击选择并加载图像文件"/>
+
+                            <!--开启ROI窗口按钮-->
+                            <Button x:Name="StartROIButton" Grid.Row="0" Grid.Column="0" 
+                                Content="ROI工具" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="StartROIButtonClick" 
+                                ToolTip="点击开启ROI窗口"/>
+
+
+
+
+                        </StackPanel>
+                        
+                        
+                        
+                        
+                        
+                    </Grid>
+
+
+                </Grid>
+            </Grid>
+        </Grid>
+
+    </Grid>
+</Window>

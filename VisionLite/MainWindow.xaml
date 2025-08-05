@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VisionLite"
         xmlns:ha="clr-namespace:HalconDotNet;assembly=halcondotnet" x:Class="VisionLite.MainWindow"
+        
         mc:Ignorable="d"
-        Title="VisionLite" Height="900" Width="1600"
+        Title="VisionLite" Height="900" Width="1700"
         Closing="Window_Closing"
         WindowStartupLocation="CenterScreen">
     <!--首界面布局，共两行，第一行共两列；第二行共三列；第一行第二列分为两行-->
@@ -82,9 +83,13 @@
                                 <ColumnDefinition Width="5*"/>
                                 <ColumnDefinition Width="5*"/>
                             </Grid.ColumnDefinitions>
-
+                            
                             <ha:HSmartWindowControlWPF x:Name="HSmart1" Grid.Column="0"
-                                                       HKeepAspectRatio="True"/>
+                                                       HKeepAspectRatio="True"
+                                                       
+                                                       HMouseDown="HSmart1_MouseDown" 
+                                                       HMouseMove="HSmart1_MouseMove"
+                                                       HMouseUp="HSmart1_MouseUp"/>
                             <ha:HSmartWindowControlWPF x:Name="HSmart2" Grid.Column="1"
                                                        HKeepAspectRatio="True"/>
                         </Grid>
@@ -217,6 +222,19 @@
                                 Foreground="White" 
                                 Click="LoadImgButtonClick" 
                                 ToolTip="点击选择并加载图像文件"/>
+
+                            <!--开启ROI窗口按钮-->
+                            <Button x:Name="StartROIButton" Grid.Row="0" Grid.Column="0" 
+                                Content="ROI工具" 
+                                Width="Auto"  
+                                FontSize="12" 
+                                Margin="1"
+                                Background="Gray" 
+                                Foreground="White" 
+                                Click="StartROIButtonClick" 
+                                ToolTip="点击开启ROI窗口"/>
+
+
 
 
                         </StackPanel>

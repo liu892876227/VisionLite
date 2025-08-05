@@ -1,0 +1,37 @@
+﻿<!-- RoiToolWindow.xaml -->
+<Window x:Class="VisionLite.RoiToolWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VisionLite"
+        xmlns:ha="clr-namespace:HalconDotNet;assembly=halcondotnet"
+        mc:Ignorable="d"
+        Title="ROI工具" Height="450" Width="400">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <!-- ROI预览区域 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 参数设置区域 -->
+        </Grid.RowDefinitions>
+
+        <!-- ROI 内容实时预览窗口 -->
+        <ha:HSmartWindowControlWPF x:Name="RoiPreviewWindow" Grid.Row="0"/>
+
+        <!-- 参数区 -->
+        <StackPanel Grid.Row="1" Margin="10">
+            <StackPanel Orientation="Horizontal">
+                <Label Content="ROI 形状:" VerticalAlignment="Center"/>
+                <ComboBox x:Name="RoiShapeComboBox" Width="150" VerticalAlignment="Center"
+                          SelectionChanged="RoiShapeComboBox_SelectionChanged">
+                    <ComboBoxItem Content="矩形"/>
+                    <ComboBoxItem Content="圆形"/>
+                    <ComboBoxItem Content="直线"/>
+                    <ComboBoxItem Content="多边形"/>
+                </ComboBox>
+            </StackPanel>
+            <!-- 可以在这里添加更多参数控件 -->
+        </StackPanel>
+    </Grid>
+</Window>

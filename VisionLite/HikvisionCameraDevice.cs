@@ -19,6 +19,8 @@ namespace VisionLite
     /// </summary>
     public class HikvisionCameraDevice : ICameraDevice
     {
+        public event Action<ICameraDevice, HObject> ImageAcquired; // 实现接口定义的事件
+
         /// <summary>
         /// 公共属性，暴露底层的海康SDK对象，以便参数窗口可以查询参数列表。
         /// </summary>
@@ -27,6 +29,8 @@ namespace VisionLite
         // --- 接口属性实现 ---
         public string DeviceID { get; private set; }
         public HSmartWindowControlWPF DisplayWindow { get; private set; }
+
+        
 
         // --- 私有成员变量 ---
         private MyCamera.MV_CC_DEVICE_INFO m_deviceInfo;
@@ -49,7 +53,7 @@ namespace VisionLite
 
             // 将 ProcessImageCallback 方法绑定到回调委托上
             ImageCallback = new MyCamera.cbOutputdelegate(ProcessImageCallback);
-            HOperatorSet.GenEmptyObj(out m_Ho_Image);
+            //HOperatorSet.GenEmptyObj(out m_Ho_Image);
         }
 
         /// <summary>
@@ -176,44 +180,50 @@ namespace VisionLite
         /// </summary>
         private void ProcessImageCallback(IntPtr pData, ref MyCamera.MV_FRAME_OUT_INFO pFrameInfo, IntPtr pUser)
         {
-            m_Ho_Image?.Dispose();                              // 释放上一帧的Halcon图像内存
+
+            HObject tempImage = new HObject();
+
+            //m_Ho_Image?.Dispose();                              // 释放上一帧的Halcon图像内存
 
             // --- 核心转换逻辑: 将海康的图像数据(IntPtr)转换为Halcon的HObject ---
-            int width = pFrameInfo.nWidth;
-            int height = pFrameInfo.nHeight;
-            string channelType = "";
+           
 
 
-            switch (pFrameInfo.enPixelType)
+            try
             {
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8:
-                    HOperatorSet.GenImage1(out m_Ho_Image, "byte", width, height, pData);
-                    break;
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed:
-                    channelType = "bgr";
+                switch (pFrameInfo.enPixelType)
+                {
+                    case MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8:
+                        HOperatorSet.GenImage1(out tempImage, "byte", pFrameInfo.nWidth, pFrameInfo.nHeight, pData);
+                        break;
+                    case MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed:
+                        HOperatorSet.GenImageInterleaved(out tempImage, pData, "bgr", pFrameInfo.nWidth, pFrameInfo.nHeight, -1, "byte", 0, 0, 0, 0, -1, 0);
+                        break;
+                    case MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed:
+                        HOperatorSet.GenImageInterleaved(out tempImage, pData, "rgb", pFrameInfo.nWidth, pFrameInfo.nHeight, -1, "byte", 0, 0, 0, 0, -1, 0);
+                        break;
+                    case MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8:
+                        HOperatorSet.GenImage1(out HObject bayerImage, "byte", pFrameInfo.nWidth, pFrameInfo.nHeight, pData);
+                        HOperatorSet.CfaToRgb(bayerImage, out tempImage, "bayer_rg", "bilinear");
+                        bayerImage.Dispose();
+                        break;
+                    default:
+                        HOperatorSet.GenEmptyObj(out tempImage);
+                        break;
+                }
 
-                    HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
-                    break;
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed:
-                    channelType = "rgb";
-
-                    HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
-                    break;
-                // Add more conversions if needed (e.g., for Bayer patterns)
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8:
-                    HOperatorSet.GenImage1(out HObject bayerImage, "byte", width, height, pData);
-                    HOperatorSet.CfaToRgb(bayerImage, out m_Ho_Image, "bayer_rg", "bilinear");
-                    bayerImage.Dispose();
-                    break;
-                default:
-                    // For unsupported formats, create an empty image
-                    HOperatorSet.GenEmptyObj(out m_Ho_Image);
-                    break;
+                if (tempImage != null && tempImage.IsInitialized())
+                {
+                    // 【核心修改】触发事件，转移所有权
+                    ImageAcquired?.Invoke(this, tempImage);
+                    tempImage = null; // 设为 null 防止被 finally 释放
+                }
             }
-
-            // --- 线程安全地更新UI ---
-            // 使用BeginInvoke将显示任务“派发”给UI线程，当前后台线程无需等待，可以立刻返回去接收下一帧
-            DisplayWindow.Dispatcher.BeginInvoke(new Action(Display));
+            finally
+            {
+                // 【新增】安全地释放未被转移的图像对象
+                tempImage?.Dispose();
+            }
         }
 
         private string GetSerialNumber(MyCamera.MV_CC_DEVICE_INFO devInfo)
@@ -261,7 +271,7 @@ namespace VisionLite
             if (nRet == 0) m_bGrabbing = false;
         }
 
-        
+
 
         private void Display()
         {
@@ -284,7 +294,7 @@ namespace VisionLite
             m_Ho_Image?.Dispose();
         }
 
-        
+
         /// <summary>
         /// 判断相机是否处于自由运行的连续采集模式（即用户理解的“连续触发”）
         /// </summary>
@@ -302,6 +312,6 @@ namespace VisionLite
             return nRet == 0 && triggerMode.nCurValue == (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF;
         }
 
-        
+
     }
 }

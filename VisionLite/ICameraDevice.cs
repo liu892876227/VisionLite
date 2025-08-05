@@ -72,5 +72,11 @@ namespace VisionLite
         /// <param name="owner">该参数窗口的父窗口。</param>
         /// <returns>一个Window派生类的实例。</returns>
         Window ShowParametersWindow(Window owner);
+
+        /// <summary>
+        /// 当设备成功采集到一帧新图像时触发。
+        /// 订阅者会收到一个 HObject 类型的参数，即采集到的新图像。
+        /// </summary>
+        event Action<ICameraDevice, HObject> ImageAcquired;
     }
 }

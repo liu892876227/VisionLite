@@ -14,7 +14,7 @@ namespace VisionLite
     /// </summary>
     public class HalconCameraDevice : ICameraDevice
     {
-
+        public event Action<ICameraDevice, HObject> ImageAcquired; // 实现接口定义的事件
         public string DeviceID { get; private set; } // 相机的唯一ID
         public HSmartWindowControlWPF DisplayWindow { get; private set; } // 绑定的显示窗口
 
@@ -89,6 +89,8 @@ namespace VisionLite
         public void GrabAndDisplay()
         {
             if (m_pAcqHandle == null) return;
+            // --- 新增：在 try 外部声明 tempImage，以便 finally 可以访问 ---
+            HObject tempImage = null;
 
             try
             {
@@ -100,13 +102,20 @@ namespace VisionLite
                     isGrabbing = true;
                 }
 
-                m_pAcqHandle?.Dispose();
                 HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerSoftware", "do_it");
+                HOperatorSet.GrabImageAsync(out tempImage, m_pAcqHandle, 5000);
 
-                HOperatorSet.GrabImageAsync(out HObject tempImage, m_pAcqHandle, 5000);
 
-                // 在自己的窗口中显示
-                Display();
+                if (tempImage != null && tempImage.IsInitialized())
+                {
+                    // --- 核心修改 开始 ---
+                    // 1. 【修改】触发事件，将 tempImage 的所有权转移给 MainWindow
+                    ImageAcquired?.Invoke(this, tempImage);
+
+                    // 2. 【新增】所有权已转移，将本地引用设为null，防止 finally 块将其错误地释放
+                    tempImage = null;
+                }
+                //tempImage?.Dispose(); // 释放临时的 tempImage
             }
             catch (HalconException ex)
             {
@@ -115,6 +124,12 @@ namespace VisionLite
                 {
                     MessageBox.Show($"从设备 {DeviceID} 采集图像失败: \n{ex.GetErrorMessage()}", "错误");
                 }
+            }
+            // --- 新增 finally 块，确保资源安全 ---
+            finally
+            {
+                // 如果图像没有被成功上报（即 tempImage 不为 null），则在这里释放
+                tempImage?.Dispose();
             }
         }
 
@@ -164,28 +179,36 @@ namespace VisionLite
         // 后台线程真正执行的循环体
         private void ContinuousGrabLoop()
         {
-            HObject tempImage = new HObject(); // 在循环外创建临时图像变量，提高效率
+            
 
             // 只要开关是开着的，就一直循环
             while (isContinuousGrabbing)
             {
+                // --- 新增：在每次循环开始时将 tempImage 设为 null ---
+                HObject tempImage = null;
                 try
                 {
                     // 和单次采集一样，先发触发命令，再异步获取图像
                     HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerSoftware", "do_it");
                     HOperatorSet.GrabImageAsync(out tempImage, m_pAcqHandle, 1000); // 超时设短一点
 
-                    // 在UI主线程上更新显示
-                    DisplayWindow.Dispatcher.Invoke(() =>
+                    if (tempImage != null && tempImage.IsInitialized())
                     {
-                        m_Ho_Image?.Dispose();
-                        m_Ho_Image = tempImage.CopyObj(1, -1); // 必须复制一份图像，因为tempImage马上会被下一次循环覆盖
-                        Display();
-                    });
+                        // --- 核心修改 开始 ---
+                        // 1. 【修改】直接触发事件，不再需要 Dispatcher.Invoke
+                        ImageAcquired?.Invoke(this, tempImage);
+
+                        // 2. 【新增】转移所有权
+                        tempImage = null;
+                    }
                 }
                 catch (HalconException) { Thread.Sleep(50); }
+                finally
+                {
+                    tempImage?.Dispose();
+                }
             }
-            tempImage.Dispose(); // 循环结束后，释放临时图像变量
+             
         }
 
         /// <summary>
@@ -241,7 +264,7 @@ namespace VisionLite
 
         public bool IsContinuousGrabbing() => isContinuousGrabbing;
 
-        
+
 
         // --- 内部方法，供参数窗口调用 ---
         public bool SetParameter(string paramName, object value)

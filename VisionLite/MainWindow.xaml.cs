@@ -18,6 +18,7 @@ using System.IO;
 using HalconDotNet;
 using MvCamCtrl.NET;
 using System.Runtime.InteropServices;
+using VisionLite.ROIs;
 
 
 namespace VisionLite
@@ -50,6 +51,26 @@ namespace VisionLite
         /// </summary>
         private Dictionary<string, Window> openParameterWindows = new Dictionary<string, Window>();
 
+        private List<RoiBase> activeRois = new List<RoiBase>();
+
+        private HObject currentImage; // 用于持有当前显示的图像
+        private RoiToolWindow activeRoiWindow = null; // 用于持有当前打开的ROI工具窗口
+
+        /// <summary>
+        /// 定义交互模式的状态机
+        /// </summary>
+        private enum InteractionMode
+        {
+            None,      // 无操作
+            
+            Moving,    // 正在移动选中的ROI
+            Resizing   // 正在缩放选中的ROI
+        }
+        private InteractionMode currentMode = InteractionMode.None;
+        private RoiBase selectedRoi = null;     // 当前选中的ROI对象
+        //private int activeHandleIndex = -1;     // 被激活的句柄索引 (我们暂时用不到，为未来缩放功能预留)
+        private double lastMouseX, lastMouseY;  // 用于计算鼠标位移
+
         public MainWindow()
         {
             InitializeComponent();
@@ -59,7 +80,7 @@ namespace VisionLite
             {
                 HSmart1, HSmart2, HSmart3, HSmart4
             };
-
+            
             // 在窗口启动时，自动调用查找设备方法，不显示成功提示
             FindAndPopulateDevices();
         }
@@ -79,7 +100,9 @@ namespace VisionLite
             var foundSerialNumbers = new HashSet<string>();
 
             // --- 使用海康SDK查找 ---
+            //创建一个海康SDK定义的数据结构，用来接收设备列表
             var hikDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
+            //调用海康SDK的函数来枚举所有通过网线（MV_GIGE_DEVICE）和USB（MV_USB_DEVICE）连接的设备
             int nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref hikDeviceList);
 
             if (nRet == 0 && hikDeviceList.nDeviceNum > 0)
@@ -87,6 +110,7 @@ namespace VisionLite
                 for (int i = 0; i < hikDeviceList.nDeviceNum; i++)
                 {
                     var stDevInfo = (MyCamera.MV_CC_DEVICE_INFO)Marshal.PtrToStructure(hikDeviceList.pDeviceInfo[i], typeof(MyCamera.MV_CC_DEVICE_INFO));
+                    //调用辅助函数从复杂的设备信息结构中提取出唯一的序列号
                     string serialNumber = GetHikSerialNumber(stDevInfo);
                     if (!string.IsNullOrEmpty(serialNumber))
                     {
@@ -147,7 +171,7 @@ namespace VisionLite
                 OpenCamButton.IsEnabled = false;
                 if (showSuccessMessage) MessageBox.Show("未发现任何设备！", "提示");
             }
-            
+
         }
 
         // 从海康设备信息结构体中提取序列号
@@ -179,13 +203,49 @@ namespace VisionLite
         #endregion
 
 
-        #region UI事件处理
+        /// <summary>
+        /// 【统一显示入口】负责在指定窗口上绘制图像和所有图形。
+        /// 这是解决黑屏问题的关键。
+        /// </summary>
+        /// <param name="targetWindow">要绘制的目标窗口</param>
+        /// <param name="imageToDisplay">要显示的背景图像</param>
+        private void DisplayInWindow(HSmartWindowControlWPF targetWindow, HObject imageToDisplay)
+        {
+            if (targetWindow?.HalconWindow == null || imageToDisplay == null || !imageToDisplay.IsInitialized())
+                return;
+
+            HWindow hWindow = targetWindow.HalconWindow;
+
+            try
+            {
+                // 每次显示都重新开启Overlay模式，确保状态正确
+                hWindow.SetPaint(new HTuple("overlay"));
+            }
+            catch (HalconException) { /* 忽略 */ }
+
+            // 设置坐标系
+            HOperatorSet.GetImageSize(imageToDisplay, out HTuple width, out HTuple height);
+            hWindow.SetPart(0, 0, height.I - 1, width.I - 1);   
+            
+            hWindow.DispObj(imageToDisplay);
+
+            // 绘制ROI
+            if (activeRois.Any())
+            {
+                foreach (var roi in activeRois)
+                {
+                    hWindow.SetColor(roi == selectedRoi ? "yellow" : "green");
+                    roi.Draw(hWindow);
+                }
+            }
+        }
+
         /// <summary>
         /// "查找设备"按钮的点击事件处理程序
         /// </summary>
         private void FindCamButtonClick(object sender, RoutedEventArgs e)
         {
-           
+
             FindAndPopulateDevices(true);
         }
 
@@ -237,17 +297,51 @@ namespace VisionLite
 
             if (newCamera.Open())
             {
-               
+                // 在相机成功打开后，订阅它的 ImageAcquired 事件
+                newCamera.ImageAcquired += OnCameraImageAcquired;
+
                 int windowIndex = displayWindows.IndexOf(freeWindow);
                 // 将新打开的相机添加到管理字典中
                 openCameras.Add(selectedDevice.UniqueID, newCamera);
                 // 使用Tag属性将窗口标记为“被占用”，并记录下占用它的设备ID
                 freeWindow.Tag = selectedDevice.UniqueID;
-                
+
                 string successMessage = $"设备 {selectedDevice.DisplayName} 打开成功，并绑定到窗口 {windowIndex + 1}。";
                 MessageBox.Show(successMessage, "成功");
                 // 打开后自动采集一帧图像，提供即时反馈
-                newCamera.GrabAndDisplay(); 
+                newCamera.GrabAndDisplay();
+            }
+
+        }
+
+
+        #region UI事件处理
+        /// <summary>
+        /// 这是所有相机 ImageAcquired 事件的统一处理器。
+        /// 当任何相机采集到新图像时，此方法会被调用。
+        /// </summary>
+        /// <param name="newImage">从相机设备传来的新图像对象</param>
+        private void OnCameraImageAcquired(ICameraDevice senderCamera, HObject newImage)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => OnCameraImageAcquired(senderCamera, newImage));
+                return;
+            }
+
+
+            try
+            {
+                currentImage?.Dispose();
+                currentImage = newImage;
+
+                var targetWindow = senderCamera.DisplayWindow;
+
+                DisplayInWindow(targetWindow, currentImage);
+            }
+            catch (HalconException)
+            {
+                newImage?.Dispose();
             }
 
         }
@@ -272,6 +366,9 @@ namespace VisionLite
                     // 这会自动触发之前订阅的 Closed 事件，将其从字典中移除
                     paramWindow.Close();
                 }
+
+                // 取消订阅
+                cameraToClose.ImageAcquired -= OnCameraImageAcquired;
 
                 // 释放窗口占用
                 cameraToClose.DisplayWindow.Tag = null;
@@ -387,7 +484,7 @@ namespace VisionLite
         /// </summary>
         private void LoadImgButtonClick(object sender, RoutedEventArgs e)
         {
-            
+
 
             // 创建文件选择对话框
             OpenFileDialog openFileDialog = new OpenFileDialog
@@ -410,93 +507,156 @@ namespace VisionLite
             {
                 try
                 {
-                    // 获取用户选择的文件的完整路径
-                    string filePath = openFileDialog.FileName;
+                    currentImage?.Dispose();
+                    HOperatorSet.ReadImage(out currentImage, openFileDialog.FileName);
 
-                    // 3. 决定要在哪个窗口显示图像
-                    HSmartWindowControlWPF targetWindow = null;
+                    var targetWindow = displayWindows.FirstOrDefault(w => w.Tag == null) ?? HSmart1;
 
-                    // 首先，尝试寻找一个空闲的窗口（即Tag为null的窗口）
-                    foreach (var window in displayWindows)
-                    {
-                        if (window.Tag == null)
-                        {
-                            targetWindow = window;
-                            break; // 找到第一个就停止
-                        }
-                    }
-
-                    // 如果所有窗口都已被相机占用，则默认使用第一个窗口
-                    if (targetWindow == null)
-                    {
-                        targetWindow = displayWindows[0];
-                    }
-
-                    // 4. 在目标窗口中加载和显示图像
-                    if (targetWindow != null)
-                    {
-                        // 创建一个临时的 HObject 来加载图像
-                        HOperatorSet.ReadImage(out HObject loadedImage, filePath);
-
-                        // 获取目标窗口的Halcon窗口对象
-                        HWindow hWindow = targetWindow.HalconWindow;
-
-                        // 在该窗口中显示图像
-                        HOperatorSet.GetImageSize(loadedImage, out HTuple width, out HTuple height);
-                        hWindow.SetPart(0, 0, height.I - 1, width.I - 1);
-                        hWindow.ClearWindow();
-                        hWindow.DispObj(loadedImage);
-
-                        // 记得释放临时图像对象的内存
-                        loadedImage.Dispose();
-                    }
-                }
-                catch (HalconException ex)
-                {
-                    // 如果Halcon操作失败，弹出错误提示
-                    MessageBox.Show("加载图像失败。\nHalcon错误: " + ex.GetErrorMessage(), "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    DisplayInWindow(targetWindow, currentImage);
                 }
                 catch (Exception ex)
                 {
-                    // 捕获其他可能的异常
-                    MessageBox.Show("发生未知错误: " + ex.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("加载图像失败: " + ex.Message, "错误");
                 }
             }
 
         }
 
-        
-        /// <summary>
-        /// 封装的图像显示方法
-        /// </summary>
-        /// <param name="imageToShow">需要显示的Halcon图像对象</param>
-        private void DisplayImage(HObject imageToShow)
-        {
-            if (imageToShow == null || !imageToShow.IsInitialized())
-                return;
+        #endregion
 
-            // 获取控件内的Halcon窗口
-            HWindow window = HSmart1.HalconWindow;
-            // 获取图像的宽度和高度
-            HOperatorSet.GetImageSize(imageToShow, out HTuple width, out HTuple height);
-            // 设置窗口的显示部分，以确保图像完整且居中显示
-            window.SetPart(0, 0, height.I - 1, width.I - 1);
-            // 清除窗口之前的内容
-            window.ClearWindow();
-            // 将图像对象显示在窗口上
-            window.DispObj(imageToShow);
+        #region ROI 相关方法
+
+        /// <summary>
+        /// “开启ROI窗口”按钮的点击事件处理程序
+        /// </summary>
+        private void StartROIButtonClick(object sender, RoutedEventArgs e)
+        {
+            if (currentImage == null || !currentImage.IsInitialized())
+            {
+                MessageBox.Show("请先加载一张图像或从相机采集一帧。", "提示");
+                return;
+            }
+
+            if (activeRoiWindow != null && activeRoiWindow.IsLoaded)
+            {
+                activeRoiWindow.Activate();
+                return;
+            }
+
+            // --- 修改：如果已经有ROI，则用现有的ROI打开窗口，否则创建新的 ---
+            if (!activeRois.Any())
+            {
+                HOperatorSet.GetImageSize(currentImage, out HTuple width, out HTuple height);
+                var defaultRectRoi = new RectangleRoi
+                {
+                    Row1 = (height.D / 2) - 100,
+                    Column1 = (width.D / 2) - 100,
+                    Row2 = (height.D / 2) + 100,
+                    Column2 = (width.D / 2) + 100
+                };
+                activeRois.Add(defaultRectRoi);
+            }
+
+            // --- 核心修正：调用统一的显示方法来刷新ROI ---
+            // 我们假设ROI操作总是在 HSmart1 上进行
+            DisplayInWindow(HSmart1, currentImage);
+
+            activeRoiWindow = new RoiToolWindow(currentImage, activeRois.First());
+            activeRoiWindow.Owner = this;
+            activeRoiWindow.Closed += (s, args) => activeRoiWindow = null;
+            activeRoiWindow.OnRoiShapeChanged += HandleRoiShapeChange;
+            activeRoiWindow.Show();
         }
 
+       
 
+        // --- 新增代码：步骤5 ---
+        /// <summary>
+        /// 处理从 RoiToolWindow 传来的形状改变请求
+        /// </summary>
+        private void HandleRoiShapeChange(RoiBase newRoi)
+        {
+            activeRois.Clear();
+            activeRois.Add(newRoi);
+            selectedRoi = newRoi;
+            // --- 核心修正：调用统一的显示方法来刷新ROI ---
+            DisplayInWindow(HSmart1, currentImage);
+        }
+
+        // --- 新增代码：步骤4 ---
+        #region 鼠标交互事件处理器
+
+        private void HSmart1_MouseDown(object sender, HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        {
+            if (activeRoiWindow == null || !activeRoiWindow.IsLoaded) return;
+
+            // --- 新增：记录下点击前的选中状态 ---
+            var previousSelectedRoi = selectedRoi;
+
+            // 先假设没有点中任何东西
+            selectedRoi = null;
+            currentMode = InteractionMode.None;
+
+            // 倒序遍历，优先选择顶层的ROI
+            for (int i = activeRois.Count - 1; i >= 0; i--)
+            {
+                var rect = activeRois[i] as RectangleRoi;
+                if (rect != null && e.Row >= rect.Row1 && e.Row <= rect.Row2 && e.Column >= rect.Column1 && e.Column <= rect.Column2)
+                {
+                    selectedRoi = rect;
+                    currentMode = InteractionMode.Moving;
+                    lastMouseX = e.Column;
+                    lastMouseY = e.Row;
+                    break;
+                }
+            }
+
+            // --- 核心修改：只有在选中状态发生改变时，才进行重绘 ---
+            if (previousSelectedRoi != selectedRoi)
+            {
+                // 如果之前的选中ROI和现在的不一样了（例如从一个ROI变成null，或者从null变成一个ROI）
+                // 这意味着UI需要更新（比如高亮颜色变了），所以我们调用重绘。
+                DisplayInWindow(HSmart1, currentImage);
+            }
+            // 如果 previousSelectedRoi 和 selectedRoi 都是 null（即点击在了空白处），
+            // 那么什么也不做，界面就不会黑屏了。
+        }
+
+        private void HSmart1_MouseMove(object sender, HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        {
+            if (e.Button == MouseButton.Left && currentMode == InteractionMode.Moving && selectedRoi != null)
+            {
+                double deltaX = e.Column - lastMouseX;
+                double deltaY = e.Row - lastMouseY;
+                if (selectedRoi is RectangleRoi rect)
+                {
+                    rect.Row1 += deltaY; rect.Row2 += deltaY;
+                    rect.Column1 += deltaX; rect.Column2 += deltaX;
+                }
+
+                DisplayInWindow(HSmart1, currentImage);
+                activeRoiWindow?.UpdatePreview();
+
+                lastMouseX = e.Column;
+                lastMouseY = e.Row;
+            }
+        }
+        private void HSmart1_MouseUp(object sender, HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        {
+            currentMode = InteractionMode.None;
+        }
+
+        #endregion
+
+        #endregion
 
         /// <summary>
         /// 窗口关闭事件，用于释放资源，确保主窗口关闭时，所有参数窗口也被关闭
         /// </summary>
-
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // 先关闭所有还开着的参数窗口
-            foreach (var window in openParameterWindows.Values.ToList()) 
+            foreach (var window in openParameterWindows.Values.ToList())
             {
                 window.Close();
             }
@@ -506,8 +666,7 @@ namespace VisionLite
             {
                 camera.Close();
             }
+            currentImage?.Dispose();
         }
-        #endregion
-
     }
 }
