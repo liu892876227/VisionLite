@@ -32,3 +32,5 @@ E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\HikvisionParametersWindow.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\HalconParametersWindow.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\HikvisionParametersWindow.baml
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\HalconParametersWindow.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ROIToolWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ROIToolWindow.baml

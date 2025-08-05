@@ -88,23 +88,30 @@ namespace VisionLite
         /// </summary>
         public void GrabAndDisplay()
         {
-            if (m_pAcqHandle == null) return;
+            if (m_pAcqHandle == null)
+            {
+                MessageBox.Show("相机句柄无效，请先打开设备。", "错误");
+                return;
+            }
 
             try
             {
                 // --- 在需要时才启动采集流 ---
-                // 如果采集流尚未启动，则在这里启动它
+                // 如果采集流尚未启动，(例如，在Open()之后第一次单采)，则启动它。
                 if (!isGrabbing)
                 {
                     HOperatorSet.GrabImageStart(m_pAcqHandle, -1);
                     isGrabbing = true;
                 }
-
-                m_pAcqHandle?.Dispose();
+                // 发送软触发命令
                 HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerSoftware", "do_it");
-
+                // 异步获取一帧图像，设置5秒超时
                 HOperatorSet.GrabImageAsync(out HObject tempImage, m_pAcqHandle, 5000);
 
+                // 成功获取图像后，先释放旧的图像内存
+                m_Ho_Image?.Dispose();
+                // 将新采集的图像赋值给类成员变量
+                m_Ho_Image = tempImage;
                 // 在自己的窗口中显示
                 Display();
             }
@@ -202,6 +209,7 @@ namespace VisionLite
                 window.SetPart(0, 0, height.I - 1, width.I - 1);                            // 设置窗口的显示区域，让它刚好能完整显示整张图片
                 //window.ClearWindow();                                                     // 清除窗口上之前的内容
                 window.DispObj(m_Ho_Image);                                                   // 在窗口上把图像画出来
+                DisplayWindow.Tag = m_Ho_Image;
             }
 
             catch (HalconException)

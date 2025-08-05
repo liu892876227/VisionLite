@@ -272,6 +272,7 @@ namespace VisionLite
                 HOperatorSet.GetImageSize(m_Ho_Image, out HTuple imgWidth, out HTuple imgHeight);
                 window.SetPart(0, 0, imgHeight.I - 1, imgWidth.I - 1);
                 window.DispObj(m_Ho_Image);
+                DisplayWindow.Tag = m_Ho_Image;
             }
             catch (HalconException) { }
         }

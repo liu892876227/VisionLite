@@ -96,6 +96,9 @@
       <DependentUpon>HalconParametersWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ParameterTranslator.cs" />
+    <Compile Include="ROIToolWindow.xaml.cs">
+      <DependentUpon>ROIToolWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SaveMainWindowXamlCs.cs" />
     <Compile Include="SaveMainWindowXamlCsAForgeOK.cs" />
     <Page Include="HikvisionParametersWindow.xaml">
@@ -115,6 +118,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="HalconParametersWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ROIToolWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

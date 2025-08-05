@@ -50,6 +50,9 @@ namespace VisionLite
         /// </summary>
         private Dictionary<string, Window> openParameterWindows = new Dictionary<string, Window>();
 
+        // 用于跟踪已打开的ROI窗口，防止重复打开
+        private ROIToolWindow roiEditorWindow = null;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -419,7 +422,8 @@ namespace VisionLite
                     // 首先，尝试寻找一个空闲的窗口（即Tag为null的窗口）
                     foreach (var window in displayWindows)
                     {
-                        if (window.Tag == null)
+                        if (window.Tag == null || !(window.Tag is string))
+                        
                         {
                             targetWindow = window;
                             break; // 找到第一个就停止
@@ -447,8 +451,9 @@ namespace VisionLite
                         hWindow.ClearWindow();
                         hWindow.DispObj(loadedImage);
 
+                        targetWindow.Tag = loadedImage;
                         // 记得释放临时图像对象的内存
-                        loadedImage.Dispose();
+                        //loadedImage.Dispose();
                     }
                 }
                 catch (HalconException ex)
@@ -465,7 +470,48 @@ namespace VisionLite
 
         }
 
-        
+        /// <summary>
+        /// "ROI工具"按钮的点击事件处理程序
+        /// </summary>
+        private void ROIToolButtonClick(object sender, RoutedEventArgs e)
+        {
+            // 检查ROI窗口是否已经打开
+            if (roiEditorWindow != null)
+            {
+                // 如果已打开，则激活它并置于顶层，而不是创建新窗口
+                roiEditorWindow.Activate();
+                return;
+            }
+
+            // 创建ROI窗口实例
+            roiEditorWindow = new ROIToolWindow();
+            roiEditorWindow.Owner = this;
+
+            // 订阅事件 (可选，如果需要接收最终ROI)
+            roiEditorWindow.ROIAccepted += (HObject returnedRoi) =>
+            {
+                MessageBox.Show("最终ROI已确认！");
+                // 可以在这里处理最终的ROI，例如保存或用于分析
+                returnedRoi.Dispose();
+            };
+
+            // 订阅关闭事件
+            roiEditorWindow.Closed += (s, args) =>
+            {
+                roiEditorWindow = null;
+            };
+
+            // 显示窗口
+            roiEditorWindow.Show();
+
+            // 首次打开时，如果窗口1有图，就主动更新一次
+            if (HSmart1.Tag is HObject currentImage && currentImage.IsInitialized())
+            {
+                roiEditorWindow.UpdateImage(currentImage);
+            }
+        }
+
+
         /// <summary>
         /// 封装的图像显示方法
         /// </summary>
@@ -500,7 +546,8 @@ namespace VisionLite
             {
                 window.Close();
             }
-
+            // 如果ROI窗口还开着，也关闭它
+            roiEditorWindow?.Close();
             // 再关闭所有相机
             foreach (var camera in openCameras.Values)
             {
@@ -509,5 +556,7 @@ namespace VisionLite
         }
         #endregion
 
+
+        
     }
 }
