@@ -1,9 +1,11 @@
 ﻿// ROIToolWindow.xaml.cs
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using HalconDotNet;
 using System.Windows.Threading;
+using Xceed.Wpf.Toolkit;
 
 namespace VisionLite
 {
@@ -19,7 +21,7 @@ namespace VisionLite
         private HDrawingObject _drawingObject; // 当前活动的ROI绘图对象
         public HObject CreatedROI { get; private set; } // 创建的最终ROI区域
 
-        
+        private bool _isUpdatingFromRoi = false; // 标志位，防止UI更新触发ROI更新的死循环
         public ROIToolWindow()
         {
             InitializeComponent();
@@ -60,13 +62,13 @@ namespace VisionLite
             // 确保我们有可以操作的背景图像
             if (_sourceImage == null || !_sourceImage.IsInitialized())
             {
-                MessageBox.Show("ROI工具窗口中没有背景图像。请先在主窗口采集或加载图像。", "错误");
+                System.Windows.MessageBox.Show("ROI工具窗口中没有背景图像。请先在主窗口采集或加载图像。", "错误");
                 RoiTypeComboBox.SelectedIndex = -1; // 重置选择
                 return;
             }
             // 清理旧的绘图对象和UI
             DetachAndDisposeDrawingObject();
-            ParametersPanel.Children.Clear();
+            
             // 获取图像尺寸，用于计算初始ROI的位置和大小
             HOperatorSet.GetImageSize(_sourceImage, out HTuple width, out HTuple height);
 
@@ -126,8 +128,11 @@ namespace VisionLite
             // 使用Dispatcher确保在UI线程上操作
             Dispatcher.Invoke(() =>
             {
-                UpdateRoiDisplay();
+                _isUpdatingFromRoi = true; // 设置标志位，表示本次更新来自ROI拖动
+                
                 UpdateParametersUI();
+                UpdateRoiDisplay();
+                _isUpdatingFromRoi = false; // 恢复标志位
             });
         }
 
@@ -170,45 +175,73 @@ namespace VisionLite
 
             ParametersPanel.Children.Clear();
             string type = _drawingObject.GetDrawingObjectParams("type");
+            HOperatorSet.GetImageSize(_sourceImage, out HTuple width, out HTuple height);
 
             // 根据ROI类型显示不同的参数
             if (type == "rectangle1")
             {
-                HTuple row1 = _drawingObject.GetDrawingObjectParams("row1");
-                HTuple col1 = _drawingObject.GetDrawingObjectParams("column1");
-                HTuple row2 = _drawingObject.GetDrawingObjectParams("row2");
-                HTuple col2 = _drawingObject.GetDrawingObjectParams("column2");
-                ParametersPanel.Children.Add(CreateParamLabel($"Row1: {row1.D:F2}"));
-                ParametersPanel.Children.Add(CreateParamLabel($"Col1: {col1.D:F2}"));
-                ParametersPanel.Children.Add(CreateParamLabel($"Row2: {row2.D:F2}"));
-                ParametersPanel.Children.Add(CreateParamLabel($"Col2: {col2.D:F2}"));
+                CreateDoubleUpDown("Row1:", "row1", 0, height.D - 1);
+                CreateDoubleUpDown("Col1:", "column1", 0, width.D - 1);
+                CreateDoubleUpDown("Row2:", "row2", 0, height.D - 1);
+                CreateDoubleUpDown("Col2:", "column2", 0, width.D - 1);
             }
             else if (type == "rectangle2")
             {
-                HTuple row = _drawingObject.GetDrawingObjectParams("row");
-                HTuple col = _drawingObject.GetDrawingObjectParams("column");
-                HTuple phi = _drawingObject.GetDrawingObjectParams("phi");
-                HTuple len1 = _drawingObject.GetDrawingObjectParams("length1");
-                HTuple len2 = _drawingObject.GetDrawingObjectParams("length2");
-                ParametersPanel.Children.Add(CreateParamLabel($"Center Row: {row.D:F2}"));
-                ParametersPanel.Children.Add(CreateParamLabel($"Center Col: {col.D:F2}"));
-                ParametersPanel.Children.Add(CreateParamLabel($"Angle (deg): {(phi.D * 180 / Math.PI):F2}"));
-                ParametersPanel.Children.Add(CreateParamLabel($"Length1 (Radius1): {len1.D:F2}"));
-                ParametersPanel.Children.Add(CreateParamLabel($"Length2 (Radius2): {len2.D:F2}"));
+                
+                
             }
             // 可以为 Circle, Ellipse, Line 添加更多 else if 分支
         }
 
-        private TextBlock CreateParamLabel(string content)
+        /// <summary>
+        /// 创建一个 DoubleUpDown 控件并添加到UI
+        /// </summary>
+        private void CreateDoubleUpDown(string label, string paramName, double min, double max)
         {
-            return new TextBlock { Text = content, Margin = new Thickness(5) };
+            var sp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+            sp.Children.Add(new Label { Content = label, Width = 80 });
+
+            // 使用 Xceed Toolkit 的 DoubleUpDown 控件
+            var doubleUpDown = new DoubleUpDown
+            {
+                Value = _drawingObject.GetDrawingObjectParams(paramName),
+                Minimum = min,
+                Maximum = max,
+                FormatString = "F2", // 显示两位小数
+                Increment = 1.0,     // 对应我们之前的 SmallChange
+                MinWidth = 120
+            };
+
+            // 订阅值改变事件
+            doubleUpDown.ValueChanged += (sender, args) =>
+            {
+                if (_isUpdatingFromRoi) return;
+                double? newValue = (double?)args.NewValue;
+
+                // args.NewValue 是 nullable double (double?)，需要检查
+                if (newValue.HasValue)
+                {
+                    try
+                    {
+                        _drawingObject.SetDrawingObjectParams(paramName, newValue.Value);
+                        // 手动触发图像更新，形成闭环
+                        UpdateRoiDisplay();
+                    }
+                    catch (HalconException) { /* 忽略设置失败 */ }
+                }
+            };
+
+            sp.Children.Add(doubleUpDown);
+            ParametersPanel.Children.Add(sp);
         }
+
+
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             if (_drawingObject == null || _drawingObject.ID == -1)
             {
-                MessageBox.Show("您还没有创建有效的ROI！", "提示");
+                System.Windows.MessageBox.Show("您还没有创建有效的ROI！", "提示");
                 return;
             }
 

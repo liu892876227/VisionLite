@@ -6,6 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VisionLite"
         xmlns:ha="clr-namespace:HalconDotNet;assembly=halcondotnet"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="ROI 编辑工具" Height="600" Width="800"
         WindowStartupLocation="CenterOwner"
