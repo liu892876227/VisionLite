@@ -483,14 +483,25 @@ namespace VisionLite
                 return;
             }
 
+            // 在创建子窗口之前，先检查主窗口是否有可用的图像
+            if (!(HSmart1.Tag is HObject currentImage && currentImage.IsInitialized()))
+            {
+                // 如果没有图像，主窗口直接弹出提示，然后中断操作
+                MessageBox.Show(this, "窗口1中没有可用的图像，无法打开ROI工具。", "提示");
+                return; // 不再创建ROIToolWindow
+            }
+
             // 创建ROI窗口实例
             roiEditorWindow = new ROIToolWindow();
             roiEditorWindow.Owner = this;
 
-            // 订阅事件 (可选，如果需要接收最终ROI)
+            // 订阅事件 
             roiEditorWindow.ROIAccepted += (HObject returnedRoi) =>
             {
-                MessageBox.Show("最终ROI已确认！");
+                // 立即关闭ROI窗口
+                roiEditorWindow?.Close();
+                // 将主窗口激活并置于顶层
+                this.Activate();
                 // 可以在这里处理最终的ROI，例如保存或用于分析
                 returnedRoi.Dispose();
             };
@@ -503,12 +514,8 @@ namespace VisionLite
 
             // 显示窗口
             roiEditorWindow.Show();
-
-            // 首次打开时，如果窗口1有图，就主动更新一次
-            if (HSmart1.Tag is HObject currentImage && currentImage.IsInitialized())
-            {
-                roiEditorWindow.UpdateImage(currentImage);
-            }
+            // 将验证过的图像传递给子窗口
+            roiEditorWindow.UpdateImage(currentImage);
         }
 
 

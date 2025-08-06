@@ -104,17 +104,27 @@ namespace VisionLite
             try
             {
                 // 调用设备层的方法来执行设置，只调用一次！
-                m_pCameraDevice.SetParameter(paramName, value);
+                bool success = m_pCameraDevice.SetParameter(paramName, value);
+                if (success)
+                {
+                    UpdateStatus($"参数 '{ParameterTranslator.Translate(paramName)}' 设置成功。");
+                }
 
                 // 无论成功与否，都完全刷新参数列表
                 // - 如果成功，会显示新值以及可能连锁改变的其他参数
                 // - 如果失败，会从相机重新读取旧的、实际的值，纠正UI
                 PopulateParameters();
             }
+            catch (HalconException ex)
+            {
+                // 捕获从设备层抛出的异常 
+                UpdateStatus($"设置失败: {ex.GetErrorMessage()}", true);
+                PopulateParameters(); // 出错时也刷新以恢复UI
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"在调用 SetParameter 时发生未知错误: {ex.Message}");
-                PopulateParameters(); // 出错时也刷新以恢复UI
+                UpdateStatus($"发生未知错误: {ex.Message}", true);
+                PopulateParameters();
             }
             finally
             {
@@ -311,5 +321,22 @@ namespace VisionLite
         }
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e) => PopulateParameters();
+
+        /// <summary>
+        /// 更新状态栏文本，并在一段时间后自动清除
+        /// </summary>
+        private async void UpdateStatus(string message, bool isError = false)
+        {
+            StatusTextBlock.Text = message;
+            StatusTextBlock.Foreground = isError ? Brushes.Red : Brushes.Black;
+
+            await System.Threading.Tasks.Task.Delay(5000);
+
+            if (StatusTextBlock.Text == message)
+            {
+                StatusTextBlock.Text = "准备就绪";
+                StatusTextBlock.Foreground = Brushes.Black;
+            }
+        }
     }
 }

@@ -148,7 +148,7 @@ namespace VisionLite
                 else { SetSdkParameter(paramName, value); }
                 return true;
             }
-            catch (Exception ex) { MessageBox.Show($"[HIK] 设置参数 '{paramName}' 失败: {ex.Message}", "错误"); return false; }
+            catch (Exception ex) { throw new Exception($"[HIK] 设置参数 '{paramName}' 失败: {ex.Message}", ex); }
         }
 
         // 根据值的类型调用不同的海康SDK函数

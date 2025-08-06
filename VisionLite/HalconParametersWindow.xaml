@@ -13,6 +13,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <!--状态栏-->
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <TextBlock x:Name="TitleTextBlock" Grid.Row="0" Text="相机参数: " FontWeight="Bold" Margin="0,0,0,10"/>
@@ -26,5 +28,12 @@
             <Button Content="刷新" Width="80" Margin="5" Click="RefreshButton_Click"/>
             <Button Content="关闭" Width="80" Margin="5" IsCancel="True"/>
         </StackPanel>
+
+        <!-- 状态栏 -->
+        <StatusBar Grid.Row="3" Margin="0,5,0,0">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusTextBlock" Text="参数加载完成"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>

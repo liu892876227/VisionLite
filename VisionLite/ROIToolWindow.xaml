@@ -14,12 +14,14 @@
         Closing="Window_Closing">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
             <!-- 用于显示图像的HSmartWindowControlWPF -->
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <!-- 用于放置ROI工具的控制面板 -->
             <RowDefinition Height="Auto"/>
             <!-- 用于放置“确定”和“取消”按钮 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 状态栏 -->
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- 图像显示区域 -->
@@ -54,9 +56,22 @@
 
         <!-- 底部按钮栏 -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button x:Name="SaveROIImageButton" 
+                    Content="保存图像" 
+                    Width="80" 
+                    Margin="0,0,20,0" 
+                    Click="SaveROIImageButton_Click"
+                    IsEnabled="False"/>
+
             <Button x:Name="OkButton" Content="确定" Width="80" Margin="10,0,0,0" IsDefault="True" Click="OkButton_Click"/>
             <Button x:Name="CancelButton" Content="取消" Width="80" Margin="10,0,0,0" IsCancel="True" Click="CancelButton_Click"/>
         </StackPanel>
 
+        <!-- 状态栏 -->
+        <StatusBar Grid.Row="3" Margin="0,5,0,0">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusTextBlock" Text="准备就绪"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>

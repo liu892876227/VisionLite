@@ -99,8 +99,25 @@ namespace VisionLite
 
         private void SetParameter(string paramName, object value)
         {
-            m_pCameraDevice.SetParameter(paramName, value);
-            PopulateParameters();
+            try
+            {
+                // 调用设备层的方法
+                bool success = m_pCameraDevice.SetParameter(paramName, value);
+
+                // 成功后刷新UI并给出提示
+                if (success)
+                {
+                    UpdateStatus($"参数 '{ParameterTranslator.Translate(paramName)}' 设置成功。");
+                }
+                PopulateParameters();
+            }
+            catch (Exception ex)
+            {
+                // 捕获从设备层抛出的异常
+                UpdateStatus($"设置失败: {ex.Message}", true);
+                // 出错时也刷新UI，以恢复到正确的参数状态
+                PopulateParameters();
+            }
         }
 
         /// <summary>
@@ -215,6 +232,18 @@ namespace VisionLite
             var label = new Label { Content = displayName, Width = 150, VerticalAlignment = VerticalAlignment.Center };
             sp.Children.Add(label);
             return sp;
+        }
+
+        private async void UpdateStatus(string message, bool isError = false)
+        {
+            StatusTextBlock.Text = message;
+            StatusTextBlock.Foreground = isError ? Brushes.Red : Brushes.Black;
+            await System.Threading.Tasks.Task.Delay(5000);
+            if (StatusTextBlock.Text == message)
+            {
+                StatusTextBlock.Text = "准备就绪";
+                StatusTextBlock.Foreground = Brushes.Black;
+            }
         }
 
     }

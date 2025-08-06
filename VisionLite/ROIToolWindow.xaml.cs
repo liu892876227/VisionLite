@@ -1,5 +1,6 @@
 ﻿// ROIToolWindow.xaml.cs
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -59,13 +60,7 @@ namespace VisionLite
         private void RoiTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (RoiTypeComboBox.SelectedItem == null) return;
-            // 确保我们有可以操作的背景图像
-            if (_sourceImage == null || !_sourceImage.IsInitialized())
-            {
-                System.Windows.MessageBox.Show("ROI工具窗口中没有背景图像。请先在主窗口采集或加载图像。", "错误");
-                RoiTypeComboBox.SelectedIndex = -1; // 重置选择
-                return;
-            }
+            
             // 清理旧的绘图对象和UI
             DetachAndDisposeDrawingObject();
             
@@ -132,6 +127,15 @@ namespace VisionLite
                 
                 UpdateParametersUI();
                 UpdateRoiDisplay();
+
+                // --- 启用按钮并更新Tooltip ---
+                if (_drawingObject != null && _drawingObject.ID != -1)
+                {
+                    SaveROIImageButton.IsEnabled = true;
+                    string savePath = Path.Combine("D:\\", "VisionLite图像保存");
+                    string fileName = $"ROI_{DateTime.Now:yyyyMMdd_HHmmss_fff}.bmp";
+                    SaveROIImageButton.ToolTip = $"保存ROI图像到: \n{savePath}";
+                }
                 _isUpdatingFromRoi = false; // 恢复标志位
             });
         }
@@ -145,24 +149,35 @@ namespace VisionLite
                 return;
 
             HObject roiRegion = _drawingObject.GetDrawingObjectIconic();
-            if (roiRegion.CountObj() > 0)
+            string roiType = _drawingObject.GetDrawingObjectParams("type");
+
+            if (!roiType.Contains("line"))
             {
-                HOperatorSet.ReduceDomain(_sourceImage, roiRegion, out HObject imageReduced);
-                HOperatorSet.CropDomain(imageReduced, out HObject imageCropped);
-
-                HWindow roiWindow = HSmartROI.HalconWindow;
-                roiWindow.ClearWindow();
-                HOperatorSet.GetImageSize(imageCropped, out HTuple width, out HTuple height);
-                // 适配显示，防止图像过小或过大
-                if (height.D > 0 && width.D > 0)
+                if (roiRegion.CountObj() > 0)
                 {
-                    roiWindow.SetPart(0, 0, height.D - 1, width.D - 1);
-                }
-                roiWindow.DispObj(imageCropped);
+                    HOperatorSet.ReduceDomain(_sourceImage, roiRegion, out HObject imageReduced);
+                    HOperatorSet.CropDomain(imageReduced, out HObject imageCropped);
 
-                imageCropped.Dispose();
-                imageReduced.Dispose();
+                    HWindow roiWindow = HSmartROI.HalconWindow;
+                    roiWindow.ClearWindow();
+                    HOperatorSet.GetImageSize(imageCropped, out HTuple width, out HTuple height);
+                    // 适配显示，防止图像过小或过大
+                    if (height.D > 0 && width.D > 0)
+                    {
+                        roiWindow.SetPart(0, 0, height.D - 1, width.D - 1);
+                    }
+                    roiWindow.DispObj(imageCropped);
+
+                    imageCropped.Dispose();
+                    imageReduced.Dispose();
+                }
             }
+            else
+            {
+                // 对于直线，我们不在ROI窗口中显示任何内容，只清空它
+                HSmartROI.HalconWindow.ClearWindow();
+            }
+                
             roiRegion.Dispose();
         }
 
@@ -180,17 +195,42 @@ namespace VisionLite
             // 根据ROI类型显示不同的参数
             if (type == "rectangle1")
             {
-                CreateDoubleUpDown("Row1:", "row1", 0, height.D - 1);
-                CreateDoubleUpDown("Col1:", "column1", 0, width.D - 1);
-                CreateDoubleUpDown("Row2:", "row2", 0, height.D - 1);
-                CreateDoubleUpDown("Col2:", "column2", 0, width.D - 1);
+                // 使用 ParameterTranslator.Translate() 获取标签 ***
+                CreateDoubleUpDown(ParameterTranslator.Translate("row1"), "row1", 0, height.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("column1"), "column1", 0, width.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("row2"), "row2", 0, height.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("column2"), "column2", 0, width.D - 1);
             }
             else if (type == "rectangle2")
             {
-                
-                
+                CreateDoubleUpDown(ParameterTranslator.Translate("row"), "row", 0, height.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("column"), "column", 0, width.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("phi"), "phi", -180, 180, true); // 角度范围用度更直观
+                CreateDoubleUpDown(ParameterTranslator.Translate("length1"), "length1", 0, Math.Max(width.D, height.D));
+                CreateDoubleUpDown(ParameterTranslator.Translate("length2"), "length2", 0, Math.Max(width.D, height.D));
             }
-            // 可以为 Circle, Ellipse, Line 添加更多 else if 分支
+            else if (type == "circle")
+            {
+                CreateDoubleUpDown(ParameterTranslator.Translate("row"), "row", 0, height.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("column"), "column", 0, width.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("radius"), "radius", 0, Math.Max(width.D, height.D));
+            }
+            else if (type == "ellipse")
+            {
+                CreateDoubleUpDown(ParameterTranslator.Translate("row"), "row", 0, height.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("column"), "column", 0, width.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("phi"), "phi", -180, 180, true); // 角度范围用度更直观
+                CreateDoubleUpDown(ParameterTranslator.Translate("radius1"), "radius1", 0, Math.Max(width.D, height.D));
+                CreateDoubleUpDown(ParameterTranslator.Translate("radius2"), "radius2", 0, Math.Max(width.D, height.D));
+            }
+            else if (type == "line")
+            {
+                CreateDoubleUpDown(ParameterTranslator.Translate("row1"), "row1", 0, height.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("column1"), "column1", 0, width.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("row2"), "row2", 0, height.D - 1);
+                CreateDoubleUpDown(ParameterTranslator.Translate("column2"), "column2", 0, width.D - 1);
+            }
+            
         }
 
         /// <summary>
@@ -198,33 +238,54 @@ namespace VisionLite
         /// </summary>
         private void CreateDoubleUpDown(string label, string paramName, double min, double max)
         {
-            var sp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
-            sp.Children.Add(new Label { Content = label, Width = 80 });
+            CreateDoubleUpDown(label, paramName, min, max, false); // 调用新的重载方法
+        }
 
-            // 使用 Xceed Toolkit 的 DoubleUpDown 控件
+
+        /// <summary>
+        /// 辅助方法：创建一个 DoubleUpDown 控件并添加到UI (带角度处理的重载版本)
+        /// </summary>
+        private void CreateDoubleUpDown(string label, string paramName, double min, double max, bool isAngle)
+        {
+            var sp = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+            sp.Children.Add(new Label { Content = label, Width = 120 });
+
+            double initialValue = _drawingObject.GetDrawingObjectParams(paramName);
+            // 如果是角度，从弧度转换为度
+            if (isAngle)
+            {
+                initialValue = initialValue * 180 / Math.PI;
+                min = min * 180 / Math.PI;
+                max = max * 180 / Math.PI;
+            }
+
             var doubleUpDown = new DoubleUpDown
             {
-                Value = _drawingObject.GetDrawingObjectParams(paramName),
+                Value = initialValue,
                 Minimum = min,
                 Maximum = max,
-                FormatString = "F2", // 显示两位小数
-                Increment = 1.0,     // 对应我们之前的 SmallChange
+                FormatString = "F2",
+                Increment = 1.0,
                 MinWidth = 120
             };
 
-            // 订阅值改变事件
             doubleUpDown.ValueChanged += (sender, args) =>
             {
                 if (_isUpdatingFromRoi) return;
                 double? newValue = (double?)args.NewValue;
 
-                // args.NewValue 是 nullable double (double?)，需要检查
                 if (newValue.HasValue)
                 {
+                    double valueToSet = newValue.Value;
+                    // 如果是角度，从度转换回弧度再设置
+                    if (isAngle)
+                    {
+                        valueToSet = valueToSet * Math.PI / 180;
+                    }
+
                     try
                     {
-                        _drawingObject.SetDrawingObjectParams(paramName, newValue.Value);
-                        // 手动触发图像更新，形成闭环
+                        _drawingObject.SetDrawingObjectParams(paramName, valueToSet);
                         UpdateRoiDisplay();
                     }
                     catch (HalconException) { /* 忽略设置失败 */ }
@@ -235,7 +296,50 @@ namespace VisionLite
             ParametersPanel.Children.Add(sp);
         }
 
+        private void SaveROIImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 再次确认ROI是否有效
+            if (_sourceImage == null || !_sourceImage.IsInitialized() || _drawingObject == null || _drawingObject.ID == -1)
+            {
+                UpdateStatus("错误: 没有有效的ROI可以保存。");
+                return;
+            }
 
+            try
+            {
+                // 获取ROI区域内的图像
+                HObject roiRegion = _drawingObject.GetDrawingObjectIconic();
+                HOperatorSet.ReduceDomain(_sourceImage, roiRegion, out HObject imageReduced);
+                HOperatorSet.CropDomain(imageReduced, out HObject imageToSave);
+
+                // 定义并创建保存路径
+                string savePath = Path.Combine("D:\\", "VisionLite图像保存");
+                if (!Directory.Exists(savePath))
+                {
+                    Directory.CreateDirectory(savePath);
+                }
+
+                // 生成唯一文件名
+                string fileName = $"ROI_{DateTime.Now:yyyyMMdd_HHmmss_fff}.bmp";
+                string fullPath = Path.Combine(savePath, fileName);
+
+                // 保存图像
+                HOperatorSet.WriteImage(imageToSave, "bmp", 0, fullPath);
+
+                // 释放临时对象
+                roiRegion.Dispose();
+                imageReduced.Dispose();
+                imageToSave.Dispose();
+
+                // 给出成功反馈
+                UpdateStatus($"图像已成功保存到：{fullPath}");
+            }
+            catch (Exception ex)
+            {
+                // 8. 处理所有可能的异常
+                UpdateStatus($"保存失败: {ex.Message}");
+            }
+        }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
@@ -247,7 +351,7 @@ namespace VisionLite
 
             CreatedROI = _drawingObject.GetDrawingObjectIconic();
             ROIAccepted?.Invoke(CreatedROI.CopyObj(1, -1));
-            this.Close();
+            
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -276,6 +380,21 @@ namespace VisionLite
                 }
                 _drawingObject.Dispose();
                 _drawingObject = null;
+            }
+        }
+
+        /// <summary>
+        /// 辅助方法：更新状态栏文本，并在一段时间后自动清除
+        /// </summary>
+        private async void UpdateStatus(string message)
+        {
+            StatusTextBlock.Text = message;
+            // 等待5秒
+            await System.Threading.Tasks.Task.Delay(5000);
+            // 如果5秒后状态栏文本还是这个消息，就把它清除
+            if (StatusTextBlock.Text == message)
+            {
+                StatusTextBlock.Text = "准备就绪";
             }
         }
     }

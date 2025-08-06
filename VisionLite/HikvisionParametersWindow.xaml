@@ -7,8 +7,22 @@
         mc:Ignorable="d"
         Title="设备参数" Height="600" Width="500" WindowStartupLocation="CenterOwner">
     <Grid Margin="10">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <!-- 状态栏 -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="ParametersStackPanel"/>
         </ScrollViewer>
+
+        <!-- 新增的状态栏 -->
+        <StatusBar Grid.Row="1" Margin="0,5,0,0">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusTextBlock" Text="参数加载完成"/>
+            </StatusBarItem>
+        </StatusBar>
+
     </Grid>
 </Window>

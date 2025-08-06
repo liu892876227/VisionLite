@@ -254,7 +254,7 @@ namespace VisionLite
         // --- 内部方法，供参数窗口调用 ---
         public bool SetParameter(string paramName, object value)
         {
-            // ... (这个方法保持原样，仅修改变量名)
+            
             if (m_pAcqHandle == null) return false;
             try
             {
@@ -284,8 +284,7 @@ namespace VisionLite
             }
             catch (HalconException hex)
             {
-                MessageBox.Show($"[Halcon] 设置参数 '{paramName}' 失败: \n{hex.GetErrorMessage()}", "错误");
-                return false;
+                throw hex;
             }
         }
 
