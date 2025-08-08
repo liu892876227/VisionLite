@@ -74,13 +74,8 @@ namespace VisionLite
 
                 return;
             }
-
-            //调试信息
-            Console.WriteLine("--- RoiTypeComboBox_SelectionChanged START ---");
-
             if (_sourceImage == null || !_sourceImage.IsInitialized())
             {
-                Console.WriteLine("!!! ERROR: _sourceImage is null or not initialized at the beginning of SelectionChanged.");
                 System.Windows.MessageBox.Show("ROI工具窗口中没有有效的背景图像。请在主窗口重新采集或加载图像。", "错误");
                 // 重置下拉框，防止用户再次点击
                 RoiTypeComboBox.SelectedIndex = -1;
@@ -95,9 +90,6 @@ namespace VisionLite
             HOperatorSet.GetImageSize(_sourceImage, out HTuple width, out HTuple height);
 
             var selectedItem = (RoiTypeComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
-
-            //调试信息
-            Console.WriteLine($"Selected ROI Type: {selectedItem}");
 
             // 根据选择创建不同类型的HDrawingObject
             try
@@ -122,12 +114,12 @@ namespace VisionLite
 
                     case "自由轮廓 (Contour)":
                         HTuple initialRows = new HTuple(
-                       height.D / 4,    // 左上 Row
-                       height.D / 4,    // 右上 Row
-                       height.D * 0.75, // 右下 Row
-                       height.D * 0.75 // 左下 Row
-                       //height.D / 4     // 回到左上 Row (闭合)
-                       );
+                            height.D / 4,    // 左上 Row
+                            height.D / 4,    // 右上 Row
+                            height.D * 0.75, // 右下 Row
+                            height.D * 0.75 // 左下 Row
+                            //height.D / 4     // 回到左上 Row (闭合)
+                        );
                         HTuple initialCols = new HTuple(
                             width.D / 4,     // 左上 Col
                             width.D * 0.75,  // 右上 Col
@@ -136,26 +128,15 @@ namespace VisionLite
                             //width.D / 4      // 回到左上 Col (闭合)
                         );
                         _drawingObject = HDrawingObject.CreateDrawingObject(HDrawingObject.HDrawingObjectType.XLD_CONTOUR, initialRows, initialCols);
-
                         break;
 
                     default:
-                        //调试信息
-                        Console.WriteLine("No matching ROI type found. Exiting.");
                         return; // 如果没有匹配项，则退出
                 }
-
-
-                //调试信息
-                Console.WriteLine("Drawing object created successfully.");
-
 
                 // 将新创建的绘图对象附加到主窗口的HSmart1上
                 if (Owner is MainWindow mainWindow)
                 {
-                    //调试信息
-                    Console.WriteLine("Owner is MainWindow. Preparing to attach...");
-
                     HWindow window = mainWindow.HSmart1.HalconWindow;
 
                     // 先刷新主窗口的显示，清除可能残留的旧ROI
@@ -163,10 +144,6 @@ namespace VisionLite
                     if (mainImage != null && mainImage.IsInitialized())
                     {
                         HOperatorSet.AttachBackgroundToWindow(mainImage, window);
-
-                        //调试信息
-                        Console.WriteLine("Main window image redisplayed.");
-
                     }
                     // 订阅所有交互事件
                     _drawingObject.OnDrag(OnRoiUpdate);
@@ -176,26 +153,17 @@ namespace VisionLite
                     //调试信息
                     _drawingObject.OnAttach((dobj, hwin, type) =>
                     {
-                        Console.WriteLine($"*** EVENT: OnAttach triggered! Type: {type} ***");
                         OnRoiUpdate(dobj, hwin, type);
                     });
-                    Console.WriteLine("All events subscribed.");
-
 
                     // 最后再将绘图对象附加到窗口，这会触发 on_attach 事件
                     window.AttachDrawingObjectToWindow(_drawingObject);
-
-                    //调试信息
-                    Console.WriteLine("AttachDrawingObjectToWindow called.");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"!!! EXCEPTION CAUGHT in SelectionChanged: {ex.Message}");
                 System.Windows.MessageBox.Show($"创建ROI时发生错误: {ex.Message}");
             }
-
-            Console.WriteLine("--- RoiTypeComboBox_SelectionChanged END ---");
         }
 
         /// <summary>
@@ -204,16 +172,11 @@ namespace VisionLite
         private void OnRoiUpdate(HDrawingObject dobj, HWindow hwin, string type)
         {
 
-            Console.WriteLine($"--- OnRoiUpdate triggered by '{type}' ---");
-
             // 使用Dispatcher确保在UI线程上操作
             Dispatcher.Invoke(() =>
             {
                 _isUpdatingFromRoi = true; // 设置标志位，表示本次更新来自ROI拖动
-
-                Console.WriteLine("Updating Parameters UI...");
                 UpdateParametersUI();
-                Console.WriteLine("Updating ROI Display...");
                 UpdateRoiDisplay();
 
                 // --- 启用按钮并更新Tooltip ---
@@ -227,8 +190,6 @@ namespace VisionLite
                 _isUpdatingFromRoi = false; // 恢复标志位
             });
 
-            Console.WriteLine("--- OnRoiUpdate finished ---");
-
         }
 
         /// <summary>
@@ -238,12 +199,8 @@ namespace VisionLite
         {
             if (_sourceImage == null || !_sourceImage.IsInitialized() || _drawingObject == null || _drawingObject.ID == -1)
                 return;
-
-            
-
             HObject iconicObject = _drawingObject.GetDrawingObjectIconic();
             string roiType = _drawingObject.GetDrawingObjectParams("type");
-
             // 准备一个最终用于裁剪的 Region 对象
             HObject regionForClipping = null;
 
@@ -251,41 +208,7 @@ namespace VisionLite
             {
                 if (roiType == "xld")
                 {
-                    HOperatorSet.GenRegionContourXld(iconicObject, out HObject regionMargin, "margin");
-                    // 检查是否成功生成了边缘区域
-                    if (regionMargin != null && regionMargin.CountObj() > 0)
-                    {
-                        // 然后对这个边缘区域求凸包，得到最终用于裁剪的填充区域
-                        HOperatorSet.ShapeTrans(regionMargin, out regionForClipping, "convex");
-
-                        // 释放临时的边缘区域对象
-                        regionMargin.Dispose();
-
-                        //// ======================= Console START (调试代码) =======================
-                        //if (regionForClipping != null && regionForClipping.IsInitialized() && regionForClipping.CountObj() > 0)
-                        //{
-                        //    if (Owner is MainWindow mainWindow)
-                        //    {
-                        //        HWindow mainWin = mainWindow.HSmart1.HalconWindow;
-                        //        HObject mainImage = mainWindow.HSmart1.Tag as HObject;
-
-                        //        if (mainImage != null && mainImage.IsInitialized())
-                        //        {
-
-
-                        //            // 在这个完整的视图上，重新显示背景图
-                        //            mainWin.DispObj(mainImage);
-
-                        //            // 现在，在这个与ROI坐标系完全匹配的视图上绘制红色矩形
-                        //            mainWin.SetColor("red");
-                        //            mainWin.SetDraw("fill");
-                        //            mainWin.DispObj(regionForClipping);
-                        //        }
-                        //    }
-                        //}
-                        //// ======================== Console END ========================
-
-                    }
+                    HOperatorSet.GenRegionContourXld(iconicObject, out regionForClipping, "filled");
                 }
 
                 else if (roiType != "line")
@@ -293,37 +216,50 @@ namespace VisionLite
                     regionForClipping = iconicObject.CopyObj(1, -1);
                 }
             }
-
             finally
             {
                 // 释放从 GetDrawingObjectIconic() 获取的临时对象
                 iconicObject.Dispose();
             }
-
             // --- 统一的裁剪和显示逻辑 ---
             if (regionForClipping != null && regionForClipping.IsInitialized() && regionForClipping.CountObj() > 0)
             {
-                HOperatorSet.ReduceDomain(_sourceImage, regionForClipping, out HObject imageReduced);
-                HOperatorSet.CropDomain(imageReduced, out HObject imageCropped);
-                HWindow roiWindow = HSmartROI.HalconWindow;
-                roiWindow.ClearWindow();
-                HOperatorSet.GetImageSize(imageCropped, out HTuple width, out HTuple height);
-                if (height > 0 && width > 0)
+                // 计算ROI与源图像有效区域的交集。Intersection算子会自动使用源图像的Domain。
+                HOperatorSet.Intersection(_sourceImage, regionForClipping, out HObject intersection);
+                // 检查交集区域的面积，判断ROI是否完全在图像之外
+                HOperatorSet.AreaCenter(intersection, out HTuple area, out _, out _);
+                if (area > 0)
                 {
-                    roiWindow.SetPart(0, 0, height.I - 1, width.I - 1);
-                }
-                roiWindow.DispObj(imageCropped);
+                    // 只有在有交集时才执行裁剪和显示
+                    HOperatorSet.ReduceDomain(_sourceImage, intersection, out HObject imageReduced);
+                    HOperatorSet.CropDomain(imageReduced, out HObject imageCropped);
+                    HWindow roiWindow = HSmartROI.HalconWindow;
+                    roiWindow.ClearWindow();
+                    HOperatorSet.GetImageSize(imageCropped, out HTuple width, out HTuple height);
+                    // 确保裁剪后的图像有尺寸再设置显示部分
+                    if (height.I > 0 && width.I > 0)
+                    {
+                        roiWindow.SetPart(0, 0, height.I - 1, width.I - 1);
+                    }
+                    roiWindow.DispObj(imageCropped);
 
-                imageCropped.Dispose();
-                imageReduced.Dispose();
+                    // 释放Halcon对象
+                    imageCropped.Dispose();
+                    imageReduced.Dispose();
+                }
+                else
+                {
+                    // 如果没有交集（ROI完全在图像外），则清空预览窗口，防止崩溃
+                    HSmartROI.HalconWindow.ClearWindow();
+                }
+                // 释放临时的交集对象
+                intersection.Dispose();
             }
             else
             {
                 HSmartROI.HalconWindow.ClearWindow();
             }
-
             regionForClipping?.Dispose();
-
         }
 
         /// <summary>

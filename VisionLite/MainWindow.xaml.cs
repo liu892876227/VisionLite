@@ -491,7 +491,6 @@ namespace VisionLite
                 return; // 不再创建ROIToolWindow
             }
 
-            // --- 【【【 终极核心修正 】】】 ---
             // 为ROIToolWindow创建一个图像的稳定副本
             HObject imageCopyForRoi = null;
             try
