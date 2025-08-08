@@ -491,31 +491,39 @@ namespace VisionLite
                 return; // 不再创建ROIToolWindow
             }
 
-            // 创建ROI窗口实例
-            roiEditorWindow = new ROIToolWindow();
-            roiEditorWindow.Owner = this;
-
-            // 订阅事件 
-            roiEditorWindow.ROIAccepted += (HObject returnedRoi) =>
+            // --- 【【【 终极核心修正 】】】 ---
+            // 为ROIToolWindow创建一个图像的稳定副本
+            HObject imageCopyForRoi = null;
+            try
             {
-                // 立即关闭ROI窗口
-                roiEditorWindow?.Close();
-                // 将主窗口激活并置于顶层
-                this.Activate();
-                // 可以在这里处理最终的ROI，例如保存或用于分析
-                returnedRoi.Dispose();
-            };
+                // 使用 CopyImage 创建一个内存独立的深拷贝
+                HOperatorSet.CopyImage(currentImage, out imageCopyForRoi);
 
-            // 订阅关闭事件
-            roiEditorWindow.Closed += (s, args) =>
+                roiEditorWindow = new ROIToolWindow();
+                roiEditorWindow.Owner = this;
+
+                roiEditorWindow.ROIAccepted += (HObject returnedRoi) =>
+                {
+                    roiEditorWindow?.Close();
+                    this.Activate();
+                    returnedRoi.Dispose();
+                };
+
+                roiEditorWindow.Closed += (s, args) =>
+                {
+                    roiEditorWindow = null;
+                };
+
+                // 将这个稳定的副本传递给子窗口
+                roiEditorWindow.Show();
+                roiEditorWindow.UpdateImage(imageCopyForRoi);
+            }
+            finally
             {
-                roiEditorWindow = null;
-            };
-
-            // 显示窗口
-            roiEditorWindow.Show();
-            // 将验证过的图像传递给子窗口
-            roiEditorWindow.UpdateImage(currentImage);
+                // 关键：确保我们为ROI窗口创建的副本在传递完成后被释放，
+                // 因为ROIToolWindow的UpdateImage内部会再次复制一份自己管理。
+                imageCopyForRoi?.Dispose();
+            }
         }
 
 
