@@ -669,58 +669,65 @@ namespace VisionLite
         private void SaveROIImageButton_Click(object sender, RoutedEventArgs e)
         {
             // 再次确认ROI是否有效
-            if (_sourceImage == null || !_sourceImage.IsInitialized() || _drawingObject == null || _drawingObject.ID == -1)
+            if (_sourceImage == null || !_sourceImage.IsInitialized())
             {
                 UpdateStatus("错误: 没有有效的ROI可以保存。");
                 return;
             }
-            // 临时的Region对象，用于统一处理两种模式下的ROI
+            // 声明一个临时的Region对象，用于统一处理两种模式下的ROI
             HObject regionToSave = null;
-            // 标志位，用于判断regionToSave是否需要释放
-            bool isTempRegion = false;
-            // 【重构】第一步：根据当前模式，获取有效的ROI区域
+            bool isTempRegion = false; // 标志位，用于判断regionToSave是否需要释放
+            // 根据当前模式，获取有效的ROI区域
             // 情况一：涂抹模式，直接使用_paintedRoi
-            if (_isPaintingMode && _paintedRoi != null && _paintedRoi.IsInitialized() && _paintedRoi.CountObj() > 0)
+            if (_isPaintingMode)
             {
-                regionToSave = _paintedRoi;
-                isTempRegion = false; // _paintedRoi是成员变量，不在此释放
-            }
-            // 情况二：标准ROI模式，从_drawingObject创建临时Region
-            else if (!_isPaintingMode && _drawingObject != null && _drawingObject.ID != -1)
-            {
-                using (HObject iconicObject = _drawingObject.GetDrawingObjectIconic())
+                if (_paintedRoi != null && _paintedRoi.IsInitialized() && _paintedRoi.CountObj() > 0)
                 {
-                    string roiType = _drawingObject.GetDrawingObjectParams("type");
-                    if (roiType == "line")
+                    regionToSave = _paintedRoi;
+                    isTempRegion = false; // _paintedRoi是成员变量，不由本方法释放
+                }
+            }
+            
+            // 情况二：标准ROI模式，从_drawingObject创建临时Region
+            else
+            {
+                if (_drawingObject != null && _drawingObject.ID != -1)
+                {
+                    using (HObject iconicObject = _drawingObject.GetDrawingObjectIconic())
                     {
-                        UpdateStatus("错误: 无法保存直线ROI的图像。");
-                        return;
-                    }
-                    if (roiType == "xld")
-                    {
-                        HOperatorSet.TestClosedXld(iconicObject, out HTuple isClosed);
-                        if (isClosed.I != 1)
+                        string roiType = _drawingObject.GetDrawingObjectParams("type");
+                        if (roiType == "line")
                         {
-                            UpdateStatus("错误: 轮廓未闭合，无法保存。");
+                            UpdateStatus("错误: 无法保存直线ROI的图像。");
                             return;
                         }
-                        HOperatorSet.GenRegionContourXld(iconicObject, out regionToSave, "filled");
+                        if (roiType == "xld")
+                        {
+                            HOperatorSet.TestClosedXld(iconicObject, out HTuple isClosed);
+                            if (isClosed.I != 1)
+                            {
+                                UpdateStatus("错误: 轮廓未闭合，无法保存。");
+                                return;
+                            }
+                            HOperatorSet.GenRegionContourXld(iconicObject, out regionToSave, "filled");
+                        }
+                        else
+                        {
+                            regionToSave = iconicObject.CopyObj(1, -1);
+                        }
                     }
-                    else
-                    {
-                        regionToSave = iconicObject.CopyObj(1, -1);
-                    }
+                    isTempRegion = true; // 标记这是为保存操作临时创建的对象
                 }
-                isTempRegion = true; // 标记这是临时对象
             }
 
+            // 检查是否成功获取了有效的ROI
             if (regionToSave == null || !regionToSave.IsInitialized() || regionToSave.CountObj() == 0)
             {
                 UpdateStatus("错误: 没有有效的ROI可以保存。");
                 return;
             }
 
-            // 【重构】第二步：统一执行保存逻辑
+            // 统一执行保存逻辑
             try
             {
                 HObject imageReduced, imageToSave;
@@ -745,7 +752,7 @@ namespace VisionLite
             }
             finally
             {
-                // 【重构】第三步：安全地释放临时资源
+                // 如果创建了临时Region，则安全地释放它
                 if (isTempRegion)
                 {
                     regionToSave?.Dispose();
