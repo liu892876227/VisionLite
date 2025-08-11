@@ -7,8 +7,7 @@ using System.Windows.Controls;
 using HalconDotNet;
 using System.Windows.Threading;
 using Xceed.Wpf.Toolkit;
-using System.Diagnostics;
-using System.Linq;
+using System.Windows.Input;
 
 namespace VisionLite
 {
@@ -23,8 +22,15 @@ namespace VisionLite
         private HObject _sourceImage;       // 从主窗口接收的原始图像
         private HDrawingObject _drawingObject; // 当前活动的ROI绘图对象
         public HObject CreatedROI { get; private set; } // 创建的最终ROI区域
-
         private bool _isUpdatingFromRoi = false; // 标志位，防止UI更新触发ROI更新的死循环
+        // --- 用于涂抹式ROI的成员 ---
+        private HObject _paintedRoi; // 用于存储涂抹生成的ROI区域
+        private bool _isPaintingMode = false; // 标记是否处于涂抹模式
+        private bool _isPaintingActive = false; // 标记鼠标左键是否按下
+        private string _brushShape = "圆形"; // 当前画笔形状, 默认圆形
+        private int _brushRadius = 20;       // 圆形画笔的半径
+        private int _brushRectWidth = 40;    // 矩形画笔的宽度
+        private int _brushRectHeight = 20;   // 矩形画笔的高度
         public ROIToolWindow()
         {
             InitializeComponent();
@@ -69,11 +75,8 @@ namespace VisionLite
         /// </summary>
         private void RoiTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (RoiTypeComboBox.SelectedItem == null)
-            {
-
-                return;
-            }
+            if (RoiTypeComboBox.SelectedItem == null || !this.IsLoaded) return;
+           
             if (_sourceImage == null || !_sourceImage.IsInitialized())
             {
                 System.Windows.MessageBox.Show("ROI工具窗口中没有有效的背景图像。请在主窗口重新采集或加载图像。", "错误");
@@ -82,14 +85,22 @@ namespace VisionLite
                 return;
             }
 
-
-            // 清理旧的绘图对象和UI
-            DetachAndDisposeDrawingObject();
-
             // 获取图像尺寸，用于计算初始ROI的位置和大小
             HOperatorSet.GetImageSize(_sourceImage, out HTuple width, out HTuple height);
 
             var selectedItem = (RoiTypeComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
+
+            // 检查是否从涂抹模式切换到了其他模式
+            if (_isPaintingMode && selectedItem != "涂抹式ROI (Paint)")
+            {
+                // 如果正在涂抹模式，则先结束涂抹
+                FinalizePainting();
+            }
+
+            // 如果之前是标准ROI模式，清理DrawingObject
+            DetachAndDisposeDrawingObject();
+            // 如果之前是涂抹模式，清理涂抹模式资源
+            DisablePaintMode();
 
             // 根据选择创建不同类型的HDrawingObject
             try
@@ -129,6 +140,10 @@ namespace VisionLite
                         );
                         _drawingObject = HDrawingObject.CreateDrawingObject(HDrawingObject.HDrawingObjectType.XLD_CONTOUR, initialRows, initialCols);
                         break;
+
+                    case "涂抹式ROI (Paint)":
+                        EnablePaintMode(); // 启用涂抹模式
+                        return; // 直接返回，不执行后续的DrawingObject逻辑
 
                     default:
                         return; // 如果没有匹配项，则退出
@@ -184,7 +199,7 @@ namespace VisionLite
                 {
                     SaveROIImageButton.IsEnabled = true;
                     string savePath = Path.Combine("D:\\", "VisionLite图像保存");
-                    string fileName = $"ROI_{DateTime.Now:yyyyMMdd_HHmmss_fff}.bmp";
+                    //string fileName = $"ROI_{DateTime.Now:yyyyMMdd_HHmmss_fff}.bmp";
                     SaveROIImageButton.ToolTip = $"保存ROI图像到: \n{savePath}";
                 }
                 _isUpdatingFromRoi = false; // 恢复标志位
@@ -197,69 +212,80 @@ namespace VisionLite
         /// </summary>
         private void UpdateRoiDisplay()
         {
-            if (_sourceImage == null || !_sourceImage.IsInitialized() || _drawingObject == null || _drawingObject.ID == -1)
-                return;
-            HObject iconicObject = _drawingObject.GetDrawingObjectIconic();
-            string roiType = _drawingObject.GetDrawingObjectParams("type");
+            if (_sourceImage == null || !_sourceImage.IsInitialized() ) return;
             // 准备一个最终用于裁剪的 Region 对象
             HObject regionForClipping = null;
 
-            try
-            {
-                if (roiType == "xld")
-                {
-                    HOperatorSet.GenRegionContourXld(iconicObject, out regionForClipping, "filled");
-                }
+            // 标志位，用于控制后续是否需要释放regionForClipping
+            bool isTempRegion = false;
 
-                else if (roiType != "line")
-                {
-                    regionForClipping = iconicObject.CopyObj(1, -1);
-                }
-            }
-            finally
+            // 优先使用涂抹模式的ROI（无论是在涂抹中还是涂抹完成）
+            if (_isPaintingMode && _paintedRoi != null && _paintedRoi.IsInitialized() && _paintedRoi.CountObj() > 0)
             {
-                // 释放从 GetDrawingObjectIconic() 获取的临时对象
-                iconicObject.Dispose();
+                regionForClipping = _paintedRoi;
+                isTempRegion = false; // 这是成员变量，不由本方法释放
+            }
+            // 模式二：标准ROI模式，从 _drawingObject 临时创建
+            else if (!_isPaintingMode && _drawingObject != null && _drawingObject.ID != -1)
+            {
+                using (HObject iconicObject = _drawingObject.GetDrawingObjectIconic())
+                {
+                    string roiType = _drawingObject.GetDrawingObjectParams("type");
+                    if (roiType == "xld")
+                    {
+                        HOperatorSet.GenRegionContourXld(iconicObject, out regionForClipping, "filled");
+                    }
+                    else if (roiType != "line")
+                    {
+                        // 标准形状的iconicObject本身就是Region，直接复制即可
+                        regionForClipping = iconicObject.CopyObj(1, -1);
+                    }
+                }
+                isTempRegion = true; // 这是临时创建的，需要释放
             }
             // --- 统一的裁剪和显示逻辑 ---
             if (regionForClipping != null && regionForClipping.IsInitialized() && regionForClipping.CountObj() > 0)
             {
-                // 计算ROI与源图像有效区域的交集。Intersection算子会自动使用源图像的Domain。
-                HOperatorSet.Intersection(_sourceImage, regionForClipping, out HObject intersection);
-                // 检查交集区域的面积，判断ROI是否完全在图像之外
-                HOperatorSet.AreaCenter(intersection, out HTuple area, out _, out _);
-                if (area > 0)
-                {
-                    // 只有在有交集时才执行裁剪和显示
-                    HOperatorSet.ReduceDomain(_sourceImage, intersection, out HObject imageReduced);
-                    HOperatorSet.CropDomain(imageReduced, out HObject imageCropped);
-                    HWindow roiWindow = HSmartROI.HalconWindow;
-                    roiWindow.ClearWindow();
-                    HOperatorSet.GetImageSize(imageCropped, out HTuple width, out HTuple height);
-                    // 确保裁剪后的图像有尺寸再设置显示部分
-                    if (height.I > 0 && width.I > 0)
-                    {
-                        roiWindow.SetPart(0, 0, height.I - 1, width.I - 1);
-                    }
-                    roiWindow.DispObj(imageCropped);
+                HObject intersection, imageReduced, imageCropped;
+                HOperatorSet.Intersection(_sourceImage, regionForClipping, out intersection);
 
-                    // 释放Halcon对象
-                    imageCropped.Dispose();
-                    imageReduced.Dispose();
-                }
-                else
+                using (intersection)
                 {
-                    // 如果没有交集（ROI完全在图像外），则清空预览窗口，防止崩溃
-                    HSmartROI.HalconWindow.ClearWindow();
+                    HOperatorSet.AreaCenter(intersection, out HTuple area, out _, out _);
+                    if (area.D > 0)
+                    {
+                        HOperatorSet.ReduceDomain(_sourceImage, intersection, out imageReduced);
+                        using (imageReduced)
+                        {
+                            HOperatorSet.CropDomain(imageReduced, out imageCropped);
+                            using (imageCropped)
+                            {
+                                HWindow roiWindow = HSmartROI.HalconWindow;
+                                roiWindow.ClearWindow();
+                                HOperatorSet.GetImageSize(imageCropped, out HTuple width, out HTuple height);
+                                if (height.I > 0 && width.I > 0)
+                                {
+                                    roiWindow.SetPart(0, 0, height.I - 1, width.I - 1);
+                                }
+                                roiWindow.DispObj(imageCropped);
+                            }
+                        }
+                        
+                    }
+                    else
+                    {
+                        HSmartROI.HalconWindow.ClearWindow();
+                    }
                 }
-                // 释放临时的交集对象
-                intersection.Dispose();
             }
             else
             {
                 HSmartROI.HalconWindow.ClearWindow();
             }
-            regionForClipping?.Dispose();
+            if (isTempRegion)
+            {
+                regionForClipping?.Dispose();
+            }
         }
 
         /// <summary>
@@ -314,30 +340,22 @@ namespace VisionLite
 
             else if (type == "xld")
             {
-                // 获取所有顶点的坐标
-                HObject contour = _drawingObject.GetDrawingObjectIconic();
-                HOperatorSet.GetContourXld(contour, out HTuple rows, out HTuple cols);
-                contour.Dispose();
-
-                var listView = new ListView { MaxHeight = 150 };
-                var gridView = new GridView();
-                gridView.Columns.Add(new GridViewColumn { Header = "#", DisplayMemberBinding = new System.Windows.Data.Binding("Index"), Width = 30 });
-                gridView.Columns.Add(new GridViewColumn { Header = "行坐标 (Row)", DisplayMemberBinding = new System.Windows.Data.Binding("Row"), Width = 120 });
-                gridView.Columns.Add(new GridViewColumn { Header = "列坐标 (Col)", DisplayMemberBinding = new System.Windows.Data.Binding("Col"), Width = 120 });
-                listView.View = gridView;
-
-                for (int i = 0; i < rows.Length; i++)
+                using (HObject contour = _drawingObject.GetDrawingObjectIconic())
                 {
-                    listView.Items.Add(new
+                    HOperatorSet.GetContourXld(contour, out HTuple rows, out HTuple cols);
+                    var listView = new ListView { MaxHeight = 150 };
+                    var gridView = new GridView();
+                    gridView.Columns.Add(new GridViewColumn { Header = "#", DisplayMemberBinding = new System.Windows.Data.Binding("Index"), Width = 30 });
+                    gridView.Columns.Add(new GridViewColumn { Header = "行坐标 (Row)", DisplayMemberBinding = new System.Windows.Data.Binding("Row"), Width = 120 });
+                    gridView.Columns.Add(new GridViewColumn { Header = "列坐标 (Col)", DisplayMemberBinding = new System.Windows.Data.Binding("Col"), Width = 120 });
+                    listView.View = gridView;
+                    for (int i = 0; i < rows.Length; i++)
                     {
-                        Index = i + 1,
-                        Row = rows[i].D.ToString("F2"),
-                        Col = cols[i].D.ToString("F2")
-                    });
+                        listView.Items.Add(new { Index = i + 1, Row = rows[i].D.ToString("F2"), Col = cols[i].D.ToString("F2") });
+                    }
+                    ParametersPanel.Children.Add(new Label { Content = "顶点列表:" });
+                    ParametersPanel.Children.Add(listView);
                 }
-
-                ParametersPanel.Children.Add(new Label { Content = "顶点列表:" });
-                ParametersPanel.Children.Add(listView);
             }
 
         }
@@ -405,6 +423,203 @@ namespace VisionLite
             ParametersPanel.Children.Add(sp);
         }
 
+        #region --- 涂抹式ROI (Paint ROI) 核心逻辑 ---
+
+        /// <summary>
+        /// 启用涂抹绘制模式
+        /// </summary>
+        private void EnablePaintMode()
+        {
+            if (_isPaintingMode) return;
+            _isPaintingMode = true;
+
+            // 1. 初始化一个空的ROI区域
+            _paintedRoi?.Dispose();
+            HOperatorSet.GenEmptyRegion(out _paintedRoi);
+
+            // 2. 在主窗口上注册鼠标事件
+            if (Owner is MainWindow mainWindow)
+            {
+                mainWindow.HSmart1.HMouseDown += PaintRoi_HMouseDown;
+                mainWindow.HSmart1.HMouseMove += PaintRoi_HMouseMove;
+
+                RefreshMainWindowDisplay();
+            }
+
+            // 3. 创建并显示画笔参数UI
+            ParametersPanel.IsEnabled = true;
+            CreatePaintToolUI();
+            UpdateStatus("涂抹模式已激活：左键涂抹，右键结束。");
+        }
+
+        /// <summary>
+        /// 禁用并清理涂抹绘制模式
+        /// </summary>
+        private void DisablePaintMode()
+        {
+            if (!_isPaintingMode) return;
+            _isPaintingMode = false;
+            // 在此处重置“涂抹激活”状态
+            _isPaintingActive = false;
+
+            // 在主窗口上注销鼠标事件
+            if (Owner is MainWindow mainWindow)
+            {
+                mainWindow.HSmart1.HMouseDown -= PaintRoi_HMouseDown;
+                mainWindow.HSmart1.HMouseMove -= PaintRoi_HMouseMove;
+            }
+
+            _paintedRoi?.Dispose();
+            _paintedRoi = null;
+            ParametersPanel.Children.Clear();
+            RefreshMainWindowDisplay();
+        }
+
+        /// <summary>
+        /// 创建涂抹工具的参数设置UI
+        /// </summary>
+        private void CreatePaintToolUI()
+        {
+            ParametersPanel.Children.Clear();
+            var shapePanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 2) };
+            shapePanel.Children.Add(new Label { Content = "画笔形状:", Width = 120, VerticalAlignment = VerticalAlignment.Center });
+            var radioCircle = new RadioButton { Content = "圆形", IsChecked = _brushShape == "圆形", VerticalAlignment = VerticalAlignment.Center };
+            var radioRect = new RadioButton { Content = "矩形", IsChecked = _brushShape == "矩形", Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+            shapePanel.Children.Add(radioCircle);
+            shapePanel.Children.Add(radioRect);
+            ParametersPanel.Children.Add(shapePanel);
+            var sizePanel = new StackPanel { Margin = new Thickness(0, 5, 0, 2) };
+            ParametersPanel.Children.Add(sizePanel);
+            Action updateSizeControls = () =>
+            {
+                sizePanel.Children.Clear();
+                if (radioCircle.IsChecked == true)
+                {
+                    _brushShape = "圆形";
+                    var ud = new IntegerUpDown { Value = _brushRadius, Minimum = 1, Maximum = 500, Increment = 1, MinWidth = 120 };
+                    ud.ValueChanged += (s, a) => _brushRadius = ud.Value ?? _brushRadius;
+                    var sp = new StackPanel { Orientation = Orientation.Horizontal };
+                    sp.Children.Add(new Label { Content = "画笔半径:", Width = 120 });
+                    sp.Children.Add(ud);
+                    sizePanel.Children.Add(sp);
+                }
+                else
+                {
+                    _brushShape = "矩形";
+                    var udWidth = new IntegerUpDown { Value = _brushRectWidth, Minimum = 1, Maximum = 1000, Increment = 1, MinWidth = 120 };
+                    udWidth.ValueChanged += (s, a) => _brushRectWidth = udWidth.Value ?? _brushRectWidth;
+                    var spWidth = new StackPanel { Orientation = Orientation.Horizontal };
+                    spWidth.Children.Add(new Label { Content = "画笔宽度:", Width = 120 });
+                    spWidth.Children.Add(udWidth);
+                    sizePanel.Children.Add(spWidth);
+                    var udHeight = new IntegerUpDown { Value = _brushRectHeight, Minimum = 1, Maximum = 1000, Increment = 1, MinWidth = 120 };
+                    udHeight.ValueChanged += (s, a) => _brushRectHeight = udHeight.Value ?? _brushRectHeight;
+                    var spHeight = new StackPanel { Orientation = Orientation.Horizontal };
+                    spHeight.Children.Add(new Label { Content = "画笔高度:", Width = 120 });
+                    spHeight.Children.Add(udHeight);
+                    sizePanel.Children.Add(spHeight);
+                }
+            };
+            radioCircle.Checked += (s, e) => updateSizeControls();
+            radioRect.Checked += (s, e) => updateSizeControls();
+            updateSizeControls();
+        }
+
+        private void PaintRoi_HMouseDown(object sender, HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        {
+            if (e.Button == MouseButton.Right)
+            {
+                // 右键结束绘制
+                FinalizePainting();
+                return;
+            }
+
+            if (e.Button == MouseButton.Left)
+            {
+                // 左键单击行为：切换涂抹激活状态
+                _isPaintingActive = !_isPaintingActive;
+                if (_isPaintingActive)
+                {
+                    // 如果是刚刚激活涂抹，则在当前点画下第一笔
+                    PaintAtCurrentPosition(e.Row, e.Column);
+                    UpdateStatus("涂抹已激活。移动鼠标进行绘制，再次左键单击暂停，右键结束。");
+                }
+                else
+                {
+                    UpdateStatus("涂抹已暂停。可再次左键单击继续，或右键结束。");
+                }
+            }
+        }
+
+        private void PaintRoi_HMouseMove(object sender, HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        {
+            if (_isPaintingActive)
+            {
+                PaintAtCurrentPosition(e.Row, e.Column);
+            }
+        }
+
+        private void PaintAtCurrentPosition(double row, double col)
+        {
+            if (!(Owner is MainWindow mainWindow)) return;
+            HWindow window = mainWindow.HSmart1.HalconWindow;
+            try
+            {
+                HObject brush;
+                if (_brushShape == "圆形")
+                {
+                    HOperatorSet.GenCircle(out brush, row, col, _brushRadius);
+                }
+                else
+                {
+                    HOperatorSet.GenRectangle1(out brush, row - _brushRectHeight / 2.0, col - _brushRectWidth / 2.0, row + _brushRectHeight / 2.0, col + _brushRectWidth / 2.0);
+                }
+                HObject oldRoi = _paintedRoi;
+                // 将新画的笔刷合并到总的ROI中
+                HOperatorSet.Union2(oldRoi, brush, out _paintedRoi);
+                oldRoi.Dispose();
+                brush.Dispose();
+                // 在主窗口实时显示涂抹的区域
+                window.SetDraw("fill");
+                window.SetColor("green");
+                window.DispObj(_paintedRoi);
+
+                // 同时，实时更新ROI工具窗口中的预览
+                UpdateRoiDisplay();
+                SaveROIImageButton.IsEnabled = true;
+            }
+            catch (HalconException) { /* 忽略小错误 */ }
+        }
+
+        private void FinalizePainting()
+        {
+            // 注销鼠标事件，停止绘制过程
+            if (Owner is MainWindow mainWindow)
+            {
+                mainWindow.HSmart1.HMouseDown -= PaintRoi_HMouseDown;
+                mainWindow.HSmart1.HMouseMove -= PaintRoi_HMouseMove;
+            }
+            // 在此处重置“涂抹激活”状态
+            _isPaintingActive = false;
+            // 更新UI状态
+            UpdateStatus("涂抹绘制已完成。点击“确定”以确认ROI。");
+            // 禁用参数面板，防止用户在完成后修改画笔
+            ParametersPanel.IsEnabled = false;
+            // 刷新主窗口的显示，清除上面残留的绿色涂抹痕迹
+            RefreshMainWindowDisplay();
+            // 在主窗口上把最终的ROI轮廓画出来，给用户清晰的反馈
+            if (Owner is MainWindow mainWin && _paintedRoi != null && _paintedRoi.IsInitialized())
+            {
+                mainWin.HSmart1.HalconWindow.SetColor("green");
+                mainWin.HSmart1.HalconWindow.SetDraw("margin");
+                mainWin.HSmart1.HalconWindow.DispObj(_paintedRoi);
+            }
+            // 最后更新一次本窗口的ROI预览
+            UpdateRoiDisplay();
+        }
+
+        #endregion
+
         private void SaveROIImageButton_Click(object sender, RoutedEventArgs e)
         {
             // 再次确认ROI是否有效
@@ -413,86 +628,111 @@ namespace VisionLite
                 UpdateStatus("错误: 没有有效的ROI可以保存。");
                 return;
             }
-
-            try
+            // 临时的Region对象，用于统一处理两种模式下的ROI
+            HObject regionToSave = null;
+            // 标志位，用于判断regionToSave是否需要释放
+            bool isTempRegion = false;
+            // 【重构】第一步：根据当前模式，获取有效的ROI区域
+            // 情况一：涂抹模式，直接使用_paintedRoi
+            if (_isPaintingMode && _paintedRoi != null && _paintedRoi.IsInitialized() && _paintedRoi.CountObj() > 0)
             {
-                // 获取ROI区域内的图像
-                HObject iconicObject = _drawingObject.GetDrawingObjectIconic();
-                string roiType = _drawingObject.GetDrawingObjectParams("type");
-
-
-                if (roiType == "line")
+                regionToSave = _paintedRoi;
+                isTempRegion = false; // _paintedRoi是成员变量，不在此释放
+            }
+            // 情况二：标准ROI模式，从_drawingObject创建临时Region
+            else if (!_isPaintingMode && _drawingObject != null && _drawingObject.ID != -1)
+            {
+                using (HObject iconicObject = _drawingObject.GetDrawingObjectIconic())
                 {
-                    UpdateStatus("错误: 无法保存直线ROI的图像。");
-                    iconicObject.Dispose();
-                    return;
-                }
-
-                // 如果是xld，则转换为region
-                if (roiType == "xld")
-                {
-                    HOperatorSet.TestClosedXld(iconicObject, out HTuple isClosed);
-                    if (isClosed.I != 1)
+                    string roiType = _drawingObject.GetDrawingObjectParams("type");
+                    if (roiType == "line")
                     {
-                        UpdateStatus("错误: 轮廓未闭合，无法保存。");
-                        iconicObject.Dispose();
+                        UpdateStatus("错误: 无法保存直线ROI的图像。");
                         return;
                     }
-                    HOperatorSet.GenRegionContourXld(iconicObject, out HObject regionFromContour, "filled");
-                    iconicObject.Dispose();
-                    iconicObject = regionFromContour;
+                    if (roiType == "xld")
+                    {
+                        HOperatorSet.TestClosedXld(iconicObject, out HTuple isClosed);
+                        if (isClosed.I != 1)
+                        {
+                            UpdateStatus("错误: 轮廓未闭合，无法保存。");
+                            return;
+                        }
+                        HOperatorSet.GenRegionContourXld(iconicObject, out regionToSave, "filled");
+                    }
+                    else
+                    {
+                        regionToSave = iconicObject.CopyObj(1, -1);
+                    }
                 }
+                isTempRegion = true; // 标记这是临时对象
+            }
 
-                // --- 从这里开始，iconicObject 保证是一个有效的 Region ---
+            if (regionToSave == null || !regionToSave.IsInitialized() || regionToSave.CountObj() == 0)
+            {
+                UpdateStatus("错误: 没有有效的ROI可以保存。");
+                return;
+            }
 
-                if (iconicObject.CountObj() == 0)
+            // 【重构】第二步：统一执行保存逻辑
+            try
+            {
+                HObject imageReduced, imageToSave;
+                HOperatorSet.ReduceDomain(_sourceImage, regionToSave, out imageReduced);
+                using (imageReduced)
                 {
-                    UpdateStatus("错误：无法从此ROI生成有效区域。");
-                    iconicObject.Dispose();
-                    return;
+                    HOperatorSet.CropDomain(imageReduced, out imageToSave);
+                    using (imageToSave)
+                    {
+                        string savePath = Path.Combine("D:\\", "VisionLite图像保存");
+                        Directory.CreateDirectory(savePath);
+                        string fileName = $"ROI_{DateTime.Now:yyyyMMdd_HHmmss_fff}.bmp";
+                        string fullPath = Path.Combine(savePath, fileName);
+                        HOperatorSet.WriteImage(imageToSave, "bmp", 0, fullPath);
+                        UpdateStatus($"图像已成功保存到：{fullPath}");
+                    }
                 }
-
-                HOperatorSet.ReduceDomain(_sourceImage, iconicObject, out HObject imageReduced);
-                HOperatorSet.CropDomain(imageReduced, out HObject imageToSave);
-
-                // 定义并创建保存路径
-                string savePath = Path.Combine("D:\\", "VisionLite图像保存");
-                if (!Directory.Exists(savePath))
-                {
-                    Directory.CreateDirectory(savePath);
-                }
-
-                // 生成唯一文件名
-                string fileName = $"ROI_{DateTime.Now:yyyyMMdd_HHmmss_fff}.bmp";
-                string fullPath = Path.Combine(savePath, fileName);
-
-                // 保存图像
-                HOperatorSet.WriteImage(imageToSave, "bmp", 0, fullPath);
-
-                // 释放临时对象
-                iconicObject.Dispose(); // 只需要释放这一个
-                imageReduced.Dispose();
-                imageToSave.Dispose();
-
-                UpdateStatus($"图像已成功保存到：{fullPath}");
             }
             catch (Exception ex)
             {
                 UpdateStatus($"保存失败: {ex.Message}");
             }
+            finally
+            {
+                // 【重构】第三步：安全地释放临时资源
+                if (isTempRegion)
+                {
+                    regionToSave?.Dispose();
+                }
+            }
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_drawingObject == null || _drawingObject.ID == -1)
+            // 临时的HObject，用于统一返回
+            HObject roiToReturn = null;
+
+            if (_isPaintingMode)
             {
-                System.Windows.MessageBox.Show("您还没有创建有效的ROI！", "提示");
-                return;
+                if (_paintedRoi == null || !_paintedRoi.IsInitialized() || _paintedRoi.CountObj() == 0)
+                {
+                    System.Windows.MessageBox.Show("您还没有绘制有效的ROI！", "提示");
+                    return;
+                }
+                roiToReturn = _paintedRoi.CopyObj(1, -1);
+            }
+            else
+            {
+                if (_drawingObject == null || _drawingObject.ID == -1)
+                {
+                    System.Windows.MessageBox.Show("您还没有创建有效的ROI！", "提示");
+                    return;
+                }
+                roiToReturn = _drawingObject.GetDrawingObjectIconic();
             }
 
-            CreatedROI = _drawingObject.GetDrawingObjectIconic();
-            ROIAccepted?.Invoke(CreatedROI.CopyObj(1, -1));
-
+            ROIAccepted?.Invoke(roiToReturn);
+            this.Close();
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -500,10 +740,30 @@ namespace VisionLite
             this.Close();
         }
 
+        /// <summary>
+        /// 辅助方法：刷新主窗口的显示，确保它显示干净的背景图
+        /// </summary>
+        private void RefreshMainWindowDisplay()
+        {
+            if (Owner is MainWindow mainWindow)
+            {
+                HWindow window = mainWindow.HSmart1.HalconWindow;
+                HObject mainImage = mainWindow.HSmart1.Tag as HObject;
+                if (mainImage != null && mainImage.IsInitialized())
+                {
+                    window.DispObj(mainImage);
+                }
+                else
+                {
+                    window.ClearWindow();
+                }
+            }
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            // 在窗口关闭时，确保从主窗口分离并释放绘图对象
             DetachAndDisposeDrawingObject();
+            DisablePaintMode(); 
             _sourceImage?.Dispose();
             CreatedROI?.Dispose();
         }

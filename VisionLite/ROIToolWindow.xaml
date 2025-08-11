@@ -8,7 +8,7 @@
         xmlns:ha="clr-namespace:HalconDotNet;assembly=halcondotnet"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
-        Title="ROI 编辑工具" Height="600" Width="800"
+        Title="ROI 编辑工具" Height="650" Width="800"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Closing="Window_Closing">
@@ -42,13 +42,14 @@
                         <ComboBoxItem Content="椭圆 (Ellipse)"/>
                         <ComboBoxItem Content="直线 (Line)"/>
                         <ComboBoxItem Content="自由轮廓 (Contour)"/>
+                        <ComboBoxItem Content="涂抹式ROI (Paint)"/>
                     </ComboBox>
                 </StackPanel>
 
                 <!-- ROI 参数显示和编辑区域 -->
                 <GroupBox Header="参数详情" Margin="0,5,0,0">
                     <!-- 这个StackPanel将用于动态显示不同ROI的参数，如坐标、半径等 -->
-                    <StackPanel x:Name="ParametersPanel" Margin="5">
+                    <StackPanel x:Name="ParametersPanel" Margin="5" MinHeight="60">
                         <TextBlock Text="请先在上方选择一种ROI形状，然后可在图像窗口中绘制。" Foreground="Gray"/>
                     </StackPanel>
                 </GroupBox>
