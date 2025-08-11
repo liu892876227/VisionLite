@@ -36,9 +36,19 @@ namespace VisionLite
         private int _brushRadius = 20;       // 圆形画笔的半径
         private int _brushRectWidth = 40;    // 矩形画笔的宽度
         private int _brushRectHeight = 20;   // 矩形画笔的高度
-        public ROIToolWindow()
+
+        // 用于存储从MainWindow传来的目标显示窗口
+        private HSmartWindowControlWPF _targetDisplayWindow;
+
+        public ROIToolWindow(HSmartWindowControlWPF targetWindow)
         {
             InitializeComponent();
+
+            // 存储对目标窗口的引用
+            _targetDisplayWindow = targetWindow;
+
+            // 自动将本窗口的所有者设置为目标窗口所在的窗口 (也就是MainWindow)
+            this.Owner = Window.GetWindow(targetWindow);
 
         }
 
@@ -154,16 +164,17 @@ namespace VisionLite
                         return; // 如果没有匹配项，则退出
                 }
 
-                // 将新创建的绘图对象附加到主窗口的HSmart1上
-                if (Owner is MainWindow mainWindow)
+                // 将新创建的绘图对象附加到目标窗口上 (不再是HSmart1)
+                if (_targetDisplayWindow != null)
                 {
-                    HWindow window = mainWindow.HSmart1.HalconWindow;
+                    HWindow window = _targetDisplayWindow.HalconWindow;
 
                     // 先刷新主窗口的显示，清除可能残留的旧ROI
-                    HObject mainImage = mainWindow.HSmart1.Tag as HObject;
+                    HObject mainImage = _targetDisplayWindow.Tag as HObject;
                     if (mainImage != null && mainImage.IsInitialized())
                     {
-                        HOperatorSet.AttachBackgroundToWindow(mainImage, window);
+                        //HOperatorSet.AttachBackgroundToWindow(mainImage, window);
+                        window.DispObj(mainImage);
                     }
                     // 订阅所有交互事件
                     _drawingObject.OnDrag(OnRoiUpdate);
@@ -443,12 +454,12 @@ namespace VisionLite
             HOperatorSet.GenEmptyRegion(out _paintedRoi);
 
             // 2. 在主窗口上注册鼠标事件
-            if (Owner is MainWindow mainWindow)
+            if (_targetDisplayWindow != null)
             {
-                mainWindow.HSmart1.HMouseDown += PaintRoi_HMouseDown;
-                mainWindow.HSmart1.HMouseMove += PaintRoi_HMouseMove;
+                _targetDisplayWindow.HMouseDown += PaintRoi_HMouseDown;
+                _targetDisplayWindow.HMouseMove += PaintRoi_HMouseMove;
 
-                RefreshMainWindowDisplay();
+                RefreshTargetWindowDisplay();
             }
 
             // 3. 创建并显示画笔参数UI
@@ -468,16 +479,16 @@ namespace VisionLite
             _isPaintingActive = false;
 
             // 在主窗口上注销鼠标事件
-            if (Owner is MainWindow mainWindow)
+            if (_targetDisplayWindow != null)
             {
-                mainWindow.HSmart1.HMouseDown -= PaintRoi_HMouseDown;
-                mainWindow.HSmart1.HMouseMove -= PaintRoi_HMouseMove;
+                _targetDisplayWindow.HMouseDown -= PaintRoi_HMouseDown; 
+                _targetDisplayWindow.HMouseMove -= PaintRoi_HMouseMove; 
             }
 
             _paintedRoi?.Dispose();
             _paintedRoi = null;
             ParametersPanel.Children.Clear();
-            RefreshMainWindowDisplay();
+            RefreshTargetWindowDisplay();
         }
 
         /// <summary>
@@ -577,8 +588,8 @@ namespace VisionLite
 
         private void PaintAtCurrentPosition(double row, double col)
         {
-            if (!(Owner is MainWindow mainWindow)) return;
-            HWindow window = mainWindow.HSmart1.HalconWindow;
+            if (_targetDisplayWindow == null) return;
+            HWindow window = _targetDisplayWindow.HalconWindow;
             try
             {
                 HObject brush;
@@ -635,10 +646,10 @@ namespace VisionLite
         private void FinalizePainting()
         {
             // 注销鼠标事件，停止绘制过程
-            if (Owner is MainWindow mainWindow)
+            if (_targetDisplayWindow != null)
             {
-                mainWindow.HSmart1.HMouseDown -= PaintRoi_HMouseDown;
-                mainWindow.HSmart1.HMouseMove -= PaintRoi_HMouseMove;
+                _targetDisplayWindow.HMouseDown -= PaintRoi_HMouseDown;
+                _targetDisplayWindow.HMouseMove -= PaintRoi_HMouseMove;
             }
             // 在此处重置“涂抹激活”状态
             _isPaintingActive = false;
@@ -652,13 +663,13 @@ namespace VisionLite
             // 禁用参数面板，防止用户在完成后修改画笔
             ParametersPanel.IsEnabled = false;
             // 刷新主窗口的显示，清除上面残留的绿色涂抹痕迹
-            RefreshMainWindowDisplay();
+            RefreshTargetWindowDisplay();
             // 在主窗口上把最终的ROI轮廓画出来，给用户清晰的反馈
-            if (Owner is MainWindow mainWin && _paintedRoi != null && _paintedRoi.IsInitialized())
+            if (_targetDisplayWindow != null && _paintedRoi != null && _paintedRoi.IsInitialized())
             {
-                mainWin.HSmart1.HalconWindow.SetColor("green");
-                mainWin.HSmart1.HalconWindow.SetDraw("margin");
-                mainWin.HSmart1.HalconWindow.DispObj(_paintedRoi);
+                _targetDisplayWindow.HalconWindow.SetColor("green");
+                _targetDisplayWindow.HalconWindow.SetDraw("margin");
+                _targetDisplayWindow.HalconWindow.DispObj(_paintedRoi);
             }
             // 最后更新一次本窗口的ROI预览
             UpdateRoiDisplay();
@@ -796,12 +807,12 @@ namespace VisionLite
         /// <summary>
         /// 辅助方法：刷新主窗口的显示，确保它显示干净的背景图
         /// </summary>
-        private void RefreshMainWindowDisplay()
+        private void RefreshTargetWindowDisplay()
         {
-            if (Owner is MainWindow mainWindow)
+            if (_targetDisplayWindow != null)
             {
-                HWindow window = mainWindow.HSmart1.HalconWindow;
-                HObject mainImage = mainWindow.HSmart1.Tag as HObject;
+                HWindow window = _targetDisplayWindow.HalconWindow;
+                HObject mainImage = _targetDisplayWindow.Tag as HObject;
                 if (mainImage != null && mainImage.IsInitialized())
                 {
                     window.DispObj(mainImage);
@@ -840,9 +851,9 @@ namespace VisionLite
         /// </summary>
         private void DetachAndDisposeDrawingObject()
         {
-            if (Owner is MainWindow mainWindow)
+            if (_targetDisplayWindow != null)
             {
-                HWindow window = mainWindow.HSmart1.HalconWindow;
+                HWindow window = _targetDisplayWindow.HalconWindow;
                 // 分离背景图
                 try { HOperatorSet.DetachBackgroundFromWindow(window); } catch (HalconException) { }
 
@@ -855,7 +866,7 @@ namespace VisionLite
                 }
 
                 // 分离后，重新显示原始图像，确保窗口回到干净状态
-                HObject mainImage = mainWindow.HSmart1.Tag as HObject;
+                HObject mainImage = _targetDisplayWindow.Tag as HObject;
                 if (mainImage != null && mainImage.IsInitialized())
                 {
                     window.DispObj(mainImage);

@@ -53,6 +53,9 @@ namespace VisionLite
         // 用于跟踪已打开的ROI窗口，防止重复打开
         private ROIToolWindow roiEditorWindow = null;
 
+        // 用于跟踪当前活动窗口的字段
+        private HSmartWindowControlWPF _activeDisplayWindow;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -63,9 +66,57 @@ namespace VisionLite
                 HSmart1, HSmart2, HSmart3, HSmart4
             };
 
+            // 为每个窗口添加鼠标点击事件处理器
+            foreach (var window in displayWindows)
+            {
+                window.PreviewMouseDown += DisplayWindow_PreviewMouseDown;
+            }
+
+            // 在启动时，默认激活第一个窗口
+            // 确保在UI加载完成后再设置活动窗口
+            this.Loaded += (s, e) => {
+                SetActiveDisplayWindow(HSmart1);
+            };
+
             // 在窗口启动时，自动调用查找设备方法，不显示成功提示
             FindAndPopulateDevices();
         }
+
+        // 设置活动窗口并更新视觉效果的辅助方法
+        private void SetActiveDisplayWindow(HSmartWindowControlWPF newActiveWindow)
+        {
+            if (newActiveWindow == null) return;
+
+            // 更新活动窗口的引用
+            _activeDisplayWindow = newActiveWindow;
+
+            // 重置所有窗口的边框样式
+            Border1.BorderBrush = Brushes.Gray;
+            Border1.BorderThickness = new Thickness(1);
+            Border2.BorderBrush = Brushes.Gray;
+            Border2.BorderThickness = new Thickness(1);
+            Border3.BorderBrush = Brushes.Gray;
+            Border3.BorderThickness = new Thickness(1);
+            Border4.BorderBrush = Brushes.Gray;
+            Border4.BorderThickness = new Thickness(1);
+
+            // 高亮新激活的窗口
+            if (_activeDisplayWindow == HSmart1) { Border1.BorderBrush = Brushes.DodgerBlue; Border1.BorderThickness = new Thickness(2); }
+            else if (_activeDisplayWindow == HSmart2) { Border2.BorderBrush = Brushes.DodgerBlue; Border2.BorderThickness = new Thickness(2); }
+            else if (_activeDisplayWindow == HSmart3) { Border3.BorderBrush = Brushes.DodgerBlue; Border3.BorderThickness = new Thickness(2); }
+            else if (_activeDisplayWindow == HSmart4) { Border4.BorderBrush = Brushes.DodgerBlue; Border4.BorderThickness = new Thickness(2); }
+        }
+
+
+        // 所有显示窗口共用的点击事件处理器
+        private void DisplayWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is HSmartWindowControlWPF clickedWindow)
+            {
+                SetActiveDisplayWindow(clickedWindow);
+            }
+        }
+
 
         #region 设备查找与管理
 
@@ -217,36 +268,52 @@ namespace VisionLite
                 return;
             }
 
-            // 找到一个空闲的显示窗口
-            HSmartWindowControlWPF freeWindow = displayWindows.FirstOrDefault(w => w.Tag == null);
+            HSmartWindowControlWPF targetWindow = null;
+            // 优先级 1: 寻找一个完全空闲的窗口 (Tag is null)
+            targetWindow = displayWindows.FirstOrDefault(w => w.Tag == null);
 
-            // 如果循环结束后，一个空闲窗口都没找到
-            if (freeWindow == null)
+            // 优先级 2: 如果没有完全空闲的，则寻找一个被本地图像占用的窗口 (Tag is HObject)，这样的窗口可以被覆盖
+            if (targetWindow == null)
             {
-                MessageBox.Show("没有空闲的显示窗口了。", "提示");
+                targetWindow = displayWindows.FirstOrDefault(w => w.Tag is HObject);
+            }
+
+            // 如果到这里 targetWindow 仍然是 null，说明所有窗口都已经被其他相机占用
+            if (targetWindow == null)
+            {
+                MessageBox.Show("没有可用的显示窗口了。所有窗口都已连接相机。", "提示");
                 return;
+            }
+
+            // --- 在绑定新相机前，清理即将被占用的窗口 ---
+            // 如果这个窗口之前是被本地图像占用的，需要释放那个图像资源
+            if (targetWindow.Tag is HObject oldImage)
+            {
+                oldImage.Dispose();
+                targetWindow.Tag = null; // 清空Tag
+                targetWindow.HalconWindow.ClearWindow(); // 清空显示
             }
 
             // --- 根据设备类型创建不同的相机实例 ---
             ICameraDevice newCamera = null;
             if (selectedDevice.SdkType == CameraSdkType.Hikvision)
             {
-                newCamera = new HikvisionCameraDevice(selectedDevice, freeWindow);
+                newCamera = new HikvisionCameraDevice(selectedDevice, targetWindow);
             }
             else // HalconMVision
             {
-                newCamera = new HalconCameraDevice(selectedDevice.UniqueID, freeWindow);
+                newCamera = new HalconCameraDevice(selectedDevice.UniqueID, targetWindow);
             }
 
             if (newCamera.Open())
             {
-               
-                int windowIndex = displayWindows.IndexOf(freeWindow);
+
+                int windowIndex = displayWindows.IndexOf(targetWindow);
                 // 将新打开的相机添加到管理字典中
                 openCameras.Add(selectedDevice.UniqueID, newCamera);
-                // 使用Tag属性将窗口标记为“被占用”，并记录下占用它的设备ID
-                freeWindow.Tag = selectedDevice.UniqueID;
-                
+                // 使用 string 类型的 deviceId 来“锁定”这个窗口，表示这是一个不可被其他相机覆盖的硬绑定
+                targetWindow.Tag = selectedDevice.UniqueID;
+
                 string successMessage = $"设备 {selectedDevice.DisplayName} 打开成功，并绑定到窗口 {windowIndex + 1}。";
                 MessageBox.Show(successMessage, "成功");
                 // 打开后自动采集一帧图像，提供即时反馈
@@ -411,60 +478,60 @@ namespace VisionLite
             // 显示文件对话框，并检查用户是否点击了“打开”
             if (openFileDialog.ShowDialog() == true)
             {
+                HObject loadedImage = null; // 在 try-catch 外部声明，以便 finally 中可以访问
                 try
                 {
-                    // 获取用户选择的文件的完整路径
                     string filePath = openFileDialog.FileName;
 
-                    // 3. 决定要在哪个窗口显示图像
-                    HSmartWindowControlWPF targetWindow = null;
+                    // 目标窗口固定为当前活动窗口
+                    HSmartWindowControlWPF targetWindow = _activeDisplayWindow;
 
-                    // 首先，尝试寻找一个空闲的窗口（即Tag为null的窗口）
-                    foreach (var window in displayWindows)
-                    {
-                        if (window.Tag == null || !(window.Tag is string))
-                        
-                        {
-                            targetWindow = window;
-                            break; // 找到第一个就停止
-                        }
-                    }
-
-                    // 如果所有窗口都已被相机占用，则默认使用第一个窗口
-                    if (targetWindow == null)
-                    {
-                        targetWindow = displayWindows[0];
-                    }
-
-                    // 4. 在目标窗口中加载和显示图像
                     if (targetWindow != null)
                     {
-                        // 创建一个临时的 HObject 来加载图像
-                        HOperatorSet.ReadImage(out HObject loadedImage, filePath);
+                        // 在显示前，先处理旧的 Tag
+                        // 如果目标窗口之前已经有本地图像，先释放它
+                        if (targetWindow.Tag is HObject oldImage)
+                        {
+                            oldImage.Dispose();
+                        }
+                        // 如果之前是相机，则发出警告并停止采集，但 Tag 的最终决定权交给后续逻辑
+                        else if (targetWindow.Tag is string deviceId && openCameras.ContainsKey(deviceId))
+                        {
+                            var camera = openCameras[deviceId];
+                            if (camera.IsContinuousGrabbing())
+                            {
+                                camera.StopContinuousGrab();
+                                MessageBox.Show($"窗口被相机 {deviceId} 占用，已停止其连续采集以加载本地图像。", "提示");
+                            }
+                        }
 
-                        // 获取目标窗口的Halcon窗口对象
+                        // 加载新图像
+                        HOperatorSet.ReadImage(out loadedImage, filePath);
+
+                        // 显示新图像并更新Tag
                         HWindow hWindow = targetWindow.HalconWindow;
-
-                        // 在该窗口中显示图像
                         HOperatorSet.GetImageSize(loadedImage, out HTuple width, out HTuple height);
                         hWindow.SetPart(0, 0, height.I - 1, width.I - 1);
                         hWindow.ClearWindow();
                         hWindow.DispObj(loadedImage);
 
+                        // 将新加载的 HObject 实例赋给 Tag，表示此窗口当前显示的是一个可被覆盖的本地图像
                         targetWindow.Tag = loadedImage;
-                        // 记得释放临时图像对象的内存
-                        //loadedImage.Dispose();
+
+                        // 将 loadedImage 的所有权转移给了 Tag，所以不能在这里 Dispose 它
+                        // 并且，需要将 loadedImage 设为 null，防止 finally 块中错误地释放它
+                        loadedImage = null;
                     }
-                }
-                catch (HalconException ex)
-                {
-                    // 如果Halcon操作失败，弹出错误提示
-                    MessageBox.Show("加载图像失败。\nHalcon错误: " + ex.GetErrorMessage(), "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 catch (Exception ex)
                 {
-                    // 捕获其他可能的异常
-                    MessageBox.Show("发生未知错误: " + ex.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"加载图像时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    // 如果在操作过程中发生异常，loadedImage 可能还未被赋给 Tag，
+                    // 这种情况下需要确保它被释放，以防内存泄漏。
+                    loadedImage?.Dispose();
                 }
             }
 
@@ -483,12 +550,20 @@ namespace VisionLite
                 return;
             }
 
-            // 在创建子窗口之前，先检查主窗口是否有可用的图像
-            if (!(HSmart1.Tag is HObject currentImage && currentImage.IsInitialized()))
+            // 检查活动窗口
+            if (_activeDisplayWindow == null)
             {
                 // 如果没有图像，主窗口直接弹出提示，然后中断操作
-                MessageBox.Show(this, "窗口1中没有可用的图像，无法打开ROI工具。", "提示");
+                MessageBox.Show(this, "没有活动的图像窗口被选中。", "提示");
                 return; // 不再创建ROIToolWindow
+            }
+
+            if (!(_activeDisplayWindow.Tag is HObject currentImage && currentImage.IsInitialized()))
+            {
+                // 获取活动窗口的索引用于提示信息
+                int windowIndex = displayWindows.IndexOf(_activeDisplayWindow) + 1;
+                MessageBox.Show(this, $"窗口{windowIndex}中没有可用的图像，无法打开ROI工具。", "提示");
+                return;
             }
 
             // 为ROIToolWindow创建一个图像的稳定副本
@@ -498,9 +573,8 @@ namespace VisionLite
                 // 使用 CopyImage 创建一个内存独立的深拷贝
                 HOperatorSet.CopyImage(currentImage, out imageCopyForRoi);
 
-                roiEditorWindow = new ROIToolWindow();
-                roiEditorWindow.Owner = this;
-
+                roiEditorWindow = new ROIToolWindow(_activeDisplayWindow);
+                
                 roiEditorWindow.ROIAccepted += (HObject returnedRoi) =>
                 {
                     roiEditorWindow?.Close();
@@ -519,7 +593,7 @@ namespace VisionLite
             }
             finally
             {
-                // 关键：确保我们为ROI窗口创建的副本在传递完成后被释放，
+                // 确保为ROI窗口创建的副本在传递完成后被释放，
                 // 因为ROIToolWindow的UpdateImage内部会再次复制一份自己管理。
                 imageCopyForRoi?.Dispose();
             }
