@@ -27,6 +27,11 @@ namespace VisionLite
         private HObject _paintedRoi; // 用于存储涂抹生成的ROI区域
         private bool _isPaintingMode = false; // 标记是否处于涂抹模式
         private bool _isPaintingActive = false; // 标记鼠标左键是否按下
+        
+        // 用于记录上一次鼠标的坐标，以实现连续绘制
+        private HTuple _lastPaintRow = -1;
+        private HTuple _lastPaintCol = -1;
+
         private string _brushShape = "圆形"; // 当前画笔形状, 默认圆形
         private int _brushRadius = 20;       // 圆形画笔的半径
         private int _brushRectWidth = 40;    // 矩形画笔的宽度
@@ -540,12 +545,18 @@ namespace VisionLite
                 _isPaintingActive = !_isPaintingActive;
                 if (_isPaintingActive)
                 {
+                    // 当开始或重新开始绘制时，记录下第一个点的位置
+                    _lastPaintRow = e.Row;
+                    _lastPaintCol = e.Column;
                     // 如果是刚刚激活涂抹，则在当前点画下第一笔
                     PaintAtCurrentPosition(e.Row, e.Column);
                     UpdateStatus("涂抹已激活。移动鼠标进行绘制，再次左键单击暂停，右键结束。");
                 }
                 else
                 {
+                    // 当暂停时，重置上一个点的位置，这样下次开始时不会画出一条多余的线
+                    _lastPaintRow = -1;
+                    _lastPaintCol = -1;
                     UpdateStatus("涂抹已暂停。可再次左键单击继续，或右键结束。");
                 }
             }
@@ -555,7 +566,12 @@ namespace VisionLite
         {
             if (_isPaintingActive)
             {
+                // 从上一个点绘制到当前点
                 PaintAtCurrentPosition(e.Row, e.Column);
+
+                // 处理完后，更新“上一个点”为当前点
+                _lastPaintRow = e.Row;
+                _lastPaintCol = e.Column;
             }
         }
 
@@ -566,25 +582,50 @@ namespace VisionLite
             try
             {
                 HObject brush;
-                if (_brushShape == "圆形")
+
+                if (_lastPaintRow.D != -1 && _lastPaintCol.D != -1)
                 {
-                    HOperatorSet.GenCircle(out brush, row, col, _brushRadius);
+                    // 声明一个 HObject 变量 lineRegion，但不要初始化它。
+                    HObject lineRegion;
+                    // 将 lineRegion 作为 out 参数传递给 GenRegionLine。
+                    HOperatorSet.GenRegionLine(out lineRegion, _lastPaintRow, _lastPaintCol, row, col);
+
+                    // 使用 using 块确保 lineRegion 在使用后被正确释放。
+                    using (lineRegion)
+                    {
+                        if (_brushShape == "圆形")
+                        {
+                            HOperatorSet.DilationCircle(lineRegion, out brush, _brushRadius);
+                        }
+                        else
+                        {
+                            HOperatorSet.DilationRectangle1(lineRegion, out brush, _brushRectWidth, _brushRectHeight);
+                        }
+                    }
                 }
                 else
                 {
-                    HOperatorSet.GenRectangle1(out brush, row - _brushRectHeight / 2.0, col - _brushRectWidth / 2.0, row + _brushRectHeight / 2.0, col + _brushRectWidth / 2.0);
+                    if (_brushShape == "圆形")
+                    {
+                        HOperatorSet.GenCircle(out brush, row, col, _brushRadius);
+                    }
+                    else
+                    {
+                        HOperatorSet.GenRectangle1(out brush, row - _brushRectHeight / 2.0, col - _brushRectWidth / 2.0, row + _brushRectHeight / 2.0, col + _brushRectWidth / 2.0);
+                    }
                 }
-                HObject oldRoi = _paintedRoi;
-                // 将新画的笔刷合并到总的ROI中
-                HOperatorSet.Union2(oldRoi, brush, out _paintedRoi);
-                oldRoi.Dispose();
+
+                HObject newRoi;
+                HOperatorSet.Union2(_paintedRoi, brush, out newRoi);
+                _paintedRoi.Dispose();
+                _paintedRoi = newRoi;
+
                 brush.Dispose();
-                // 在主窗口实时显示涂抹的区域
+
                 window.SetDraw("fill");
                 window.SetColor("green");
                 window.DispObj(_paintedRoi);
 
-                // 同时，实时更新ROI工具窗口中的预览
                 UpdateRoiDisplay();
                 SaveROIImageButton.IsEnabled = true;
             }
@@ -601,6 +642,11 @@ namespace VisionLite
             }
             // 在此处重置“涂抹激活”状态
             _isPaintingActive = false;
+
+            // 在此处也重置上一个点的位置
+            _lastPaintRow = -1;
+            _lastPaintCol = -1;
+
             // 更新UI状态
             UpdateStatus("涂抹绘制已完成。点击“确定”以确认ROI。");
             // 禁用参数面板，防止用户在完成后修改画笔
