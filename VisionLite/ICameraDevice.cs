@@ -67,10 +67,11 @@ namespace VisionLite
         bool SetParameter(string paramName, object value);
 
         /// <summary>
-        /// 创建并返回一个与此相机类型对应的参数设置窗口。
+        /// 获取相机当前持有的最新图像对象。
         /// </summary>
-        /// <param name="owner">该参数窗口的父窗口。</param>
-        /// <returns>一个Window派生类的实例。</returns>
-        Window ShowParametersWindow(Window owner);
+        /// <returns>一个 HObject 图像，如果无图像则可能为 null 或未初始化。</returns>
+        HObject GetCurrentImage();
+
+
     }
 }

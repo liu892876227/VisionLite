@@ -12,6 +12,16 @@
         MinHeight="300" MinWidth="500">
     <!--首界面布局，共两行，第一行共两列；第二行共三列；第一行第二列分为两行-->
 
+    <!-- 添加资源字典引用 -->
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="CameraIcon.xaml"/>
+                <ResourceDictionary Source="ToolbarIcons.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
     <Grid ShowGridLines="True">
         <Grid.RowDefinitions>
             <!--软件图标、菜单栏和快捷工具条-->
@@ -31,10 +41,62 @@
             <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="1">
                 <Grid.RowDefinitions>
                     <!--菜单栏-->
-                    <RowDefinition/>
+                    <RowDefinition Height="25"/>
                     <!--快捷工具条-->
-                    <RowDefinition/>
+                    <RowDefinition Height="25"/>
                 </Grid.RowDefinitions>
+                <!-- 快捷工具条 -->
+                <Border Grid.Row="1" Background="#FF4F4F4F">
+                    <StackPanel Orientation="Horizontal">
+                        <!-- 相机管理按钮 -->
+                        <Button x:Name="CameraManagementButton" 
+                                Width="40" 
+                                ToolTip="打开相机管理中心"
+                                Click="CameraManagementButton_Click"
+                                Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <Button.Content>
+                                <ContentPresenter Content="{StaticResource CameraIcon}"/>
+                            </Button.Content>
+                        </Button>
+
+                        <!-- 分隔符 -->
+                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                        <!-- 采集控制按钮 -->
+                        <Button x:Name="SingleCaptureToolbarButton" Width="40" ToolTip="对活动窗口单次触发" Click="SingleCaptureToolbarButton_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <ContentPresenter Content="{StaticResource SingleCaptureIcon}"/>
+                        </Button>
+                        <Button x:Name="ContinueCaptureToolbarButton" Width="40" ToolTip="对活动窗口连续触发" Click="ContinueCaptureToolbarButton_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <ContentPresenter Content="{StaticResource ContinueCaptureIcon}"/>
+                        </Button>
+                        <Button x:Name="StopCaptureToolbarButton" Width="40" ToolTip="停止活动窗口采集" Click="StopCaptureToolbarButton_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <ContentPresenter Content="{StaticResource StopCaptureIcon}"/>
+                        </Button>
+
+                        <!-- 分隔符 -->
+                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
+
+                        <!-- 加载图像和ROI工具按钮 -->
+                        <!-- 加载图像和ROI工具按钮 -->
+                        <Button x:Name="LoadImgButton" 
+                                Width="40" 
+                                ToolTip="加载本地图像"
+                                Click="LoadImgButtonClick"
+                                Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <ContentPresenter Content="{StaticResource LoadImageIcon}"/>
+                        </Button>
+
+                        <Button x:Name="ROIToolButton"
+                                Width="40"
+                                ToolTip="打开ROI工具"
+                                Click="ROIToolButtonClick"
+                                Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+                            <ContentPresenter Content="{StaticResource ROIToolIcon}"/>
+                        </Button>
+
+
+                    </StackPanel>
+                </Border>
             </Grid>
         </Grid>
 
@@ -46,12 +108,11 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="2">
+            <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="1">
                 <Grid.RowDefinitions>
                     <!--图像显示区域-->
-                    <RowDefinition Height="9*"/>
-                    <!--结果显示区域-->
-                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="*"/>
+
                     <!--状态栏-->
                     <RowDefinition Height="25"/>
                 </Grid.RowDefinitions>
@@ -63,9 +124,8 @@
                         <!--图像显示区域的图像缩放控制栏-->
                         <RowDefinition Height="25"/>
                         <!--图像显示区域的图像显示区域-->
-                        <RowDefinition Height="8*"/>
-                        <!--图像显示区域的图像采集控制区域和图像缩放图-->
-                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="*"/>
+
                     </Grid.RowDefinitions>
 
                     <!--实现固定四个图像显示窗口-->
@@ -96,7 +156,7 @@
                                 <ColumnDefinition Width="5*"/>
                                 <ColumnDefinition Width="5*"/>
                             </Grid.ColumnDefinitions>
-                            
+
                             <!-- 用Border包裹HSmartWindowControlWPF -->
                             <Border x:Name="Border3" Grid.Column="0" BorderBrush="Gray" BorderThickness="1" Margin="1">
                                 <ha:HSmartWindowControlWPF x:Name="HSmart3" HKeepAspectRatio="True"/>
@@ -106,146 +166,20 @@
                                 <ha:HSmartWindowControlWPF x:Name="HSmart4" HKeepAspectRatio="True"/>
                             </Border>
                         </Grid>
-
-                        
                     </Grid>
-                    
-
-                    <Grid ShowGridLines="True" Grid.Row="3" Grid.Column="0">
-                        <Grid.RowDefinitions>
-                            <!--图像采集控制区域-->
-                            <RowDefinition Height="25"/>
-                            <!--图像缩放图-->
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-
-                            
-                            <!--文本框-->
-                            <TextBlock Text="视频输入设备:"
-                                       FontSize="12"
-                                       Foreground="Black"
-                                       TextAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Padding="1"/>
-                            
-                            <!--组合框选择可以连接的设备-->
-                            <ComboBox x:Name = "comboBox" HorizontalAlignment = "Center" 
-                                       VerticalAlignment = "Center" Width = "250"
-                                      />
-                            
-                            <!--查找设备按钮-->
-                            <Button x:Name="FindCamButton" Grid.Row="0" Grid.Column="0" 
-                                Content="查找设备" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="FindCamButtonClick" 
-                                ToolTip="点击查找设备"/>
-
-                            <!--打开设备按钮-->
-                            <Button x:Name="OpenCamButton" Grid.Row="0" Grid.Column="0" 
-                                Content="打开设备" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="OpenCamButtonClick" 
-                                ToolTip="点击打开设备"/>
-
-                            <!--关闭设备按钮-->
-                            <Button x:Name="CloseCamButton" Grid.Row="0" Grid.Column="0" 
-                                Content="关闭设备" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="CloseCamButtonClick" 
-                                ToolTip="点击关闭设备"/>
-
-                            <!--查看设备参数按钮-->
-                            <Button x:Name="ViewCamParaButton" Grid.Row="0" Grid.Column="0" 
-                                Content="设备参数" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="ViewCamParaButtonClick" 
-                                ToolTip="点击查看设备参数"/>
-
-                            <!--单次触发图像采集按钮-->
-                            <Button x:Name="SingleCaptureButton" Grid.Row="0" Grid.Column="0" 
-                                Content="单次触发" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="SingleCaptureButtonClick" 
-                                ToolTip="点击触发单次图像采集"/>
-
-                            <!--连续触发图像采集按钮-->
-                            <Button x:Name="ContinueCaptureButton" Grid.Row="0" Grid.Column="0" 
-                                Content="连续触发" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="ContinueCaptureButtonClick" 
-                                ToolTip="点击触发连续图像采集"/>
-                            
-                            <!--停止连续图像采集按钮-->
-                            <Button x:Name="StopContinueCaptureButton" Grid.Row="0" Grid.Column="0" 
-                                Content="停止触发" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="StopContinueCaptureButtonClick" 
-                                ToolTip="停止触发连续图像采集"/>
-
-                            <!--加载图像路径按钮-->
-                            <Button x:Name="LoadImgButton" Grid.Row="0" Grid.Column="0" 
-                                Content="加载本地图像" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="LoadImgButtonClick" 
-                                ToolTip="点击选择并加载图像文件"/>
-
-                            <!--ROI工具按钮-->
-                            <Button x:Name="ROIToolButton" Grid.Row="0" Grid.Column="0" 
-                                Content="ROI工具" 
-                                Width="Auto"  
-                                FontSize="12" 
-                                Margin="1"
-                                Background="Gray" 
-                                Foreground="White" 
-                                Click="ROIToolButtonClick" 
-                                ToolTip="点击打开ROI窗口"/>
-
-
-                        </StackPanel>
-                        
-                        
-                        
-                        
-                        
-                    </Grid>
-
-
                 </Grid>
+                
+                <!-- 状态栏 -->
+                <StatusBar Grid.Row="1">
+                    <StatusBarItem>
+                        <TextBlock x:Name="StatusTextBlock" Text="准备就绪"/>
+                    </StatusBarItem>
+
+                    <!-- 在状态栏右侧添加ROI参数显示区域 -->
+                    <StatusBarItem HorizontalAlignment="Right">
+                        <TextBlock x:Name="RoiParametersTextBlock" Margin="0,0,10,0"/>
+                    </StatusBarItem>
+                </StatusBar>
             </Grid>
         </Grid>
 

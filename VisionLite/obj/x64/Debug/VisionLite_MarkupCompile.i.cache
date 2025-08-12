@@ -10,11 +10,11 @@ none
 false
 
 E:\mySoftware\VisionLite\VisionLite\App.xaml
-41543458916
+5-932679236
 
-16-2018157968
+14372512599
 27153463149
-HikvisionParametersWindow.xaml;MainWindow.xaml;HalconParametersWindow.xaml;ROIToolWindow.xaml;
+CameraIcon.xaml;CameraManagementWindow.xaml;MainWindow.xaml;ROIToolWindow.xaml;ToolbarIcons.xaml;
 
-False
+True
 

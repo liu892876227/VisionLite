@@ -8,6 +8,7 @@ using HalconDotNet;
 using System.Windows.Threading;
 using Xceed.Wpf.Toolkit;
 using System.Windows.Input;
+using System.Linq;
 
 namespace VisionLite
 {
@@ -16,6 +17,12 @@ namespace VisionLite
 
     public partial class ROIToolWindow : Window
     {
+        
+        /// <summary>
+        /// 当ROI的参数（位置、大小等）发生变化时触发的事件。
+        /// </summary>
+        public event EventHandler<RoiUpdatedEventArgs> RoiUpdated;
+
         public event ROIAcceptedEventHandler ROIAccepted;
 
         // --- 私有成员 ---
@@ -23,6 +30,7 @@ namespace VisionLite
         private HDrawingObject _drawingObject; // 当前活动的ROI绘图对象
         public HObject CreatedROI { get; private set; } // 创建的最终ROI区域
         private bool _isUpdatingFromRoi = false; // 标志位，防止UI更新触发ROI更新的死循环
+        
         // --- 用于涂抹式ROI的成员 ---
         private HObject _paintedRoi; // 用于存储涂抹生成的ROI区域
         private bool _isPaintingMode = false; // 标记是否处于涂抹模式
@@ -37,18 +45,21 @@ namespace VisionLite
         private int _brushRectWidth = 40;    // 矩形画笔的宽度
         private int _brushRectHeight = 20;   // 矩形画笔的高度
 
+        // 用来存储对主窗口的引用 
+        private readonly MainWindow m_pMainWindow;
         // 用于存储从MainWindow传来的目标显示窗口
         private HSmartWindowControlWPF _targetDisplayWindow;
 
-        public ROIToolWindow(HSmartWindowControlWPF targetWindow)
+        public ROIToolWindow(HSmartWindowControlWPF targetWindow, MainWindow mainWindow)
         {
             InitializeComponent();
 
+            // 保存对主窗口的引用 
+            m_pMainWindow = mainWindow;
             // 存储对目标窗口的引用
             _targetDisplayWindow = targetWindow;
 
-            // 自动将本窗口的所有者设置为目标窗口所在的窗口 (也就是MainWindow)
-            this.Owner = Window.GetWindow(targetWindow);
+            this.Owner = mainWindow;
 
         }
 
@@ -169,19 +180,23 @@ namespace VisionLite
                 {
                     HWindow window = _targetDisplayWindow.HalconWindow;
 
-                    // 先刷新主窗口的显示，清除可能残留的旧ROI
-                    HObject mainImage = _targetDisplayWindow.Tag as HObject;
+                    // 使用与 RefreshTargetWindowDisplay 相同的健壮逻辑来获取背景图 
+                    HObject mainImage = GetTargetWindowImage();
                     if (mainImage != null && mainImage.IsInitialized())
                     {
-                        //HOperatorSet.AttachBackgroundToWindow(mainImage, window);
+                       
                         window.DispObj(mainImage);
+                    }
+                    else
+                    {
+                        window.ClearWindow();
                     }
                     // 订阅所有交互事件
                     _drawingObject.OnDrag(OnRoiUpdate);
                     _drawingObject.OnResize(OnRoiUpdate);
                     _drawingObject.OnSelect(OnRoiUpdate);
 
-                    //调试信息
+                    
                     _drawingObject.OnAttach((dobj, hwin, type) =>
                     {
                         OnRoiUpdate(dobj, hwin, type);
@@ -210,6 +225,9 @@ namespace VisionLite
                 UpdateParametersUI();
                 UpdateRoiDisplay();
 
+                // --- 触发 RoiUpdated 事件 ---
+                NotifyRoiUpdate();
+
                 // --- 启用按钮并更新Tooltip ---
                 if (_drawingObject != null && _drawingObject.ID != -1)
                 {
@@ -221,6 +239,48 @@ namespace VisionLite
                 _isUpdatingFromRoi = false; // 恢复标志位
             });
 
+        }
+
+
+        // --- 收集参数并触发事件 ---
+        private void NotifyRoiUpdate()
+        {
+            if (_drawingObject == null || _drawingObject.ID == -1)
+            {
+                // 如果ROI不存在，可以触发一个带有空参数的事件来清空显示
+                RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(new Dictionary<string, double>()));
+                return;
+            }
+
+            var parameters = new Dictionary<string, double>();
+            string roiType = _drawingObject.GetDrawingObjectParams("type");
+
+            // 根据不同的ROI类型，收集其参数
+            if (roiType == "rectangle1")
+            {
+                parameters["row1"] = _drawingObject.GetDrawingObjectParams("row1");
+                parameters["column1"] = _drawingObject.GetDrawingObjectParams("column1");
+                parameters["row2"] = _drawingObject.GetDrawingObjectParams("row2");
+                parameters["column2"] = _drawingObject.GetDrawingObjectParams("column2");
+            }
+            else if (roiType == "rectangle2")
+            {
+                parameters["row"] = _drawingObject.GetDrawingObjectParams("row");
+                parameters["column"] = _drawingObject.GetDrawingObjectParams("column");
+                parameters["phi"] = (_drawingObject.GetDrawingObjectParams("phi")) * 180 / Math.PI; // 转换为度
+                parameters["length1"] = _drawingObject.GetDrawingObjectParams("length1");
+                parameters["length2"] = _drawingObject.GetDrawingObjectParams("length2");
+            }
+            else if (roiType == "circle")
+            {
+                parameters["row"] = _drawingObject.GetDrawingObjectParams("row");
+                parameters["column"] = _drawingObject.GetDrawingObjectParams("column");
+                parameters["radius"] = _drawingObject.GetDrawingObjectParams("radius");
+            }
+            // ... 您可以为其他ROI类型（如ellipse）添加更多逻辑 ...
+
+            // 触发事件，将收集到的参数传递出去
+            RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(parameters));
         }
 
         /// <summary>
@@ -812,7 +872,7 @@ namespace VisionLite
             if (_targetDisplayWindow != null)
             {
                 HWindow window = _targetDisplayWindow.HalconWindow;
-                HObject mainImage = _targetDisplayWindow.Tag as HObject;
+                HObject mainImage = GetTargetWindowImage();
                 if (mainImage != null && mainImage.IsInitialized())
                 {
                     window.DispObj(mainImage);
@@ -824,8 +884,36 @@ namespace VisionLite
             }
         }
 
+        // 用于获取目标窗口应该显示的图像 
+        private HObject GetTargetWindowImage()
+        {
+            if (_targetDisplayWindow == null || m_pMainWindow == null)
+            {
+                return null;
+            }
+
+            // 逻辑1: 检查是否有相机连接到此窗口
+            var camera = m_pMainWindow.openCameras.Values.FirstOrDefault(c => c.DisplayWindow == _targetDisplayWindow);
+            if (camera != null)
+            {
+                return camera.GetCurrentImage(); // 从相机获取最新图像
+            }
+
+            // 逻辑2: 如果没有相机，检查Tag是否为本地图像
+            if (_targetDisplayWindow.Tag is HObject localImage)
+            {
+                return localImage;
+            }
+
+            // 如果两种情况都不是，则返回null
+            return null;
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            // 触发一个空事件，以便主窗口可以清空显示
+            RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(new Dictionary<string, double>()));
+
             DetachAndDisposeDrawingObject();
             DisablePaintMode(); 
             _sourceImage?.Dispose();
@@ -885,8 +973,8 @@ namespace VisionLite
         private async void UpdateStatus(string message)
         {
             StatusTextBlock.Text = message;
-            // 等待5秒
-            await System.Threading.Tasks.Task.Delay(5000);
+            // 等待7秒
+            await System.Threading.Tasks.Task.Delay(7000);
             // 如果5秒后状态栏文本还是这个消息，就把它清除
             if (StatusTextBlock.Text == message)
             {

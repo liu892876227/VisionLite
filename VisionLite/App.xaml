@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:VisionLite"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+       
+
     </Application.Resources>
 </Application>

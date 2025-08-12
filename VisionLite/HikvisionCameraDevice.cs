@@ -63,8 +63,7 @@ namespace VisionLite
                 int nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref deviceList);
                 if (nRet != 0)
                 {
-                    MessageBox.Show($"[HIK] 枚举设备失败！错误码: 0x{nRet:X}", "打开失败");
-                    return false;
+                    throw new Exception($"[HIK] 枚举设备失败！错误码: 0x{nRet:X}");
                 }
                 // 根据唯一的序列号(DeviceID)在列表中查找设备
                 bool deviceFound = false;
@@ -81,16 +80,14 @@ namespace VisionLite
                 }
                 if (!deviceFound)
                 {
-                    MessageBox.Show($"[HIK] 未能在设备列表中找到序列号为 '{this.DeviceID}' 的设备。", "打开失败");
-                    return false;
+                    throw new Exception($"[HIK] 未能在设备列表中找到序列号为 '{this.DeviceID}' 的设备。");
                 }
 
                 // 创建设备句柄
                 nRet = CameraSdkObject.MV_CC_CreateDevice_NET(ref m_deviceInfo);
                 if (nRet != 0)
                 {
-                    MessageBox.Show($"[HIK] 创建设备句柄失败！错误码: 0x{nRet:X}", "打开失败");
-                    return false;
+                    throw new Exception($"[HIK] 创建设备句柄失败！错误码: 0x{nRet:X}");
                 }
                 // 打开设备
                 nRet = CameraSdkObject.MV_CC_OpenDevice_NET();
@@ -98,8 +95,7 @@ namespace VisionLite
                 {
                     // 如果打开失败，需要销毁已创建的句柄
                     CameraSdkObject.MV_CC_DestroyDevice_NET();
-                    MessageBox.Show($"[HIK] 打开设备失败！错误码: 0x{nRet:X}", "打开失败");
-                    return false;
+                    throw new Exception($"[HIK] 打开设备失败！错误码: 0x{nRet:X}");
                 }
                 // 为GigE相机设置最佳网络包大小
                 if (m_deviceInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
@@ -109,13 +105,39 @@ namespace VisionLite
                 }
                 // 注册回调函数
                 CameraSdkObject.MV_CC_RegisterImageCallBack_NET(ImageCallback, IntPtr.Zero);
+
+                // 在Open成功后，立即启动采集流并设置为软触发模式 ---
+                // 设置为连续采集模式，这是软触发和自由运行的基础
+                CameraSdkObject.MV_CC_SetEnumValue_NET("AcquisitionMode", (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
+                // 默认开启触发模式，等待软触发命令
+                CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_ON);
+                // 将触发源设置为“软触发”
+                CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerSource", (uint)MyCamera.MV_CAM_TRIGGER_SOURCE.MV_TRIGGER_SOURCE_SOFTWARE);
+
+                // 启动采集流（开始接收图像）
+                nRet = CameraSdkObject.MV_CC_StartGrabbing_NET();
+                if (nRet != 0)
+                {
+                    CameraSdkObject.MV_CC_CloseDevice_NET();
+                    CameraSdkObject.MV_CC_DestroyDevice_NET();
+                    throw new Exception($"[HIK] 启动采集流失败！错误码: 0x{nRet:X}");
+                }
+                m_bGrabbing = true; // 标记采集流已成功启动
+
                 return true;
             }
 
             catch (Exception ex)
             {
-                MessageBox.Show($"[HIK] 打开设备时发生未知异常: {ex.Message}", "严重错误");
-                return false;
+                m_bGrabbing = false;
+                // --- 重新抛出捕获的异常或包装它 ---
+                // 如果异常不是我们自己抛出的，就包装一下
+                if (!(ex.Message.StartsWith("[HIK]")))
+                {
+                    throw new Exception($"[HIK] 打开设备时发生未知异常: {ex.Message}");
+                }
+                // 如果是我们自己抛出的，就直接再次抛出
+                throw;
             }
         }
 
@@ -160,15 +182,6 @@ namespace VisionLite
             // Add bool handling if needed
         }
 
-        /// <summary>
-        /// 实现接口的ShowParametersWindow方法，创建并返回海康专属的参数窗口。
-        /// </summary>
-        public Window ShowParametersWindow(Window owner)
-        {
-            var paramWindow = new HikvisionParametersWindow(this, this.CameraSdkObject);
-            paramWindow.Owner = owner;
-            return paramWindow;
-        }
 
         /// <summary>
         /// 当SDK内部线程捕获到一帧图像时，此回调方法会被调用。
@@ -233,35 +246,32 @@ namespace VisionLite
 
         public void GrabAndDisplay()
         {
-            // 单次触发的正确状态设置
-            CameraSdkObject.MV_CC_SetEnumValue_NET("AcquisitionMode", (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
-            CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_ON);
-            CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerSource", (uint)MyCamera.MV_CAM_TRIGGER_SOURCE.MV_TRIGGER_SOURCE_SOFTWARE);
-            if (!m_bGrabbing)
+            // --- 增加对采集流状态的检查 ---
+            if (CameraSdkObject == null || !m_bGrabbing)
             {
-                int nRet = CameraSdkObject.MV_CC_StartGrabbing_NET();
-                if (nRet != 0) return;
-                m_bGrabbing = true;
+                throw new Exception("相机句柄无效或采集流未启动。");
             }
+
+            // --- 移除所有状态设置和if块，只保留触发命令 ---
+            // 因为所有准备工作都已经在Open()中完成
             CameraSdkObject.MV_CC_SetCommandValue_NET("TriggerSoftware");
         }
 
         public void StartContinuousGrab()
         {
-            // 连续采集的正确状态设置
-            CameraSdkObject.MV_CC_SetEnumValue_NET("AcquisitionMode", (uint)MyCamera.MV_CAM_ACQUISITION_MODE.MV_ACQ_MODE_CONTINUOUS);
+            // --- 不再启动采集流，只切换触发模式 ---
+            // 连续采集意味着关闭触发模式，让相机自由运行出图
             CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
-            int nRet = CameraSdkObject.MV_CC_StartGrabbing_NET();
-            if (nRet == 0) m_bGrabbing = true;
         }
 
         public void StopContinuousGrab()
         {
-            int nRet = CameraSdkObject.MV_CC_StopGrabbing_NET();
-            if (nRet == 0) m_bGrabbing = false;
+            // --- 不再停止采集流，只切换回软触发模式 ---
+            // 停止连续采集后，我们希望相机回到“等待软触发”的状态，以便单次采集可以工作
+            CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_ON);
         }
 
-        
+
 
         private void Display()
         {
@@ -272,14 +282,20 @@ namespace VisionLite
                 HOperatorSet.GetImageSize(m_Ho_Image, out HTuple imgWidth, out HTuple imgHeight);
                 window.SetPart(0, 0, imgHeight.I - 1, imgWidth.I - 1);
                 window.DispObj(m_Ho_Image);
-                DisplayWindow.Tag = m_Ho_Image;
+                
             }
             catch (HalconException) { }
         }
 
         public void Close()
         {
-            if (m_bGrabbing) StopContinuousGrab();
+            // --- 确保在关闭设备前，停止采集流 ---
+            if (m_bGrabbing)
+            {
+                CameraSdkObject?.MV_CC_StopGrabbing_NET();
+                m_bGrabbing = false; // 重置标志位
+            }
+            // 后续的关闭和销毁逻辑保持不变
             CameraSdkObject?.MV_CC_CloseDevice_NET();
             CameraSdkObject?.MV_CC_DestroyDevice_NET();
             m_Ho_Image?.Dispose();
@@ -303,6 +319,9 @@ namespace VisionLite
             return nRet == 0 && triggerMode.nCurValue == (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF;
         }
 
-        
+        public HObject GetCurrentImage()
+        {
+            return m_Ho_Image;
+        }
     }
 }

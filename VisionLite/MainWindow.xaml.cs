@@ -34,21 +34,19 @@ namespace VisionLite
         /// 键(Key): 设备的唯一ID字符串。
         /// 值(Value): 实现ICameraDevice接口的相机对象实例。
         /// </summary>
-        private Dictionary<string, ICameraDevice> openCameras = new Dictionary<string, ICameraDevice>();
+        internal Dictionary<string, ICameraDevice> openCameras = new Dictionary<string, ICameraDevice>();
+
+        // 添加一个字段来跟踪相机管理窗口实例
+        private CameraManagementWindow cameraManagementWindow = null;
+
+        // 添加一个公共事件，当相机列表（打开/关闭）发生变化时触发
+        public event EventHandler CameraListChanged;
 
         /// <summary>
         /// 管理所有用于显示图像的WPF控件。
         /// 使用列表可以方便地按顺序查找空闲窗口。
         /// </summary>
         private List<HSmartWindowControlWPF> displayWindows;
-
-        /// <summary>
-        /// 管理所有已打开的、非模态的参数窗口。
-        /// 这是为了防止重复打开同一个相机的参数窗口，并确保在关闭相机时能同步关闭其参数窗口。
-        /// 键(Key): 设备的唯一ID字符串。
-        /// 值(Value): 该设备对应的参数窗口实例。
-        /// </summary>
-        private Dictionary<string, Window> openParameterWindows = new Dictionary<string, Window>();
 
         // 用于跟踪已打开的ROI窗口，防止重复打开
         private ROIToolWindow roiEditorWindow = null;
@@ -77,9 +75,6 @@ namespace VisionLite
             this.Loaded += (s, e) => {
                 SetActiveDisplayWindow(HSmart1);
             };
-
-            // 在窗口启动时，自动调用查找设备方法，不显示成功提示
-            FindAndPopulateDevices();
         }
 
         // 设置活动窗口并更新视觉效果的辅助方法
@@ -117,25 +112,128 @@ namespace VisionLite
             }
         }
 
-
-        #region 设备查找与管理
+        #region 状态栏管理
 
         /// <summary>
-        /// 查找并填充设备列表。采用混合驱动模式，先查找海康SDK支持的设备，再查找Halcon支持的设备，并进行去重
+        /// 更新主窗口状态栏的文本，并在一段时间后自动清除
         /// </summary>
-        /// /// <param name="showSuccessMessage">如果为true，则在查找结束后弹窗提示结果。</param>
-        private void FindAndPopulateDevices(bool showSuccessMessage = false)
+        /// <param name="message">要显示的消息</param>
+        /// <param name="isError">消息是否为错误类型（将以红色显示）</param>
+        public async void UpdateStatus(string message, bool isError)
         {
-            comboBox.Items.Clear();
-            var foundDevices = new List<DeviceInfo>();
+            // 确保在UI线程上更新
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                StatusTextBlock.Text = message;
+                StatusTextBlock.Foreground = isError ? Brushes.Red : Brushes.Black;
 
-            // 使用HashSet来存储已发现的设备序列号，以实现高效去重
+                // 等待7秒
+                await Task.Delay(7000);
+
+                // 如果5秒后状态栏文本还是这个消息，就把它清除
+                if (StatusTextBlock.Text == message)
+                {
+                    StatusTextBlock.Text = "准备就绪";
+                    StatusTextBlock.Foreground = Brushes.Black;
+                }
+            });
+        }
+
+        #endregion
+
+        #region 相机管理
+
+        // 相机管理按钮的点击事件
+        private void CameraManagementButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (cameraManagementWindow != null)
+            {
+                cameraManagementWindow.Activate();
+            }
+            else
+            {
+                cameraManagementWindow = new CameraManagementWindow(this);
+                cameraManagementWindow.Show();
+            }
+        }
+
+        // 供子窗口调用的方法，用于通知主窗口它已关闭
+        public void NotifyCameraManagementWindowClosed()
+        {
+            cameraManagementWindow = null;
+        }
+
+        // 根据当前活动窗口获取对应的相机对象
+        private ICameraDevice GetCameraForActiveWindow()
+        {
+            if (_activeDisplayWindow == null)
+            {
+                UpdateStatus("操作失败：没有选中的活动窗口。", true);
+                return null;
+            }
+
+            foreach (var camera in openCameras.Values)
+            {
+                if (camera.DisplayWindow == _activeDisplayWindow)
+                {
+                    return camera;
+                }
+            }
+            // 如果遍历完都找不到，说明这个窗口确实没有连接相机
+            UpdateStatus("提示：当前活动窗口没有连接相机。", true);
+            return null;
+        }
+
+        // 工具条按钮事件
+        private void SingleCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var camera = GetCameraForActiveWindow();
+                if (camera == null) return;
+
+                if (camera.IsContinuousGrabbing())
+                {
+                    // 修改：使用状态栏提示
+                    UpdateStatus("操作冲突：相机正在连续采集中，请先停止。", true);
+                    return;
+                }
+                camera.GrabAndDisplay();
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"单次采集失败: {ex.Message}", true);
+            }
+        }
+
+        private void ContinueCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var camera = GetCameraForActiveWindow();
+                camera?.StartContinuousGrab();
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"开始连续采集失败: {ex.Message}", true);
+            }
+        }
+
+        private void StopCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
+        {
+            var camera = GetCameraForActiveWindow();
+            camera?.StopContinuousGrab();
+        }
+
+        // 将查找逻辑提取到一个可重用的公共方法中
+        public List<DeviceInfo> GetFoundDevices()
+        {
+            var foundDevices = new List<DeviceInfo>();
             var foundSerialNumbers = new HashSet<string>();
 
             // --- 使用海康SDK查找 ---
             var hikDeviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
             int nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref hikDeviceList);
-
             if (nRet == 0 && hikDeviceList.nDeviceNum > 0)
             {
                 for (int i = 0; i < hikDeviceList.nDeviceNum; i++)
@@ -144,14 +242,12 @@ namespace VisionLite
                     string serialNumber = GetHikSerialNumber(stDevInfo);
                     if (!string.IsNullOrEmpty(serialNumber))
                     {
-                        // 为每个找到的设备创建一个DeviceInfo对象，并标记其SDK类型为Hikvision
                         foundDevices.Add(new DeviceInfo
                         {
                             DisplayName = $"[HIK] {GetHikDisplayName(stDevInfo)} ({serialNumber})",
                             UniqueID = serialNumber,
                             SdkType = CameraSdkType.Hikvision
                         });
-                        // 将序列号添加到HashSet中，用于后续去重
                         foundSerialNumbers.Add(serialNumber);
                     }
                 }
@@ -165,43 +261,99 @@ namespace VisionLite
                 {
                     foreach (string deviceId in halconDeviceList.SArr)
                     {
-
-                        // 尝试从Halcon返回的设备ID字符串中解析出序列号
                         string serialNumber = deviceId.Split(' ').LastOrDefault()?.Trim('\'');
-
-                        // 如果解析成功，并且这个序列号之前没有被海康SDK发现过
                         if (!string.IsNullOrEmpty(serialNumber) && !foundSerialNumbers.Contains(serialNumber))
                         {
-                            // 才将这个设备作为一个新的、由Halcon驱动的设备添加进列表
                             foundDevices.Add(new DeviceInfo
                             {
                                 DisplayName = $"[HAL] {deviceId}",
-                                UniqueID = deviceId,                    // Halcon设备使用其完整的ID字符串作为唯一标识
+                                UniqueID = deviceId,
                                 SdkType = CameraSdkType.HalconMVision
                             });
                         }
                     }
                 }
             }
-            catch (HalconException) { /* 忽略Halcon查找时可能发生的异常，例如接口未安装等 */ }
-
-            // --- 将最终的设备列表填充到UI的ComboBox中 ---
-            if (foundDevices.Any())
+            catch (HalconException) { /* 忽略Halcon查找时可能发生的异常 */ }
+            return foundDevices;
+        }
+        // 将打开逻辑提取为公共方法
+        public (bool Success, string Message) OpenDevice(DeviceInfo selectedDevice)
+        {
+            if (selectedDevice == null)
             {
-                foreach (var dev in foundDevices)
-                {
-                    comboBox.Items.Add(dev);            // ComboBox会自动调用DeviceInfo的ToString()方法来显示
-                }
-                comboBox.SelectedIndex = 0;
-                OpenCamButton.IsEnabled = true;
-                if (showSuccessMessage) MessageBox.Show($"查找成功！共发现 {foundDevices.Count} 个设备。", "完成");
+                return (false, "未选择任何有效设备。");
             }
+            if (openCameras.ContainsKey(selectedDevice.UniqueID))
+            {
+                return (false, $"设备 {selectedDevice.UniqueID} 已经打开了。");
+            }
+            if (openCameras.Count >= 4)
+            {
+                return (false, "最多只能打开4个设备。");
+            }
+            HSmartWindowControlWPF targetWindow = null;
+
+            // 新的窗口选择逻辑
+            // 优先级1: 尝试使用当前激活的窗口，前提是它没被占用
+            if (_activeDisplayWindow != null && !(_activeDisplayWindow.Tag is string))
+            {
+                targetWindow = _activeDisplayWindow;
+            }
+            // 优先级2: 如果活动窗口已被占用，则查找第一个可用的窗口
             else
             {
-                OpenCamButton.IsEnabled = false;
-                if (showSuccessMessage) MessageBox.Show("未发现任何设备！", "提示");
+                targetWindow = displayWindows.FirstOrDefault(w => w.Tag == null || w.Tag is HObject);
             }
-            
+
+            if (targetWindow == null) return (false, "没有可用的显示窗口了。");
+
+            if (targetWindow.Tag is HObject oldImage)
+            {
+                oldImage.Dispose();
+                targetWindow.HalconWindow.ClearWindow();
+            }
+
+            ICameraDevice newCamera = (selectedDevice.SdkType == CameraSdkType.Hikvision)
+                ? (ICameraDevice)new HikvisionCameraDevice(selectedDevice, targetWindow)
+                : new HalconCameraDevice(selectedDevice.UniqueID, targetWindow);
+
+            try
+            {
+                if (newCamera.Open())
+                {
+                    int windowIndex = displayWindows.IndexOf(targetWindow);
+                    openCameras.Add(selectedDevice.UniqueID, newCamera);
+                    targetWindow.Tag = selectedDevice.UniqueID;
+                    CameraListChanged?.Invoke(this, EventArgs.Empty);
+                    return (true, $"设备 {selectedDevice.DisplayName} 打开成功，已绑定到窗口 {windowIndex + 1}。");
+                }
+                // newCamera.Open() 返回 false 的情况（虽然现在不太可能，因为我们改为抛出异常）
+                return (false, $"打开设备 {selectedDevice.DisplayName} 失败。");
+            }
+            catch (Exception ex)
+            {
+                // 捕获从 Open() 抛出的异常，并将其作为返回消息
+                return (false, ex.Message);
+            }
+        }
+        // 将关闭逻辑提取为公共方法
+        public (bool Success, string Message) CloseDevice(DeviceInfo selectedDevice)
+        {
+            if (selectedDevice == null)
+            {
+                return (false, "请选择一个要关闭的设备。");
+            }
+            if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice cameraToClose))
+            {
+                cameraToClose.DisplayWindow.Tag = null;
+                cameraToClose.Close();
+                openCameras.Remove(selectedDevice.UniqueID);
+                CameraListChanged?.Invoke(this, EventArgs.Empty);
+                return (true, $"设备 {selectedDevice.DisplayName} 已成功关闭。");
+            }
+            return (false, $"设备 {selectedDevice.DisplayName} 并未打开，无需关闭。");
+
         }
 
         // 从海康设备信息结构体中提取序列号
@@ -234,230 +386,31 @@ namespace VisionLite
 
 
         #region UI事件处理
-        /// <summary>
-        /// "查找设备"按钮的点击事件处理程序
-        /// </summary>
-        private void FindCamButtonClick(object sender, RoutedEventArgs e)
-        {
-           
-            FindAndPopulateDevices(true);
-        }
-
-        /// <summary>
-        /// "打开设备"按钮的点击事件处理程序
-        /// </summary>
-        private void OpenCamButtonClick(object sender, RoutedEventArgs e)
-        {
-
-            if (!(comboBox.SelectedItem is DeviceInfo selectedDevice))
-            {
-                MessageBox.Show("请先选择一个有效的设备。", "提示");
-                return;
-            }
-
-            if (openCameras.ContainsKey(selectedDevice.UniqueID))
-            {
-                MessageBox.Show($"设备 {selectedDevice.UniqueID} 已经打开了。", "提示");
-                return;
-            }
-
-            // 检查是否已达到最大连接数
-            if (openCameras.Count >= 4)
-            {
-                MessageBox.Show("最多只能打开4个设备。", "提示");
-                return;
-            }
-
-            HSmartWindowControlWPF targetWindow = null;
-            // 优先级 1: 寻找一个完全空闲的窗口 (Tag is null)
-            targetWindow = displayWindows.FirstOrDefault(w => w.Tag == null);
-
-            // 优先级 2: 如果没有完全空闲的，则寻找一个被本地图像占用的窗口 (Tag is HObject)，这样的窗口可以被覆盖
-            if (targetWindow == null)
-            {
-                targetWindow = displayWindows.FirstOrDefault(w => w.Tag is HObject);
-            }
-
-            // 如果到这里 targetWindow 仍然是 null，说明所有窗口都已经被其他相机占用
-            if (targetWindow == null)
-            {
-                MessageBox.Show("没有可用的显示窗口了。所有窗口都已连接相机。", "提示");
-                return;
-            }
-
-            // --- 在绑定新相机前，清理即将被占用的窗口 ---
-            // 如果这个窗口之前是被本地图像占用的，需要释放那个图像资源
-            if (targetWindow.Tag is HObject oldImage)
-            {
-                oldImage.Dispose();
-                targetWindow.Tag = null; // 清空Tag
-                targetWindow.HalconWindow.ClearWindow(); // 清空显示
-            }
-
-            // --- 根据设备类型创建不同的相机实例 ---
-            ICameraDevice newCamera = null;
-            if (selectedDevice.SdkType == CameraSdkType.Hikvision)
-            {
-                newCamera = new HikvisionCameraDevice(selectedDevice, targetWindow);
-            }
-            else // HalconMVision
-            {
-                newCamera = new HalconCameraDevice(selectedDevice.UniqueID, targetWindow);
-            }
-
-            if (newCamera.Open())
-            {
-
-                int windowIndex = displayWindows.IndexOf(targetWindow);
-                // 将新打开的相机添加到管理字典中
-                openCameras.Add(selectedDevice.UniqueID, newCamera);
-                // 使用 string 类型的 deviceId 来“锁定”这个窗口，表示这是一个不可被其他相机覆盖的硬绑定
-                targetWindow.Tag = selectedDevice.UniqueID;
-
-                string successMessage = $"设备 {selectedDevice.DisplayName} 打开成功，并绑定到窗口 {windowIndex + 1}。";
-                MessageBox.Show(successMessage, "成功");
-                // 打开后自动采集一帧图像，提供即时反馈
-                newCamera.GrabAndDisplay(); 
-            }
-
-        }
-
-        /// <summary>
-        /// "关闭设备"按钮的点击事件处理程序
-        /// </summary>
-        private void CloseCamButtonClick(object sender, RoutedEventArgs e)
-        {
-            // 检查下拉框中是否有选中项
-            if (!(comboBox.SelectedItem is DeviceInfo selectedDevice))
-            {
-                MessageBox.Show("请在列表中选择一个要关闭的设备。", "提示");
-                return;
-            }
-            // 尝试从已打开的相机字典中获取设备
-            if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice cameraToClose))
-            {
-                // 如果该相机有打开的参数窗口，先将其关闭
-                if (openParameterWindows.TryGetValue(cameraToClose.DeviceID, out Window paramWindow))
-                {
-                    // 这会自动触发之前订阅的 Closed 事件，将其从字典中移除
-                    paramWindow.Close();
-                }
-
-                // 释放窗口占用
-                cameraToClose.DisplayWindow.Tag = null;
-                // 调用相机的关闭方法
-                cameraToClose.Close();
-                // 从管理字典中移除相机
-                openCameras.Remove(selectedDevice.UniqueID);
-                MessageBox.Show($"设备 {selectedDevice.DisplayName} 已关闭。", "成功");
-            }
-            else
-            {
-                MessageBox.Show($"设备 {selectedDevice.DisplayName} 并未打开。", "提示");
-            }
-        }
-
-        /// <summary>
-        /// "单次触发图像采集"按钮的点击事件处理程序
-        /// </summary>
-        private void SingleCaptureButtonClick(object sender, RoutedEventArgs e)
-        {
-
-            if (!(comboBox.SelectedItem is DeviceInfo selectedDevice)) return;
-            if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice camera))
-            {
-                // 进行状态检查，防止在连续采集中进行单次触发
-                if (camera.IsContinuousGrabbing())
-                {
-                    MessageBox.Show("设备正在连续采集中，请先停止。", "操作冲突");
-                    return;
-                }
-                camera.GrabAndDisplay();
-            }
-            else { MessageBox.Show("设备未打开，无法采集。", "提示"); }
-        }
-
-        /// <summary>
-        /// "连续触发图像采集"按钮的点击事件处理程序
-        /// </summary>
-        private void ContinueCaptureButtonClick(object sender, RoutedEventArgs e)
-        {
-            if (!(comboBox.SelectedItem is DeviceInfo selectedDevice)) return;
-            if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice camera))
-            {
-                camera.StartContinuousGrab();
-            }
-            else { MessageBox.Show("设备未打开，无法开始连续采集。", "提示"); }
-        }
-
-        /// <summary>
-        /// "停止连续图像采集"按钮的点击事件处理程序
-        /// </summary>
-        private void StopContinueCaptureButtonClick(object sender, RoutedEventArgs e)
-        {
-            if (!(comboBox.SelectedItem is DeviceInfo selectedDevice)) return;
-            if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice camera))
-            {
-                camera.StopContinuousGrab();
-            }
-            else { MessageBox.Show("设备未打开，无法停止。", "提示"); }
-        }
-
-        /// <summary>
-        /// "查看设备参数"按钮的点击事件处理程序
-        /// </summary>
-        private void ViewCamParaButtonClick(object sender, RoutedEventArgs e)
-        {
-            if (!(comboBox.SelectedItem is DeviceInfo selectedDevice))
-            {
-                MessageBox.Show("请选择一个要查看参数的设备。", "提示");
-                return;
-            }
-            if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice camera))
-            {
-                // 检查参数窗口是否已存在
-                if (openParameterWindows.TryGetValue(camera.DeviceID, out Window existingWindow))
-                {
-                    // 如果存在，则激活它，而不是创建新的
-                    existingWindow.Activate();
-                    return;
-                }
-
-
-                // 通过接口调用，获取设备专属的参数窗口实例
-                Window paramWindow = camera.ShowParametersWindow(this);
-
-                // 根据相机类型决定是模态还是非模态显示
-                if (camera is HalconCameraDevice)
-                {
-                    // Halcon设备强制使用模态对话框，因为设置关键参数需要暂停程序流程
-                    paramWindow.ShowDialog();
-                }
-                else // Hikvision设备使用非模态
-                {
-                    // 订阅窗口的Closed事件，以便在它关闭时，我们能将它从管理字典中移除
-                    paramWindow.Closed += (s, args) => {
-                        openParameterWindows.Remove(camera.DeviceID);
-                    };
-                    // 将新窗口添加到管理字典中
-                    openParameterWindows.Add(camera.DeviceID, paramWindow);
-                    // 以非模态方式显示窗口
-                    paramWindow.Show();
-                }
-
-            }
-            else
-            {
-                MessageBox.Show("设备未打开，无法查看参数。", "提示");
-            }
-        }
 
         /// <summary>
         /// “加载图像”按钮的点击事件处理程序
         /// </summary>
         private void LoadImgButtonClick(object sender, RoutedEventArgs e)
         {
-            
+            // --- 在所有操作之前，先检查目标窗口的状态 ---
+            HSmartWindowControlWPF targetWindow = _activeDisplayWindow;
+
+            // 检查是否有活动窗口
+            if (targetWindow == null)
+            {
+                UpdateStatus("请先点击选择一个显示窗口。", true);
+                return;
+            }
+
+            // 检查活动窗口是否已经被相机占用
+            if (targetWindow.Tag is string deviceId)
+            {
+                // 如果Tag是字符串，说明它被一个相机锁定
+                UpdateStatus($"此窗口已被相机 '{deviceId}' 占用，无法加载图像。", true);
+                return; // 中断操作
+            }
+
+            // --- 如果检查通过，才继续执行后续的文件选择和加载逻辑 ---
 
             // 创建文件选择对话框
             OpenFileDialog openFileDialog = new OpenFileDialog
@@ -481,51 +434,30 @@ namespace VisionLite
                 HObject loadedImage = null; // 在 try-catch 外部声明，以便 finally 中可以访问
                 try
                 {
-                    string filePath = openFileDialog.FileName;
-
-                    // 目标窗口固定为当前活动窗口
-                    HSmartWindowControlWPF targetWindow = _activeDisplayWindow;
-
-                    if (targetWindow != null)
+                    // 如果窗口之前有本地图像，先释放它
+                    if (targetWindow.Tag is HObject oldImage)
                     {
-                        // 在显示前，先处理旧的 Tag
-                        // 如果目标窗口之前已经有本地图像，先释放它
-                        if (targetWindow.Tag is HObject oldImage)
-                        {
-                            oldImage.Dispose();
-                        }
-                        // 如果之前是相机，则发出警告并停止采集，但 Tag 的最终决定权交给后续逻辑
-                        else if (targetWindow.Tag is string deviceId && openCameras.ContainsKey(deviceId))
-                        {
-                            var camera = openCameras[deviceId];
-                            if (camera.IsContinuousGrabbing())
-                            {
-                                camera.StopContinuousGrab();
-                                MessageBox.Show($"窗口被相机 {deviceId} 占用，已停止其连续采集以加载本地图像。", "提示");
-                            }
-                        }
-
-                        // 加载新图像
-                        HOperatorSet.ReadImage(out loadedImage, filePath);
-
-                        // 显示新图像并更新Tag
-                        HWindow hWindow = targetWindow.HalconWindow;
-                        HOperatorSet.GetImageSize(loadedImage, out HTuple width, out HTuple height);
-                        hWindow.SetPart(0, 0, height.I - 1, width.I - 1);
-                        hWindow.ClearWindow();
-                        hWindow.DispObj(loadedImage);
-
-                        // 将新加载的 HObject 实例赋给 Tag，表示此窗口当前显示的是一个可被覆盖的本地图像
-                        targetWindow.Tag = loadedImage;
-
-                        // 将 loadedImage 的所有权转移给了 Tag，所以不能在这里 Dispose 它
-                        // 并且，需要将 loadedImage 设为 null，防止 finally 块中错误地释放它
-                        loadedImage = null;
+                        oldImage.Dispose();
                     }
+
+                    // 加载新图像
+                    HOperatorSet.ReadImage(out loadedImage, openFileDialog.FileName);
+
+                    // 显示新图像并更新Tag
+                    HWindow hWindow = targetWindow.HalconWindow;
+                    HOperatorSet.GetImageSize(loadedImage, out HTuple width, out HTuple height);
+                    hWindow.SetPart(0, 0, height.I - 1, width.I - 1);
+                    hWindow.ClearWindow();
+                    hWindow.DispObj(loadedImage);
+
+                    // 将新加载的 HObject 实例赋给 Tag
+                    targetWindow.Tag = loadedImage;
+                    loadedImage = null;
                 }
+                
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"加载图像时发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                    UpdateStatus($"加载图像时发生错误: {ex.Message}", true);
                 }
                 finally
                 {
@@ -554,15 +486,27 @@ namespace VisionLite
             if (_activeDisplayWindow == null)
             {
                 // 如果没有图像，主窗口直接弹出提示，然后中断操作
-                MessageBox.Show(this, "没有活动的图像窗口被选中。", "提示");
+                UpdateStatus("请先点击选择一个显示窗口以使用ROI工具。", true);
                 return; // 不再创建ROIToolWindow
             }
 
-            if (!(_activeDisplayWindow.Tag is HObject currentImage && currentImage.IsInitialized()))
+            HObject currentImage = null;
+
+            // 首先尝试从相机获取图像
+            var camera = openCameras.Values.FirstOrDefault(c => c.DisplayWindow == _activeDisplayWindow);
+            if (camera != null)
             {
-                // 获取活动窗口的索引用于提示信息
-                int windowIndex = displayWindows.IndexOf(_activeDisplayWindow) + 1;
-                MessageBox.Show(this, $"窗口{windowIndex}中没有可用的图像，无法打开ROI工具。", "提示");
+                currentImage = camera.GetCurrentImage();
+            }
+            // 如果没有相机，再尝试从Tag获取本地加载的图像
+            else if (_activeDisplayWindow.Tag is HObject localImage)
+            {
+                currentImage = localImage;
+            }
+
+            if (currentImage == null || !currentImage.IsInitialized() || currentImage.CountObj() < 1)
+            {
+                UpdateStatus("当前活动窗口中没有可用的图像，无法打开ROI工具。", true);
                 return;
             }
 
@@ -573,8 +517,11 @@ namespace VisionLite
                 // 使用 CopyImage 创建一个内存独立的深拷贝
                 HOperatorSet.CopyImage(currentImage, out imageCopyForRoi);
 
-                roiEditorWindow = new ROIToolWindow(_activeDisplayWindow);
-                
+                roiEditorWindow = new ROIToolWindow(_activeDisplayWindow, this);
+
+                // --- 订阅新的 RoiUpdated 事件 ---
+                roiEditorWindow.RoiUpdated += OnRoiParametersUpdated;
+
                 roiEditorWindow.ROIAccepted += (HObject returnedRoi) =>
                 {
                     roiEditorWindow?.Close();
@@ -584,6 +531,11 @@ namespace VisionLite
 
                 roiEditorWindow.Closed += (s, args) =>
                 {
+                    // 在窗口关闭时，确保取消订阅以防内存泄漏
+                    if (roiEditorWindow != null)
+                    {
+                        roiEditorWindow.RoiUpdated -= OnRoiParametersUpdated;
+                    }
                     roiEditorWindow = null;
                 };
 
@@ -599,6 +551,12 @@ namespace VisionLite
             }
         }
 
+        // --- 事件处理方法，用于更新主窗口UI ---
+        private void OnRoiParametersUpdated(object sender, RoiUpdatedEventArgs e)
+        {
+            // 直接使用事件参数中已经格式化好的字符串来更新TextBlock
+            RoiParametersTextBlock.Text = e.ParametersAsString;
+        }
 
         /// <summary>
         /// 封装的图像显示方法
@@ -629,11 +587,10 @@ namespace VisionLite
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            // 先关闭所有还开着的参数窗口
-            foreach (var window in openParameterWindows.Values.ToList()) 
-            {
-                window.Close();
-            }
+            // 关闭相机管理窗口（如果它还开着）
+            cameraManagementWindow?.Close();
+           
+           
             // 如果ROI窗口还开着，也关闭它
             roiEditorWindow?.Close();
             // 再关闭所有相机

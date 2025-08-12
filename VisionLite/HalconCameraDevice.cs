@@ -43,12 +43,7 @@ namespace VisionLite
             HOperatorSet.GenEmptyObj(out m_Ho_Image);
         }
 
-        public Window ShowParametersWindow(Window owner)
-        {
-            var paramWindow = new HalconParametersWindow(this);
-            paramWindow.Owner = owner;
-            return paramWindow;
-        }
+        
 
         /// <summary>
         /// 打开并配置相机
@@ -73,13 +68,18 @@ namespace VisionLite
                 HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerMode", "On");
                 HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerSource", "Software");
 
+                // 在Open成功后，立即启动采集流
+                HOperatorSet.GrabImageStart(m_pAcqHandle, -1);
+                isGrabbing = true;
 
                 return true; // 打开成功
             }
             catch (HalconException ex)
             {
-                MessageBox.Show($"打开设备 {DeviceID} 失败: \n{ex.GetErrorMessage()}", "错误");
-                return false;
+                // 如果启动采集流失败，也要确保isGrabbing为false
+                isGrabbing = false;
+
+                throw new Exception($"打开设备 {DeviceID} 失败: {ex.GetErrorMessage()}");
             }
         }
 
@@ -90,19 +90,12 @@ namespace VisionLite
         {
             if (m_pAcqHandle == null)
             {
-                MessageBox.Show("相机句柄无效，请先打开设备。", "错误");
-                return;
+                throw new Exception("相机句柄无效或采集流未启动。");
             }
 
             try
             {
-                // --- 在需要时才启动采集流 ---
-                // 如果采集流尚未启动，(例如，在Open()之后第一次单采)，则启动它。
-                if (!isGrabbing)
-                {
-                    HOperatorSet.GrabImageStart(m_pAcqHandle, -1);
-                    isGrabbing = true;
-                }
+                
                 // 发送软触发命令
                 HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerSoftware", "do_it");
                 // 异步获取一帧图像，设置5秒超时
@@ -120,7 +113,7 @@ namespace VisionLite
                 // 忽略单次采集的超时错误，避免在调整参数后第一次触发时因未来得及出图而报错
                 if (ex.GetErrorCode() != 5322) // H_ERR_TIMEOUT
                 {
-                    MessageBox.Show($"从设备 {DeviceID} 采集图像失败: \n{ex.GetErrorMessage()}", "错误");
+                    throw new Exception($"从设备 {DeviceID} 采集图像失败: {ex.GetErrorMessage()}");
                 }
             }
         }
@@ -151,7 +144,7 @@ namespace VisionLite
             }
             catch (HalconException ex)
             {
-                MessageBox.Show($"开始连续采集失败: \n{ex.GetErrorMessage()}", "错误");
+                throw new Exception($"开始连续采集失败: {ex.GetErrorMessage()}");
             }
         }
 
@@ -209,7 +202,7 @@ namespace VisionLite
                 window.SetPart(0, 0, height.I - 1, width.I - 1);                            // 设置窗口的显示区域，让它刚好能完整显示整张图片
                 //window.ClearWindow();                                                     // 清除窗口上之前的内容
                 window.DispObj(m_Ho_Image);                                                   // 在窗口上把图像画出来
-                DisplayWindow.Tag = m_Ho_Image;
+                
             }
 
             catch (HalconException)
@@ -290,6 +283,11 @@ namespace VisionLite
 
         // 供参数窗口访问句柄
         public HTuple GetAcqHandle() => m_pAcqHandle;
+
+        public HObject GetCurrentImage()
+        {
+            return m_Ho_Image;
+        }
     }
 
 }
