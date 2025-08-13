@@ -10,7 +10,7 @@ namespace VisionLite
 {
     /// <summary>
     /// 定义所有相机设备必须实现的通用接口。
-    /// 这个接口是硬件抽象层的核心，它使得主窗口(MainWindow)可以以统一的方式
+    /// 这个接口是硬件抽象层的核心，使主窗口(MainWindow)可以以统一的方式
     /// 与不同品牌、不同SDK的相机进行交互，而无需关心其内部实现细节。
     /// </summary>
     public interface ICameraDevice
@@ -26,7 +26,7 @@ namespace VisionLite
         HSmartWindowControlWPF DisplayWindow { get; }
 
         /// <summary>
-        /// 打开与相机的连接。
+        /// 打开与相机的连接，并使其进入准备就绪状态（例如，启动采集流）。
         /// </summary>
         /// <returns>如果成功打开则返回true，否则返回false。</returns>
         bool Open();
@@ -38,6 +38,7 @@ namespace VisionLite
 
         /// <summary>
         /// 执行一次单次触发采集，并将结果显示在绑定的窗口中。
+        /// 要求相机已处于“等待触发”的状态。
         /// </summary>
         void GrabAndDisplay();
 
@@ -47,7 +48,7 @@ namespace VisionLite
         void StartContinuousGrab();
 
         /// <summary>
-        /// 停止连续采集。
+        /// 停止连续采集，并使相机恢复到“等待触发”的状态。
         /// </summary>
         void StopContinuousGrab();
 

@@ -18,42 +18,73 @@ using System.IO;
 using HalconDotNet;
 using MvCamCtrl.NET;
 using System.Runtime.InteropServices;
+using System.ComponentModel;
+
 
 
 namespace VisionLite
 {
     /// <summary>
-    /// 应用程序的主窗口，负责UI交互和整体逻辑协调
+    /// 应用程序的主窗口，是所有UI交互和业务逻辑的协调中心。
+    /// 负责管理：
+    /// - 多个图像显示窗口的布局和激活状态。
+    /// - 所有已连接的相机设备实例。
+    /// - 与子窗口（如相机管理、ROI工具）的通信。
+    /// - 用户通过顶部工具栏发起的各种操作。
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region 核心字段和属性
 
         /// <summary>
         /// 管理所有已打开的相机设备。
-        /// 使用字典可以快速通过唯一的设备ID（如序列号）找到对应的相机对象。
-        /// 键(Key): 设备的唯一ID字符串。
-        /// 值(Value): 实现ICameraDevice接口的相机对象实例。
+        /// Key: 设备的唯一ID (string)。
+        /// Value: 实现ICameraDevice接口的相机对象实例。
+        /// 'internal'修饰符允许同程序集中的其他类（如CameraManagementWindow）访问它。
         /// </summary>
         internal Dictionary<string, ICameraDevice> openCameras = new Dictionary<string, ICameraDevice>();
 
-        // 添加一个字段来跟踪相机管理窗口实例
+        /// <summary>
+        /// 跟踪非模态的相机管理窗口实例，以实现单例模式（只打开一个）。
+        /// </summary>
         private CameraManagementWindow cameraManagementWindow = null;
 
-        // 添加一个公共事件，当相机列表（打开/关闭）发生变化时触发
+        /// <summary>
+        /// 当相机列表（打开/关闭相机）发生变化时触发的事件。
+        /// 用于通知其他窗口（如CameraManagementWindow）同步其UI状态。
+        /// </summary>
         public event EventHandler CameraListChanged;
 
         /// <summary>
-        /// 管理所有用于显示图像的WPF控件。
-        /// 使用列表可以方便地按顺序查找空闲窗口。
+        /// 管理所有用于显示图像的WPF控件的列表。
         /// </summary>
         private List<HSmartWindowControlWPF> displayWindows;
 
-        // 用于跟踪已打开的ROI窗口，防止重复打开
+        /// <summary>
+        /// 跟踪ROI工具窗口实例，以实现单例模式。
+        /// </summary>
         private ROIToolWindow roiEditorWindow = null;
 
-        // 用于跟踪当前活动窗口的字段
+        /// <summary>
+        /// 存储当前被用户点击选中的活动显示窗口。
+        /// 所有针对窗口的操作（如采集、加载图像）都将作用于此窗口。
+        /// </summary>
         private HSmartWindowControlWPF _activeDisplayWindow;
 
+        /// <summary>
+        /// 缓存由ROIToolWindow发送的最新一次ROI更新事件的参数。
+        /// 用于在主窗口视图变化时，能够重新计算并更新Adorner的位置。
+        /// </summary>
+        private RoiUpdatedEventArgs _lastRoiArgs;
+
+        /// <summary>
+        /// 持有当前在活动窗口上显示的ROI参数浮动框 (Adorner) 的实例。
+        /// </summary>
+        private RoiAdorner _roiAdorner;
+
+        #endregion
+
+        //构造函数
         public MainWindow()
         {
             InitializeComponent();
@@ -68,16 +99,19 @@ namespace VisionLite
             foreach (var window in displayWindows)
             {
                 window.PreviewMouseDown += DisplayWindow_PreviewMouseDown;
+                
             }
-
-            // 在启动时，默认激活第一个窗口
-            // 确保在UI加载完成后再设置活动窗口
+            // 在窗口加载完成后，默认激活第一个显示窗口
             this.Loaded += (s, e) => {
                 SetActiveDisplayWindow(HSmart1);
             };
         }
 
-        // 设置活动窗口并更新视觉效果的辅助方法
+        #region 窗口激活与视图管理
+        /// <summary>
+        /// 设置指定的显示窗口为活动窗口，并更新其UI（高亮边框）。
+        /// </summary>
+        /// <param name="newActiveWindow">要被激活的显示窗口。</param>
         private void SetActiveDisplayWindow(HSmartWindowControlWPF newActiveWindow)
         {
             if (newActiveWindow == null) return;
@@ -85,7 +119,7 @@ namespace VisionLite
             // 更新活动窗口的引用
             _activeDisplayWindow = newActiveWindow;
 
-            // 重置所有窗口的边框样式
+            // 统一视觉反馈：先重置所有窗口的边框样式为默认灰色
             Border1.BorderBrush = Brushes.Gray;
             Border1.BorderThickness = new Thickness(1);
             Border2.BorderBrush = Brushes.Gray;
@@ -102,8 +136,9 @@ namespace VisionLite
             else if (_activeDisplayWindow == HSmart4) { Border4.BorderBrush = Brushes.DodgerBlue; Border4.BorderThickness = new Thickness(2); }
         }
 
-
-        // 所有显示窗口共用的点击事件处理器
+        /// <summary>
+        /// 所有显示窗口共用的鼠标点击事件处理器。
+        /// </summary>
         private void DisplayWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is HSmartWindowControlWPF clickedWindow)
@@ -111,6 +146,20 @@ namespace VisionLite
                 SetActiveDisplayWindow(clickedWindow);
             }
         }
+
+        /// <summary>
+        /// 处理显示窗口视图变化（由拖动或缩放图像引起）的事件。
+        /// </summary>
+        private void OnDisplayWindowViewChanged(object sender, EventArgs e)
+        {
+            // 确保事件来自于当前活动的窗口，并且ROI工具正处于打开状态
+            if (sender == _activeDisplayWindow && _roiAdorner != null && _lastRoiArgs != null)
+            {
+                // 使用缓存的最后一次ROI参数，重新计算并更新Adorner的位置
+                UpdateAdornerPosition(_lastRoiArgs);
+            }
+        }
+        #endregion
 
         #region 状态栏管理
 
@@ -143,27 +192,36 @@ namespace VisionLite
 
         #region 相机管理
 
-        // 相机管理按钮的点击事件
+        /// <summary>
+        /// "相机管理"工具栏按钮的点击事件处理程序。
+        /// 实现相机管理窗口的单例模式。
+        /// </summary>
         private void CameraManagementButton_Click(object sender, RoutedEventArgs e)
         {
             if (cameraManagementWindow != null)
             {
-                cameraManagementWindow.Activate();
+                cameraManagementWindow.Activate();// 如果已存在，则激活并置于顶层
             }
             else
             {
-                cameraManagementWindow = new CameraManagementWindow(this);
+                cameraManagementWindow = new CameraManagementWindow(this);// 否则创建新实例
                 cameraManagementWindow.Show();
             }
         }
 
-        // 供子窗口调用的方法，用于通知主窗口它已关闭
+        /// <summary>
+        /// 供子窗口（CameraManagementWindow）调用的方法，
+        /// 用于在子窗口关闭时通知主窗口，以便主窗口可以重置实例跟踪字段。
+        /// </summary>
         public void NotifyCameraManagementWindowClosed()
         {
             cameraManagementWindow = null;
         }
 
-        // 根据当前活动窗口获取对应的相机对象
+        /// <summary>
+        /// 根据当前活动窗口获取其对应的相机对象实例。
+        /// </summary>
+        /// <returns>如果找到则返回ICameraDevice实例，否则返回null并更新状态栏。</returns>
         private ICameraDevice GetCameraForActiveWindow()
         {
             if (_activeDisplayWindow == null)
@@ -171,7 +229,8 @@ namespace VisionLite
                 UpdateStatus("操作失败：没有选中的活动窗口。", true);
                 return null;
             }
-
+            // 通过遍历已打开的相机列表，查找哪个相机的DisplayWindow与当前活动窗口匹配
+            // 这是比使用Tag属性更可靠的方式
             foreach (var camera in openCameras.Values)
             {
                 if (camera.DisplayWindow == _activeDisplayWindow)
@@ -184,48 +243,10 @@ namespace VisionLite
             return null;
         }
 
-        // 工具条按钮事件
-        private void SingleCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var camera = GetCameraForActiveWindow();
-                if (camera == null) return;
-
-                if (camera.IsContinuousGrabbing())
-                {
-                    // 修改：使用状态栏提示
-                    UpdateStatus("操作冲突：相机正在连续采集中，请先停止。", true);
-                    return;
-                }
-                camera.GrabAndDisplay();
-            }
-            catch (Exception ex)
-            {
-                UpdateStatus($"单次采集失败: {ex.Message}", true);
-            }
-        }
-
-        private void ContinueCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                var camera = GetCameraForActiveWindow();
-                camera?.StartContinuousGrab();
-            }
-            catch (Exception ex)
-            {
-                UpdateStatus($"开始连续采集失败: {ex.Message}", true);
-            }
-        }
-
-        private void StopCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
-        {
-            var camera = GetCameraForActiveWindow();
-            camera?.StopContinuousGrab();
-        }
-
-        // 将查找逻辑提取到一个可重用的公共方法中
+        /// <summary>
+        /// 枚举所有连接到PC的、受支持的相机设备（海康和Halcon MVision）。
+        /// </summary>
+        /// <returns>一个包含所有被发现设备信息的列表。</returns>
         public List<DeviceInfo> GetFoundDevices()
         {
             var foundDevices = new List<DeviceInfo>();
@@ -277,7 +298,12 @@ namespace VisionLite
             catch (HalconException) { /* 忽略Halcon查找时可能发生的异常 */ }
             return foundDevices;
         }
-        // 将打开逻辑提取为公共方法
+
+        /// <summary>
+        /// 打开指定的相机设备，并将其绑定到一个可用的显示窗口。
+        /// </summary>
+        /// <param name="selectedDevice">要打开的设备信息。</param>
+        /// <returns>一个元组，包含操作是否成功(bool)和相应的提示信息(string)。</returns>
         public (bool Success, string Message) OpenDevice(DeviceInfo selectedDevice)
         {
             if (selectedDevice == null)
@@ -337,7 +363,9 @@ namespace VisionLite
                 return (false, ex.Message);
             }
         }
-        // 将关闭逻辑提取为公共方法
+        /// <summary>
+        /// 关闭指定的相机设备并释放相关资源。
+        /// </summary>
         public (bool Success, string Message) CloseDevice(DeviceInfo selectedDevice)
         {
             if (selectedDevice == null)
@@ -355,37 +383,55 @@ namespace VisionLite
             return (false, $"设备 {selectedDevice.DisplayName} 并未打开，无需关闭。");
 
         }
-
-        // 从海康设备信息结构体中提取序列号
-        private string GetHikSerialNumber(MyCamera.MV_CC_DEVICE_INFO devInfo)
-        {
-            if (devInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
-                return ((MyCamera.MV_GIGE_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO))).chSerialNumber;
-            if (devInfo.nTLayerType == MyCamera.MV_USB_DEVICE)
-                return ((MyCamera.MV_USB3_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stUsb3VInfo, typeof(MyCamera.MV_USB3_DEVICE_INFO))).chSerialNumber;
-            return null;
-        }
-
-        // 从海康设备信息结构体中提取用户自定义名称或型号名称
-        private string GetHikDisplayName(MyCamera.MV_CC_DEVICE_INFO devInfo)
-        {
-            if (devInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
-            {
-                var info = ((MyCamera.MV_GIGE_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO)));
-                return string.IsNullOrEmpty(info.chUserDefinedName) ? info.chModelName : info.chUserDefinedName;
-            }
-            if (devInfo.nTLayerType == MyCamera.MV_USB_DEVICE)
-            {
-                var info = ((MyCamera.MV_USB3_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stUsb3VInfo, typeof(MyCamera.MV_USB3_DEVICE_INFO)));
-                return string.IsNullOrEmpty(info.chUserDefinedName) ? info.chModelName : info.chUserDefinedName;
-            }
-            return "Unknown Device";
-        }
-
         #endregion
 
+        #region 工具栏按钮事件处理
+        /// <summary>
+        /// “单次采集”工具栏按钮的点击事件。
+        /// </summary>
+        private void SingleCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var camera = GetCameraForActiveWindow();
+                if (camera == null) return;
 
-        #region UI事件处理
+                if (camera.IsContinuousGrabbing())
+                {
+                    // 修改：使用状态栏提示
+                    UpdateStatus("操作冲突：相机正在连续采集中，请先停止。", true);
+                    return;
+                }
+                camera.GrabAndDisplay();
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"单次采集失败: {ex.Message}", true);
+            }
+        }
+        /// <summary>
+        /// “连续采集”工具栏按钮的点击事件。
+        /// </summary>
+        private void ContinueCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var camera = GetCameraForActiveWindow();
+                camera?.StartContinuousGrab();
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"开始连续采集失败: {ex.Message}", true);
+            }
+        }
+        /// <summary>
+        /// “停止采集”工具栏按钮的点击事件。
+        /// </summary>
+        private void StopCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
+        {
+            var camera = GetCameraForActiveWindow();
+            camera?.StopContinuousGrab();
+        }
 
         /// <summary>
         /// “加载图像”按钮的点击事件处理程序
@@ -454,7 +500,7 @@ namespace VisionLite
                     targetWindow.Tag = loadedImage;
                     loadedImage = null;
                 }
-                
+
                 catch (Exception ex)
                 {
                     UpdateStatus($"加载图像时发生错误: {ex.Message}", true);
@@ -519,18 +565,20 @@ namespace VisionLite
 
                 roiEditorWindow = new ROIToolWindow(_activeDisplayWindow, this);
 
-                // --- 订阅新的 RoiUpdated 事件 ---
+                // 订阅ROI工具的参数更新事件，以便在主窗口显示浮动参数框
                 roiEditorWindow.RoiUpdated += OnRoiParametersUpdated;
-
+                // 订阅ROI工具的“确认”事件
                 roiEditorWindow.ROIAccepted += (HObject returnedRoi) =>
                 {
                     roiEditorWindow?.Close();
                     this.Activate();
                     returnedRoi.Dispose();
                 };
-
+                // 订阅ROI工具的关闭事件，用于清理资源
                 roiEditorWindow.Closed += (s, args) =>
                 {
+                    // --- 在窗口关闭时，移除Adorner ---
+                    RemoveRoiAdorner();
                     // 在窗口关闭时，确保取消订阅以防内存泄漏
                     if (roiEditorWindow != null)
                     {
@@ -538,6 +586,9 @@ namespace VisionLite
                     }
                     roiEditorWindow = null;
                 };
+
+                // --- 显示Adorner浮动参数框 ---
+                ShowRoiAdorner();
 
                 // 将这个稳定的副本传递给子窗口
                 roiEditorWindow.Show();
@@ -550,13 +601,114 @@ namespace VisionLite
                 imageCopyForRoi?.Dispose();
             }
         }
+        #endregion
 
-        // --- 事件处理方法，用于更新主窗口UI ---
+
+        // 从海康设备信息结构体中提取序列号
+        private string GetHikSerialNumber(MyCamera.MV_CC_DEVICE_INFO devInfo)
+        {
+            if (devInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
+                return ((MyCamera.MV_GIGE_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO))).chSerialNumber;
+            if (devInfo.nTLayerType == MyCamera.MV_USB_DEVICE)
+                return ((MyCamera.MV_USB3_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stUsb3VInfo, typeof(MyCamera.MV_USB3_DEVICE_INFO))).chSerialNumber;
+            return null;
+        }
+
+        // 从海康设备信息结构体中提取用户自定义名称或型号名称
+        private string GetHikDisplayName(MyCamera.MV_CC_DEVICE_INFO devInfo)
+        {
+            if (devInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
+            {
+                var info = ((MyCamera.MV_GIGE_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stGigEInfo, typeof(MyCamera.MV_GIGE_DEVICE_INFO)));
+                return string.IsNullOrEmpty(info.chUserDefinedName) ? info.chModelName : info.chUserDefinedName;
+            }
+            if (devInfo.nTLayerType == MyCamera.MV_USB_DEVICE)
+            {
+                var info = ((MyCamera.MV_USB3_DEVICE_INFO)MyCamera.ByteToStruct(devInfo.SpecialInfo.stUsb3VInfo, typeof(MyCamera.MV_USB3_DEVICE_INFO)));
+                return string.IsNullOrEmpty(info.chUserDefinedName) ? info.chModelName : info.chUserDefinedName;
+            }
+            return "Unknown Device";
+        }
+
+        #region Adorner (浮动参数框) 管理
+        /// <summary>
+        /// 在ROI更新事件触发时被调用，负责更新状态栏和浮动参数框。
+        /// </summary>
         private void OnRoiParametersUpdated(object sender, RoiUpdatedEventArgs e)
         {
             // 直接使用事件参数中已经格式化好的字符串来更新TextBlock
-            RoiParametersTextBlock.Text = e.ParametersAsString;
+            RoiParametersTextBlock.Text = e.ParametersAsString.Replace(Environment.NewLine, " | ");
+
+            // --- 缓存最新的事件参数 ---
+            _lastRoiArgs = e;
+
+            // --- 调用新的辅助方法来更新Adorner ---
+            UpdateAdornerPosition(e);
         }
+
+        /// <summary>
+        /// 核心辅助方法：计算并更新Adorner在屏幕上的位置和显示的文本。
+        /// </summary>
+        private void UpdateAdornerPosition(RoiUpdatedEventArgs e)
+        {
+            if (_roiAdorner != null && e.Position.HasValue)
+            {
+                var hWindow = _activeDisplayWindow.HalconWindow;
+                // 将Halcon的图像坐标转换为WPF控件的像素坐标
+                hWindow.ConvertCoordinatesImageToWindow(e.Position.Value.Y, e.Position.Value.X, out double windowY, out double windowX);
+                // 预先测量Adorner的尺寸，以便进行垂直居中对齐
+                _roiAdorner.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                double adornerHeight = _roiAdorner.DesiredSize.Height;
+                // 计算最终位置：在ROI最右侧再加一点偏移，并垂直居中
+                Point newPosition = new Point(windowX + 15, windowY - adornerHeight / 2);
+                _roiAdorner.Update(e.ParametersAsString, newPosition);
+            }
+            else if (_roiAdorner != null)
+            {
+                _roiAdorner.Update("", new Point(0, 0));
+            }
+        }
+
+        /// <summary>
+        /// 创建并显示Adorner，同时开始监听窗口视图的变化。
+        /// </summary>
+        private void ShowRoiAdorner()
+        {
+            if (_activeDisplayWindow != null)
+            {
+                // 获取 Adorner 层
+                AdornerLayer adornerLayer = AdornerLayer.GetAdornerLayer(_activeDisplayWindow);
+                if (adornerLayer != null)
+                {
+                    // 创建 Adorner 实例并添加到层中
+                    _roiAdorner = new RoiAdorner(_activeDisplayWindow);
+                    adornerLayer.Add(_roiAdorner);
+                    // --- 添加对 HImagePart 属性变化的监听 ---
+                    DependencyPropertyDescriptor dpd = DependencyPropertyDescriptor.FromProperty(HSmartWindowControlWPF.HImagePartProperty, typeof(HSmartWindowControlWPF));
+                    dpd.AddValueChanged(_activeDisplayWindow, OnDisplayWindowViewChanged);
+                }
+            }
+        }
+        /// <summary>
+        /// 移除Adorner，并停止监听窗口视图变化，同时清空缓存。
+        /// </summary>
+        private void RemoveRoiAdorner()
+        {
+            if (_activeDisplayWindow != null && _roiAdorner != null)
+            {
+                // --- 移除对 HImagePart 属性变化的监听 ---
+                DependencyPropertyDescriptor dpd = DependencyPropertyDescriptor.FromProperty(HSmartWindowControlWPF.HImagePartProperty, typeof(HSmartWindowControlWPF));
+                dpd.RemoveValueChanged(_activeDisplayWindow, OnDisplayWindowViewChanged);
+
+                AdornerLayer adornerLayer = AdornerLayer.GetAdornerLayer(_activeDisplayWindow);
+                adornerLayer?.Remove(_roiAdorner);
+                _roiAdorner = null;
+                // --- 清空缓存的ROI参数 ---
+                _lastRoiArgs = null;
+            }
+        }
+        #endregion
+
 
         /// <summary>
         /// 封装的图像显示方法
@@ -582,7 +734,7 @@ namespace VisionLite
 
 
         /// <summary>
-        /// 窗口关闭事件，用于释放资源，确保主窗口关闭时，所有参数窗口也被关闭
+        /// 主窗口关闭时触发，用于安全地释放所有资源。
         /// </summary>
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -599,8 +751,6 @@ namespace VisionLite
                 camera.Close();
             }
         }
-        #endregion
-
 
         
     }

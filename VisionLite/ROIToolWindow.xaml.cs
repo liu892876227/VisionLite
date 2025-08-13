@@ -12,9 +12,16 @@ using System.Linq;
 
 namespace VisionLite
 {
-    // 定义一个委托，用于 ROI 确认事件
+    /// <summary>
+    /// 定义一个委托，用于在用户确认ROI选择后，将最终的ROI对象传递出去。
+    /// </summary>
+    /// <param name="roi">用户最终确认的ROI几何对象。</param>
     public delegate void ROIAcceptedEventHandler(HObject roi);
-
+    /// <summary>
+    /// ROI编辑工具窗口的后台逻辑。
+    /// 负责创建、管理交互式的Halcon ROI (HDrawingObject)，
+    /// 并通过事件与主窗口通信，实时更新ROI参数。
+    /// </summary>
     public partial class ROIToolWindow : Window
     {
         
@@ -22,7 +29,9 @@ namespace VisionLite
         /// 当ROI的参数（位置、大小等）发生变化时触发的事件。
         /// </summary>
         public event EventHandler<RoiUpdatedEventArgs> RoiUpdated;
-
+        /// <summary>
+        /// 当用户点击“确定”按钮，确认最终选择的ROI时触发的事件。
+        /// </summary>
         public event ROIAcceptedEventHandler ROIAccepted;
 
         // --- 私有成员 ---
@@ -34,22 +43,27 @@ namespace VisionLite
         // --- 用于涂抹式ROI的成员 ---
         private HObject _paintedRoi; // 用于存储涂抹生成的ROI区域
         private bool _isPaintingMode = false; // 标记是否处于涂抹模式
-        private bool _isPaintingActive = false; // 标记鼠标左键是否按下
-        
-        // 用于记录上一次鼠标的坐标，以实现连续绘制
-        private HTuple _lastPaintRow = -1;
-        private HTuple _lastPaintCol = -1;
-
+        private bool _isPaintingActive = false; // 标记鼠标左键是否按下以激活涂抹
+        private HTuple _lastPaintRow = -1;// 用于记录上一次鼠标的行坐标，以实现连续绘制
+        private HTuple _lastPaintCol = -1;// 用于记录上一次鼠标的列坐标
         private string _brushShape = "圆形"; // 当前画笔形状, 默认圆形
         private int _brushRadius = 20;       // 圆形画笔的半径
         private int _brushRectWidth = 40;    // 矩形画笔的宽度
         private int _brushRectHeight = 20;   // 矩形画笔的高度
 
-        // 用来存储对主窗口的引用 
+        /// <summary>
+        /// 对主窗口的引用，用于访问相机列表等公共资源。
+        /// </summary>
         private readonly MainWindow m_pMainWindow;
-        // 用于存储从MainWindow传来的目标显示窗口
+        /// <summary>
+        /// ROI将要绘制在其上的主窗口显示控件。
+        /// </summary>
         private HSmartWindowControlWPF _targetDisplayWindow;
-
+        /// <summary>
+        /// 构造函数。
+        /// </summary>
+        /// <param name="targetWindow">ROI将要绘制在其上的主窗口显示控件。</param>
+        /// <param name="mainWindow">对主窗口的引用，用于访问相机列表等公共资源。</param>
         public ROIToolWindow(HSmartWindowControlWPF targetWindow, MainWindow mainWindow)
         {
             InitializeComponent();
@@ -242,13 +256,16 @@ namespace VisionLite
         }
 
 
-        // --- 收集参数并触发事件 ---
+        /// <summary>
+        /// 核心方法：收集当前ROI的数值参数和几何轮廓，
+        /// 然后触发RoiUpdated事件，将这些信息广播出去。
+        /// </summary>
         private void NotifyRoiUpdate()
         {
             if (_drawingObject == null || _drawingObject.ID == -1)
             {
                 // 如果ROI不存在，可以触发一个带有空参数的事件来清空显示
-                RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(new Dictionary<string, double>()));
+                RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(new Dictionary<string, double>(), null));
                 return;
             }
 
@@ -277,10 +294,44 @@ namespace VisionLite
                 parameters["column"] = _drawingObject.GetDrawingObjectParams("column");
                 parameters["radius"] = _drawingObject.GetDrawingObjectParams("radius");
             }
-            // ... 您可以为其他ROI类型（如ellipse）添加更多逻辑 ...
+            
+            else if (roiType == "ellipse")
+            {
+                parameters["row"] = _drawingObject.GetDrawingObjectParams("row");
+                parameters["column"] = _drawingObject.GetDrawingObjectParams("column");
+                parameters["phi"] = (_drawingObject.GetDrawingObjectParams("phi")) * 180 / Math.PI; // 转换为度
+                parameters["radius1"] = _drawingObject.GetDrawingObjectParams("radius1"); // 半长轴
+                parameters["radius2"] = _drawingObject.GetDrawingObjectParams("radius2"); // 半短轴
+            }
+            
+            else if (roiType == "line")
+            {
+                parameters["row1"] = _drawingObject.GetDrawingObjectParams("row1");
+                parameters["column1"] = _drawingObject.GetDrawingObjectParams("column1");
+                parameters["row2"] = _drawingObject.GetDrawingObjectParams("row2");
+                parameters["column2"] = _drawingObject.GetDrawingObjectParams("column2");
+            }
 
-            // 触发事件，将收集到的参数传递出去
-            RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(parameters));
+            // --- 获取ROI的轮廓 (Contour) ---
+            HObject contour = null;
+            try
+            {
+                // GetDrawingObjectIconic() 返回的是一个可以代表ROI几何形状的对象
+                // 对于 Rectangle2, 它是一个XLD Contour
+                using (HObject iconic = _drawingObject.GetDrawingObjectIconic())
+                {
+                    // 复制一份，因为iconic需要被释放
+                    contour = iconic.CopyObj(1, -1);
+                }
+            }
+            catch (HalconException)
+            {
+                contour?.Dispose();
+                contour = null;
+            }
+
+            // --- 将轮廓对象和参数一起传递出去 ---
+            RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(parameters, contour));
         }
 
         /// <summary>
@@ -737,6 +788,9 @@ namespace VisionLite
 
         #endregion
 
+        /// <summary>
+        /// “保存图像”按钮的点击事件处理程序。
+        /// </summary>
         private void SaveROIImageButton_Click(object sender, RoutedEventArgs e)
         {
             // 再次确认ROI是否有效
@@ -830,7 +884,9 @@ namespace VisionLite
                 }
             }
         }
-
+        /// <summary>
+        /// “确定”按钮的点击事件处理程序。
+        /// </summary>
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             // 临时的HObject，用于统一返回
@@ -858,7 +914,9 @@ namespace VisionLite
             ROIAccepted?.Invoke(roiToReturn);
             this.Close();
         }
-
+        /// <summary>
+        /// “取消”按钮的点击事件处理程序。
+        /// </summary>
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
@@ -884,7 +942,10 @@ namespace VisionLite
             }
         }
 
-        // 用于获取目标窗口应该显示的图像 
+        /// <summary>
+        /// 健壮的辅助方法，用于获取目标窗口当前应该显示的图像。
+        /// 它会智能地区分图像是来自相机还是本地文件。
+        /// </summary>
         private HObject GetTargetWindowImage()
         {
             if (_targetDisplayWindow == null || m_pMainWindow == null)
@@ -908,11 +969,13 @@ namespace VisionLite
             // 如果两种情况都不是，则返回null
             return null;
         }
-
+        /// <summary>
+        /// 窗口关闭时触发，用于安全地清理所有资源。
+        /// </summary>
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // 触发一个空事件，以便主窗口可以清空显示
-            RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(new Dictionary<string, double>()));
+            RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(new Dictionary<string, double>(), null));
 
             DetachAndDisposeDrawingObject();
             DisablePaintMode(); 

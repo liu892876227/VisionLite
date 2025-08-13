@@ -25,21 +25,29 @@ namespace VisionLite
         public MyCamera CameraSdkObject { get; private set; }
 
         // --- 接口属性实现 ---
-        public string DeviceID { get; private set; }
-        public HSmartWindowControlWPF DisplayWindow { get; private set; }
+        public string DeviceID { get; private set; }// 获取相机的唯一标识符（序列号）
+        public HSmartWindowControlWPF DisplayWindow { get; private set; }// 获取此相机实例绑定的WPF显示控件
 
         // --- 私有成员变量 ---
-        private MyCamera.MV_CC_DEVICE_INFO m_deviceInfo;
+        private MyCamera.MV_CC_DEVICE_INFO m_deviceInfo;                        // 存储从SDK枚举到的设备信息结构体
         private HObject m_Ho_Image;
-        private volatile bool m_bGrabbing = false;                              // 标记采集流是否已启动
-        private MyCamera.cbOutputdelegate ImageCallback;                        // 图像回调委托
+        /// <summary>
+        /// 标记相机的采集流（grabbing stream）是否已通过StartGrabbing启动。
+        /// 使用'volatile'关键字确保在多线程访问时其值的可见性。
+        /// </summary>// 用于存储该相机捕获的最新一帧Halcon图像
+        private volatile bool m_bGrabbing = false;                             
+        private MyCamera.cbOutputdelegate ImageCallback;                        // 存储图像回调委托的实例，防止被垃圾回收
 
-        // 定义了哪些参数在设置前需要先停止采集
+        // 定义了哪些参数在设置前需要先停止采集流，以确保硬件能够正确应用这些可能会改变图像尺寸或格式的关键更改
         private readonly List<string> criticalParameters = new List<string>
         {
             "Width", "Height", "OffsetX", "OffsetY", "PixelFormat"
         };
-
+        /// <summary>
+        /// 构造函数，初始化相机设备。
+        /// </summary>
+        /// <param name="info">包含设备唯一ID等信息的DeviceInfo对象。</param>
+        /// <param name="window">此相机将要绑定的WPF显示控件。</param>
         public HikvisionCameraDevice(DeviceInfo info, HSmartWindowControlWPF window)
         {
             this.DeviceID = info.UniqueID;
@@ -47,18 +55,23 @@ namespace VisionLite
             CameraSdkObject = new MyCamera();
             m_deviceInfo = new MyCamera.MV_CC_DEVICE_INFO();
 
-            // 将 ProcessImageCallback 方法绑定到回调委托上
+            // 将 ProcessImageCallback 方法绑定到回调委托上，当SDK有新图像时会调用它
+            // 这是一个异步过程，由SDK的内部线程触发。
             ImageCallback = new MyCamera.cbOutputdelegate(ProcessImageCallback);
+            // 初始化一个空的Halcon图像对象，避免在使用前为null
             HOperatorSet.GenEmptyObj(out m_Ho_Image);
         }
 
+        #region 核心功能方法 (ICameraDevice接口实现)
         /// <summary>
-        /// 实现接口的Open方法，完成设备连接和初始化。
+        /// 打开设备连接，配置初始参数，并启动采集流，使相机进入“等待触发”状态。
         /// </summary>
+        /// <returns>操作是否成功。</returns>
         public bool Open()
         {
             try
             {
+                // 枚举所有GigE和USB相机
                 var deviceList = new MyCamera.MV_CC_DEVICE_INFO_LIST();
                 int nRet = MyCamera.MV_CC_EnumDevices_NET(MyCamera.MV_GIGE_DEVICE | MyCamera.MV_USB_DEVICE, ref deviceList);
                 if (nRet != 0)
@@ -97,13 +110,13 @@ namespace VisionLite
                     CameraSdkObject.MV_CC_DestroyDevice_NET();
                     throw new Exception($"[HIK] 打开设备失败！错误码: 0x{nRet:X}");
                 }
-                // 为GigE相机设置最佳网络包大小
+                // 对于GigE相机，设置最佳网络包大小以优化传输性能
                 if (m_deviceInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
                 {
                     int nPacketSize = CameraSdkObject.MV_CC_GetOptimalPacketSize_NET();
                     if (nPacketSize > 0) CameraSdkObject.MV_CC_SetIntValue_NET("GevSCPSPacketSize", (uint)nPacketSize);
                 }
-                // 注册回调函数
+                // 注册回调函数，告诉SDK新图像数据应该发往 ProcessImageCallback 方法
                 CameraSdkObject.MV_CC_RegisterImageCallBack_NET(ImageCallback, IntPtr.Zero);
 
                 // 在Open成功后，立即启动采集流并设置为软触发模式 ---
@@ -114,10 +127,11 @@ namespace VisionLite
                 // 将触发源设置为“软触发”
                 CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerSource", (uint)MyCamera.MV_CAM_TRIGGER_SOURCE.MV_TRIGGER_SOURCE_SOFTWARE);
 
-                // 启动采集流（开始接收图像）
+                // 启动采集流。这会打开数据通道，让相机准备好接收触发命令
                 nRet = CameraSdkObject.MV_CC_StartGrabbing_NET();
                 if (nRet != 0)
                 {
+                    // 如果失败，必须清理资源并抛出异常
                     CameraSdkObject.MV_CC_CloseDevice_NET();
                     CameraSdkObject.MV_CC_DestroyDevice_NET();
                     throw new Exception($"[HIK] 启动采集流失败！错误码: 0x{nRet:X}");
@@ -129,6 +143,7 @@ namespace VisionLite
 
             catch (Exception ex)
             {
+                // 捕获所有可能的异常，确保状态正确并向上层报告错误
                 m_bGrabbing = false;
                 // --- 重新抛出捕获的异常或包装它 ---
                 // 如果异常不是我们自己抛出的，就包装一下
@@ -142,7 +157,7 @@ namespace VisionLite
         }
 
         /// <summary>
-        /// 实现接口的SetParameter方法，提供安全设置参数的逻辑。
+        /// 安全地设置相机参数，并处理设置关键参数时需要暂停采集的逻辑。
         /// </summary>
         public bool SetParameter(string paramName, object value)
         {
@@ -153,9 +168,9 @@ namespace VisionLite
                 if (criticalParameters.Contains(paramName))
                 {
                     bool wasGrabbing = m_bGrabbing;
-                    bool wasContinuous = IsContinuousGrabbing();                                        // 记录下在停止前是否是连续模式
+                    bool wasContinuous = IsContinuousGrabbing();// 记录下在停止前是否是连续模式
                     if (wasGrabbing) { CameraSdkObject.MV_CC_StopGrabbing_NET(); m_bGrabbing = false; }
-                    SetSdkParameter(paramName, value);
+                    SetSdkParameter(paramName, value);// 设置参数
 
                     // 如果之前在采集，则恢复采集状态
                     if (wasGrabbing)
@@ -163,7 +178,7 @@ namespace VisionLite
                         CameraSdkObject.MV_CC_StartGrabbing_NET();
                         m_bGrabbing = true;
 
-                        // 特别地，如果之前是连续模式，需要重新调用StartContinuousGrab来恢复正确的触发模式
+                        // 如果之前是连续模式，需要重新设置为连续模式
                         if (wasContinuous) { StartContinuousGrab(); }
                     }
                 }
@@ -173,14 +188,80 @@ namespace VisionLite
             catch (Exception ex) { throw new Exception($"[HIK] 设置参数 '{paramName}' 失败: {ex.Message}", ex); }
         }
 
-        // 根据值的类型调用不同的海康SDK函数
-        private void SetSdkParameter(string paramName, object value)
+        /// <summary>
+        /// 执行一次单次触发采集。要求相机已处于“等待触发”的状态。
+        /// </summary>
+        public void GrabAndDisplay()
         {
-            if (value is long intVal) CameraSdkObject.MV_CC_SetIntValueEx_NET(paramName, intVal);
-            else if (value is float floatVal) CameraSdkObject.MV_CC_SetFloatValue_NET(paramName, floatVal);
-            else if (value is string stringVal) CameraSdkObject.MV_CC_SetEnumValueByString_NET(paramName, stringVal);
-            // Add bool handling if needed
+            // --- 增加对采集流状态的检查 ---
+            if (CameraSdkObject == null || !m_bGrabbing)
+            {
+                throw new Exception("相机句柄无效或采集流未启动。");
+            }
+            // 直接发送软触发命令。所有准备工作都已在Open()中完成
+            CameraSdkObject.MV_CC_SetCommandValue_NET("TriggerSoftware");
         }
+        /// <summary>
+        /// 开始自由运行的连续采集模式。
+        /// </summary>
+        public void StartContinuousGrab()
+        {
+            // 连续采集意味着关闭触发模式，让相机自由运行出图。
+            // 采集流已在Open()中启动，所以这里只需切换模式。
+            CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
+        }
+        /// <summary>
+        /// 停止连续采集，并使相机恢复到“等待触发”的状态。
+        /// </summary>
+        public void StopContinuousGrab()
+        {
+            // 停止连续采集后，我们希望相机回到“等待软触发”的状态，以便单次采集可以工作
+            CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_ON);
+        }
+        /// <summary>
+        /// 关闭与相机的连接并释放所有相关资源。
+        /// </summary>
+        public void Close()
+        {
+            // --- 确保在关闭设备前，停止采集流 ---
+            if (m_bGrabbing)
+            {
+                CameraSdkObject?.MV_CC_StopGrabbing_NET();
+                m_bGrabbing = false; // 重置标志位
+            }
+            // 依次关闭设备和销毁句柄
+            CameraSdkObject?.MV_CC_CloseDevice_NET();
+            CameraSdkObject?.MV_CC_DestroyDevice_NET();
+            // 释放Halcon图像对象占用的内存
+            m_Ho_Image?.Dispose();
+        }
+        /// <summary>
+        /// 检查相机当前是否处于连续采集模式。
+        /// </summary>
+        public bool IsContinuousGrabbing()
+        {
+            // 必须先确保采集流已启动
+            if (!m_bGrabbing || CameraSdkObject == null)
+            {
+                return false;
+            }
+            // 判断的依据是 TriggerMode 是否为 OFF
+            var triggerMode = new MyCamera.MVCC_ENUMVALUE();
+            int nRet = CameraSdkObject.MV_CC_GetEnumValue_NET("TriggerMode", ref triggerMode);
+            // 如果成功获取到参数，并且当前值为 OFF，则我们认为它在“连续采集”
+            return nRet == 0 && triggerMode.nCurValue == (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF;
+        }
+        /// <summary>
+        /// 获取相机当前持有的最新图像对象。
+        /// </summary>
+        public HObject GetCurrentImage()
+        {
+            return m_Ho_Image;
+        }
+        #endregion
+
+        #region 内部辅助方法
+        
 
 
         /// <summary>
@@ -189,7 +270,7 @@ namespace VisionLite
         /// </summary>
         private void ProcessImageCallback(IntPtr pData, ref MyCamera.MV_FRAME_OUT_INFO pFrameInfo, IntPtr pUser)
         {
-            m_Ho_Image?.Dispose();                              // 释放上一帧的Halcon图像内存
+            m_Ho_Image?.Dispose();// 释放上一帧的Halcon图像内存
 
             // --- 核心转换逻辑: 将海康的图像数据(IntPtr)转换为Halcon的HObject ---
             int width = pFrameInfo.nWidth;
@@ -212,23 +293,59 @@ namespace VisionLite
 
                     HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
                     break;
-                // Add more conversions if needed (e.g., for Bayer patterns)
+                
                 case MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8:
                     HOperatorSet.GenImage1(out HObject bayerImage, "byte", width, height, pData);
                     HOperatorSet.CfaToRgb(bayerImage, out m_Ho_Image, "bayer_rg", "bilinear");
                     bayerImage.Dispose();
                     break;
                 default:
-                    // For unsupported formats, create an empty image
+                    // 对于不支持的格式，创建一个空的图像对象以避免错误
                     HOperatorSet.GenEmptyObj(out m_Ho_Image);
                     break;
             }
 
             // --- 线程安全地更新UI ---
-            // 使用BeginInvoke将显示任务“派发”给UI线程，当前后台线程无需等待，可以立刻返回去接收下一帧
+            // 使用Dispatcher.BeginInvoke将显示任务“派发”给UI线程，
+            // 当前后台线程无需等待，可以立刻返回去接收下一帧，保证了采集效率。
             DisplayWindow.Dispatcher.BeginInvoke(new Action(Display));
         }
+        /// <summary>
+        /// 在绑定的WPF窗口中显示当前图像。
+        /// 此方法总是在UI线程上被调用。
+        /// </summary>
+        private void Display()
+        {
+            if (m_Ho_Image == null || !m_Ho_Image.IsInitialized()) return;
+            try
+            {
+                HWindow window = DisplayWindow.HalconWindow;
+                HOperatorSet.GetImageSize(m_Ho_Image, out HTuple imgWidth, out HTuple imgHeight);
+                // 设置窗口的显示区域，让它刚好能完整显示整张图片
+                window.SetPart(0, 0, imgHeight.I - 1, imgWidth.I - 1);
+                // 在窗口上把图像画出来
+                window.DispObj(m_Ho_Image);
 
+            }
+            catch (HalconException)
+            {
+                // 在快速刷新或窗口关闭时，可能会发生异常，这里静默处理以增强程序稳定性。
+            }
+        }
+
+        /// <summary>
+        /// 根据值的类型调用不同的海康SDK函数来设置参数。
+        /// </summary>
+        private void SetSdkParameter(string paramName, object value)
+        {
+            if (value is long intVal) CameraSdkObject.MV_CC_SetIntValueEx_NET(paramName, intVal);
+            else if (value is float floatVal) CameraSdkObject.MV_CC_SetFloatValue_NET(paramName, floatVal);
+            else if (value is string stringVal) CameraSdkObject.MV_CC_SetEnumValueByString_NET(paramName, stringVal);
+            // 这里可以根据需要添加对 bool 等其他类型的处理
+        }
+        /// <summary>
+        /// 从海康设备信息结构体中提取序列号。
+        /// </summary>
         private string GetSerialNumber(MyCamera.MV_CC_DEVICE_INFO devInfo)
         {
             if (devInfo.nTLayerType == MyCamera.MV_GIGE_DEVICE)
@@ -243,85 +360,7 @@ namespace VisionLite
             }
             return null;
         }
+        #endregion
 
-        public void GrabAndDisplay()
-        {
-            // --- 增加对采集流状态的检查 ---
-            if (CameraSdkObject == null || !m_bGrabbing)
-            {
-                throw new Exception("相机句柄无效或采集流未启动。");
-            }
-
-            // --- 移除所有状态设置和if块，只保留触发命令 ---
-            // 因为所有准备工作都已经在Open()中完成
-            CameraSdkObject.MV_CC_SetCommandValue_NET("TriggerSoftware");
-        }
-
-        public void StartContinuousGrab()
-        {
-            // --- 不再启动采集流，只切换触发模式 ---
-            // 连续采集意味着关闭触发模式，让相机自由运行出图
-            CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF);
-        }
-
-        public void StopContinuousGrab()
-        {
-            // --- 不再停止采集流，只切换回软触发模式 ---
-            // 停止连续采集后，我们希望相机回到“等待软触发”的状态，以便单次采集可以工作
-            CameraSdkObject.MV_CC_SetEnumValue_NET("TriggerMode", (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_ON);
-        }
-
-
-
-        private void Display()
-        {
-            if (m_Ho_Image == null || !m_Ho_Image.IsInitialized()) return;
-            try
-            {
-                HWindow window = DisplayWindow.HalconWindow;
-                HOperatorSet.GetImageSize(m_Ho_Image, out HTuple imgWidth, out HTuple imgHeight);
-                window.SetPart(0, 0, imgHeight.I - 1, imgWidth.I - 1);
-                window.DispObj(m_Ho_Image);
-                
-            }
-            catch (HalconException) { }
-        }
-
-        public void Close()
-        {
-            // --- 确保在关闭设备前，停止采集流 ---
-            if (m_bGrabbing)
-            {
-                CameraSdkObject?.MV_CC_StopGrabbing_NET();
-                m_bGrabbing = false; // 重置标志位
-            }
-            // 后续的关闭和销毁逻辑保持不变
-            CameraSdkObject?.MV_CC_CloseDevice_NET();
-            CameraSdkObject?.MV_CC_DestroyDevice_NET();
-            m_Ho_Image?.Dispose();
-        }
-
-        
-        /// <summary>
-        /// 判断相机是否处于自由运行的连续采集模式（即用户理解的“连续触发”）
-        /// </summary>
-        public bool IsContinuousGrabbing()
-        {
-            // 必须先确保采集流已启动
-            if (!m_bGrabbing || CameraSdkObject == null)
-            {
-                return false;
-            }
-            // 判断的依据是 TriggerMode 是否为 OFF
-            var triggerMode = new MyCamera.MVCC_ENUMVALUE();
-            int nRet = CameraSdkObject.MV_CC_GetEnumValue_NET("TriggerMode", ref triggerMode);
-            // 如果成功获取到参数，并且当前值为 OFF，则我们认为它在“连续采集”
-            return nRet == 0 && triggerMode.nCurValue == (uint)MyCamera.MV_CAM_TRIGGER_MODE.MV_TRIGGER_MODE_OFF;
-        }
-
-        public HObject GetCurrentImage()
-        {
-            return m_Ho_Image;
-        }
     }
 }

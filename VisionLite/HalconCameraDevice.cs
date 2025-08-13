@@ -10,22 +10,24 @@ using System.Threading;
 namespace VisionLite
 {
     /// <summary>
-    /// 使用Halcon MVision接口的相机实现
+    /// ICameraDevice接口的具体实现，使用Halcon的MVision Framegrabber接口来控制相机。
+    /// 这是一个通用的接口，可以驱动多种符合GenICam标准的相机。
     /// </summary>
     public class HalconCameraDevice : ICameraDevice
     {
+        // --- 接口属性实现 ---
+        public string DeviceID { get; private set; } // 获取相机的唯一标识符（由Halcon在枚举时生成的ID）
+        public HSmartWindowControlWPF DisplayWindow { get; private set; } // 获取此相机实例绑定的WPF显示控件
 
-        public string DeviceID { get; private set; } // 相机的唯一ID
-        public HSmartWindowControlWPF DisplayWindow { get; private set; } // 绑定的显示窗口
+        public HTuple m_pAcqHandle; //  Halcon图像采集设备的句柄
+        public HObject m_Ho_Image; // 用于存储该相机捕获的最新一帧Halcon图像
 
-        public HTuple m_pAcqHandle; // 相机的句柄
-        public HObject m_Ho_Image; // 用于存储该相机捕获的图像
+        // 私有成员变量
+        private bool isGrabbing = false; // 标记相机的采集流（grabbing stream）是否已通过GrabImageStart启动
 
-        private bool isGrabbing = false; // 标记相机采集流是否已通过 GrabImageStart 启动
-
-        // 用于控制连续采集的成员变量
-        private Thread continuousGrabThread; // 用于连续采集的后台线程
-        private volatile bool isContinuousGrabbing = false;
+        
+        private Thread continuousGrabThread; // 用于执行连续采集的后台线程
+        private volatile bool isContinuousGrabbing = false;// 控制后台连续采集线程循环的标志位
 
         // 定义一个列表，包含那些需要停止采集才能修改的关键参数
         private readonly List<string> criticalParameters = new List<string>
@@ -34,8 +36,10 @@ namespace VisionLite
         };
 
         /// <summary>
-        /// 构造函数
+        /// 构造函数，初始化相机设备。
         /// </summary>
+        /// <param name="deviceId">由Halcon InfoFramegrabber返回的设备唯一ID。</param>
+        /// <param name="window">此相机将要绑定的WPF显示控件。</param>
         public HalconCameraDevice(string deviceId, HSmartWindowControlWPF window)
         {
             this.DeviceID = deviceId;
@@ -43,15 +47,16 @@ namespace VisionLite
             HOperatorSet.GenEmptyObj(out m_Ho_Image);
         }
 
-        
-
+        #region 核心功能方法 (ICameraDevice接口实现)
         /// <summary>
-        /// 打开并配置相机
+        /// 打开设备连接，配置初始参数，并启动采集流，使相机进入“等待触发”状态。
         /// </summary>
+        /// <returns>操作是否成功。</returns>
         public bool Open()
         {
             try
             {
+                // 打开指定的图像采集设备
                 HOperatorSet.OpenFramegrabber("MVision", 1, 1, 0, 0, 0, 0,
                     "progressive",          //HTuple field,指定采集的是半场还是全场图像。'default' 或 'progressive'。通常使用 'default'。
                     8,                      //HTuple bitsPerChannel,每个通道的像素位数。-1 表示使用默认值。常见值为 8 (对于 Mono8 或 RGB8)。
@@ -84,18 +89,17 @@ namespace VisionLite
         }
 
         /// <summary>
-        /// 单次触发并显示图像
+        /// 执行一次单次触发采集，并将结果显示在绑定的窗口中。
         /// </summary>
         public void GrabAndDisplay()
         {
-            if (m_pAcqHandle == null)
+            if (m_pAcqHandle == null || !isGrabbing)
             {
                 throw new Exception("相机句柄无效或采集流未启动。");
             }
 
             try
             {
-                
                 // 发送软触发命令
                 HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerSoftware", "do_it");
                 // 异步获取一帧图像，设置5秒超时
@@ -118,7 +122,9 @@ namespace VisionLite
             }
         }
 
-        // 开始连续采集的方法
+        /// <summary>
+        /// 开始自由运行的连续采集模式。
+        /// </summary>
         public void StartContinuousGrab()
         {
             if (m_pAcqHandle == null || isContinuousGrabbing)
@@ -134,7 +140,7 @@ namespace VisionLite
                     HOperatorSet.GrabImageStart(m_pAcqHandle, -1);
                     isGrabbing = true;
                 }
-
+                // Halcon的连续采集是通过在后台线程中不断发送软触发命令来模拟的
                 // 打开连续采集的开关
                 isContinuousGrabbing = true;
                 // 创建并启动一个新的后台线程，让它去执行 ContinuousGrabLoop 方法
@@ -148,70 +154,14 @@ namespace VisionLite
             }
         }
 
-        // 停止连续采集的方法
+        /// <summary>
+        /// 停止连续采集。
+        /// </summary>
         public void StopContinuousGrab()
         {
-            // 1. 设置标志位，通知后台线程停止循环。
-            //    由于 isContinuousGrabbing 是 volatile 的，这个更改会立即被后台线程看到。
+            // 只需将标志位设为false，后台线程就会在下一次循环检查时自动退出
             isContinuousGrabbing = false;
-
-            // 2. 移除 Join() 调用。
-            //    我们不再阻塞UI线程等待后台线程结束。
-            //    后台线程会在完成最后一次循环（最多几毫秒）后自行终止。
-            //    continuousGrabThread?.Join(200); // <--- 移除或注释掉这行致命的代码
         }
-
-        // 后台线程真正执行的循环体
-        private void ContinuousGrabLoop()
-        {
-            HObject tempImage = new HObject(); // 在循环外创建临时图像变量，提高效率
-
-            // 只要开关是开着的，就一直循环
-            while (isContinuousGrabbing)
-            {
-                try
-                {
-                    // 和单次采集一样，先发触发命令，再异步获取图像
-                    HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerSoftware", "do_it");
-                    HOperatorSet.GrabImageAsync(out tempImage, m_pAcqHandle, 1000); // 超时设短一点
-
-                    // 在UI主线程上更新显示
-                    DisplayWindow.Dispatcher.Invoke(() =>
-                    {
-                        m_Ho_Image?.Dispose();
-                        m_Ho_Image = tempImage.CopyObj(1, -1); // 必须复制一份图像，因为tempImage马上会被下一次循环覆盖
-                        Display();
-                    });
-                }
-                catch (HalconException) { Thread.Sleep(50); }
-            }
-            tempImage.Dispose(); // 循环结束后，释放临时图像变量
-        }
-
-        /// <summary>
-        /// 在绑定的窗口中显示图像
-        /// </summary>
-        private void Display()
-        {
-            if (m_Ho_Image == null || !m_Ho_Image.IsInitialized()) return;
-
-            try
-            {
-                HWindow window = DisplayWindow.HalconWindow;                                // 从WPF控件中获取到真正的HALCON窗口对象
-                HOperatorSet.GetImageSize(m_Ho_Image, out HTuple width, out HTuple height);   // 获取图像的宽和高
-                window.SetPart(0, 0, height.I - 1, width.I - 1);                            // 设置窗口的显示区域，让它刚好能完整显示整张图片
-                //window.ClearWindow();                                                     // 清除窗口上之前的内容
-                window.DispObj(m_Ho_Image);                                                   // 在窗口上把图像画出来
-                
-            }
-
-            catch (HalconException)
-            {
-                // 在快速刷新时，对象可能已被释放，忽略此错误
-            }
-        }
-
-
 
         /// <summary>
         /// 关闭相机并释放资源
@@ -238,16 +188,16 @@ namespace VisionLite
             // 无论相机是否打开，都尝试释放图像对象占用的内存
             m_Ho_Image?.Dispose();
         }
-
-
+        /// <summary>
+        /// 检查相机当前是否处于连续采集模式。
+        /// </summary>
         public bool IsContinuousGrabbing() => isContinuousGrabbing;
-
-        
-
-        // --- 内部方法，供参数窗口调用 ---
+        /// <summary>
+        /// 安全地设置相机参数。
+        /// </summary>
         public bool SetParameter(string paramName, object value)
         {
-            
+
             if (m_pAcqHandle == null) return false;
             try
             {
@@ -256,6 +206,7 @@ namespace VisionLite
                 {
                     bool wasContinuous = this.isContinuousGrabbing;
                     if (wasContinuous) StopContinuousGrab();
+                    // 对于Halcon接口，设置关键参数前需要先调用AcquisitionStop
                     if (isGrabbing)
                     {
                         HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "AcquisitionStop", "do_it");
@@ -264,6 +215,7 @@ namespace VisionLite
                     HOperatorSet.SetFramegrabberParam(m_pAcqHandle, paramName, halconValue);
                     if (wasContinuous)
                     {
+                        // 重启采集流
                         HOperatorSet.GrabImageStart(m_pAcqHandle, -1);
                         isGrabbing = true;
                         StartContinuousGrab();
@@ -280,14 +232,82 @@ namespace VisionLite
                 throw hex;
             }
         }
-
-        // 供参数窗口访问句柄
-        public HTuple GetAcqHandle() => m_pAcqHandle;
-
+        /// <summary>
+        /// 获取相机当前持有的最新图像对象。
+        /// </summary>
         public HObject GetCurrentImage()
         {
             return m_Ho_Image;
         }
+        /// <summary>
+        /// 供参数窗口访问句柄。
+        /// </summary>
+        public HTuple GetAcqHandle() => m_pAcqHandle;
+        #endregion
+
+        #region 内部辅助方法
+        /// <summary>
+        /// 后台线程循环体，用于模拟连续采集。
+        /// </summary>
+        private void ContinuousGrabLoop()
+        {
+            HObject tempImage = new HObject(); // 在循环外创建临时图像变量，提高效率
+
+            // 只要开关是开着的，就一直循环
+            while (isContinuousGrabbing)
+            {
+                try
+                {
+                    // 和单次采集一样，先发触发命令，再异步获取图像
+                    HOperatorSet.SetFramegrabberParam(m_pAcqHandle, "TriggerSoftware", "do_it");
+                    HOperatorSet.GrabImageAsync(out tempImage, m_pAcqHandle, 1000); // 超时设短一点
+
+                    // 在UI主线程上更新显示
+                    DisplayWindow.Dispatcher.Invoke(() =>
+                    {
+                        m_Ho_Image?.Dispose();
+                        m_Ho_Image = tempImage.CopyObj(1, -1); // 必须复制一份图像，因为tempImage马上会被下一次循环覆盖
+                        Display();
+                    });
+                }
+                catch (HalconException)
+                {
+                    // 如果采集超时或发生错误，短暂休眠后继续尝试
+                    Thread.Sleep(50);
+                }
+            }
+            tempImage.Dispose(); // 循环结束后，释放临时图像变量
+        }
+
+        /// <summary>
+        /// 在绑定的WPF窗口中显示当前图像。
+        /// </summary>
+        private void Display()
+        {
+            if (m_Ho_Image == null || !m_Ho_Image.IsInitialized()) return;
+
+            try
+            {
+                HWindow window = DisplayWindow.HalconWindow;                                // 从WPF控件中获取到真正的HALCON窗口对象
+                HOperatorSet.GetImageSize(m_Ho_Image, out HTuple width, out HTuple height);   // 获取图像的宽和高
+                window.SetPart(0, 0, height.I - 1, width.I - 1);                            // 设置窗口的显示区域，让它刚好能完整显示整张图片
+                //window.ClearWindow();                                                     // 清除窗口上之前的内容
+                window.DispObj(m_Ho_Image);                                                   // 在窗口上把图像画出来
+                
+            }
+
+            catch (HalconException)
+            {
+                // 在快速刷新时，对象可能已被释放，忽略此错误
+            }
+        }
+
+        #endregion
+
+
+
+
+
     }
 
 }

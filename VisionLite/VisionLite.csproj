@@ -108,6 +108,7 @@
     <Compile Include="HikvisionCameraDevice.cs" />
     <Compile Include="ICameraDevice.cs" />
     <Compile Include="ParameterTranslator.cs" />
+    <Compile Include="RoiAdorner.cs" />
     <Compile Include="ROIToolWindow.xaml.cs">
       <DependentUpon>ROIToolWindow.xaml</DependentUpon>
     </Compile>
