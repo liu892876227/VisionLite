@@ -558,6 +558,10 @@ namespace VisionLite
         private void EnablePaintMode()
         {
             if (_isPaintingMode) return;
+            // --- 在启用涂抹模式时，立即通知主窗口清空旧的参数显示 ---
+            // 触发一个带有空参数和null几何体的事件。
+            RoiUpdated?.Invoke(this, new RoiUpdatedEventArgs(new Dictionary<string, double>(), null));
+
             _isPaintingMode = true;
 
             // 1. 初始化一个空的ROI区域
