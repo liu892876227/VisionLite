@@ -1,7 +1,6 @@
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.AssemblyReference.cache
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.SuggestedBindingRedirects.cache
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.g.cs
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ROIToolWindow.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite_MarkupCompile.cache
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite_MarkupCompile.lref
@@ -40,7 +39,6 @@ E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\ru\Xceed.Wpf.AvalonDock.resour
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\sv\Xceed.Wpf.AvalonDock.resources.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.baml
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ROIToolWindow.baml
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.g.resources
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.Properties.Resources.resources
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.GenerateResource.cache
@@ -52,3 +50,4 @@ E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraIcon.baml
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.baml
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ToolbarIcons.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.baml

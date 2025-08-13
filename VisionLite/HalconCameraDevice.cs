@@ -288,12 +288,17 @@ namespace VisionLite
 
             try
             {
-                HWindow window = DisplayWindow.HalconWindow;                                // 从WPF控件中获取到真正的HALCON窗口对象
-                HOperatorSet.GetImageSize(m_Ho_Image, out HTuple width, out HTuple height);   // 获取图像的宽和高
-                window.SetPart(0, 0, height.I - 1, width.I - 1);                            // 设置窗口的显示区域，让它刚好能完整显示整张图片
-                //window.ClearWindow();                                                     // 清除窗口上之前的内容
-                window.DispObj(m_Ho_Image);                                                   // 在窗口上把图像画出来
+                HOperatorSet.GetImageSize(m_Ho_Image, out HTuple width, out HTuple height);
+
                 
+                // 必须在UI线程上更新WPF依赖属性
+                DisplayWindow.Dispatcher.Invoke(() =>
+                {
+                    DisplayWindow.HImagePart = new Rect(0, 0, width.I, height.I);
+                });
+                DisplayWindow.HalconWindow.ClearWindow();
+                // HImagePart设置后，控件会自动调用SetPart，我们只需显示对象即可
+                DisplayWindow.HalconWindow.DispObj(m_Ho_Image);
             }
 
             catch (HalconException)

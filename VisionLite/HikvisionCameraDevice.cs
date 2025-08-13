@@ -261,71 +261,157 @@ namespace VisionLite
         #endregion
 
         #region 内部辅助方法
-        
+
 
 
         /// <summary>
         /// 当SDK内部线程捕获到一帧图像时，此回调方法会被调用。
         /// **注意：此方法运行在非UI线程上。**
         /// </summary>
+        //private void ProcessImageCallback(IntPtr pData, ref MyCamera.MV_FRAME_OUT_INFO pFrameInfo, IntPtr pUser)
+        //{
+        //    // 声明一个临时的、代表相机易失缓冲区的图像对象
+        //    HObject volatileImage = null;
+        //    try
+        //    {
+        //        // --- 核心转换逻辑: 将海康的图像数据(IntPtr)转换为一个临时的HObject ---
+        //        int width = pFrameInfo.nWidth;
+        //        int height = pFrameInfo.nHeight;
+        //        string channelType = "";
+
+        //        HOperatorSet.GenEmptyObj(out volatileImage); // 先初始化，防止后续失败导致对象无效
+
+        //        switch (pFrameInfo.enPixelType)
+        //        {
+        //            case MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8:
+        //                HOperatorSet.GenImage1(out volatileImage, "byte", width, height, pData);
+        //                break;
+        //            case MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed:
+        //                channelType = "bgr";
+        //                HOperatorSet.GenImageInterleaved(out volatileImage, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
+        //                break;
+        //            case MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed:
+        //                channelType = "rgb";
+        //                HOperatorSet.GenImageInterleaved(out volatileImage, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
+        //                break;
+        //            case MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8:
+        //                HOperatorSet.GenImage1(out HObject bayerImage, "byte", width, height, pData);
+        //                HOperatorSet.CfaToRgb(bayerImage, out volatileImage, "bayer_rg", "bilinear");
+        //                bayerImage.Dispose();
+        //                break;
+        //            default:
+        //                // 对于不支持的格式，volatileImage 保持为空对象
+        //                break;
+        //        }
+        //        // 释放上一帧的稳定图像内存
+        //        m_Ho_Image?.Dispose();
+        //        // 从易失的缓冲区图像，创建一个全新的、内存独立的稳定副本
+        //        HOperatorSet.CopyImage(volatileImage, out m_Ho_Image);
+
+        //        // --- 线程安全地更新UI ---
+        //        // 使用Dispatcher.BeginInvoke将显示任务“派发”给UI线程，
+        //        // 当前后台线程无需等待，可以立刻返回去接收下一帧，保证了采集效率。
+        //        DisplayWindow.Dispatcher.BeginInvoke(new Action(Display));
+        //    }
+        //    finally
+        //    {
+        //        // 确保代表缓冲区的临时对象被释放
+        //        volatileImage?.Dispose();
+        //    }
+        //}
         private void ProcessImageCallback(IntPtr pData, ref MyCamera.MV_FRAME_OUT_INFO pFrameInfo, IntPtr pUser)
         {
-            m_Ho_Image?.Dispose();// 释放上一帧的Halcon图像内存
-
-            // --- 核心转换逻辑: 将海康的图像数据(IntPtr)转换为Halcon的HObject ---
-            int width = pFrameInfo.nWidth;
-            int height = pFrameInfo.nHeight;
-            string channelType = "";
-
-
-            switch (pFrameInfo.enPixelType)
+            // 在后台线程中，只做最核心的一件事：将SDK的内存数据转为一个临时的Halcon图像对象。
+            HObject volatileImage = null;
+            try
             {
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8:
-                    HOperatorSet.GenImage1(out m_Ho_Image, "byte", width, height, pData);
-                    break;
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed:
-                    channelType = "bgr";
+                int width = pFrameInfo.nWidth;
+                int height = pFrameInfo.nHeight;
+                HOperatorSet.GenEmptyObj(out volatileImage);
 
-                    HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
-                    break;
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed:
-                    channelType = "rgb";
+                switch (pFrameInfo.enPixelType)
+                {
+                    case MyCamera.MvGvspPixelType.PixelType_Gvsp_Mono8:
+                        HOperatorSet.GenImage1(out volatileImage, "byte", width, height, pData);
+                        break;
+                    case MyCamera.MvGvspPixelType.PixelType_Gvsp_BGR8_Packed:
+                        HOperatorSet.GenImageInterleaved(out volatileImage, pData, "bgr", width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
+                        break;
+                    case MyCamera.MvGvspPixelType.PixelType_Gvsp_RGB8_Packed:
+                        HOperatorSet.GenImageInterleaved(out volatileImage, pData, "rgb", width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
+                        break;
 
-                    HOperatorSet.GenImageInterleaved(out m_Ho_Image, pData, channelType, width, height, -1, "byte", 0, 0, 0, 0, -1, 0);
-                    break;
-                
-                case MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8:
-                    HOperatorSet.GenImage1(out HObject bayerImage, "byte", width, height, pData);
-                    HOperatorSet.CfaToRgb(bayerImage, out m_Ho_Image, "bayer_rg", "bilinear");
-                    bayerImage.Dispose();
-                    break;
-                default:
-                    // 对于不支持的格式，创建一个空的图像对象以避免错误
-                    HOperatorSet.GenEmptyObj(out m_Ho_Image);
-                    break;
+                    // 【【【 针对编译错误的最终核心修正 】】】
+                    case MyCamera.MvGvspPixelType.PixelType_Gvsp_BayerRG8:
+                        HObject bayerImage = null; // 在 try-finally 块之外声明
+                        try
+                        {
+                            // 现在 bayerImage 可以作为 out 参数被传递
+                            HOperatorSet.GenImage1(out bayerImage, "byte", width, height, pData);
+                            HOperatorSet.CfaToRgb(bayerImage, out volatileImage, "bayer_rg", "bilinear");
+                        }
+                        finally
+                        {
+                            // 在 finally 块中确保释放，这和 using 的作用一样安全
+                            bayerImage?.Dispose();
+                        }
+                        break;
+
+                    default:
+                        volatileImage?.Dispose();
+                        return; // 不支持的格式，直接返回
+                }
+
+                // 检查转换是否成功
+                if (volatileImage == null || !volatileImage.IsInitialized() || volatileImage.CountObj() == 0)
+                {
+                    volatileImage?.Dispose();
+                    return;
+                }
+
+                // 将【临时的volatileImage】直接异步调度到UI线程。
+                // UI线程会负责拷贝、显示和释放它。
+                DisplayWindow.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        // 1. 在UI线程中，释放旧的稳定图像
+                        m_Ho_Image?.Dispose();
+
+                        // 2. 在UI线程中，从临时的 volatileImage 拷贝一份到 m_Ho_Image
+                        HOperatorSet.CopyImage(volatileImage, out m_Ho_Image);
+
+                        // 3. 在UI线程中，调用新的 Display 方法来显示刚拷贝好的稳定图像
+                        Display(m_Ho_Image); // 注意：这里需要你之前已将 Display 方法修改为接受 HObject 参数
+                    }
+                    finally
+                    {
+                        // 4. 【关键】在UI线程中，所有操作完成后，再释放这个临时的 volatileImage。
+                        // 这样就完全避免了竞态条件。
+                        volatileImage?.Dispose();
+                    }
+                }));
             }
-
-            // --- 线程安全地更新UI ---
-            // 使用Dispatcher.BeginInvoke将显示任务“派发”给UI线程，
-            // 当前后台线程无需等待，可以立刻返回去接收下一帧，保证了采集效率。
-            DisplayWindow.Dispatcher.BeginInvoke(new Action(Display));
+            catch (Exception)
+            {
+                // 如果在后台转换过程中发生异常，也要确保释放对象
+                volatileImage?.Dispose();
+            }
         }
         /// <summary>
         /// 在绑定的WPF窗口中显示当前图像。
         /// 此方法总是在UI线程上被调用。
         /// </summary>
-        private void Display()
+        private void Display(HObject imageToShow)
         {
-            if (m_Ho_Image == null || !m_Ho_Image.IsInitialized()) return;
+            if (imageToShow == null || !imageToShow.IsInitialized()) return;
             try
             {
-                HWindow window = DisplayWindow.HalconWindow;
-                HOperatorSet.GetImageSize(m_Ho_Image, out HTuple imgWidth, out HTuple imgHeight);
-                // 设置窗口的显示区域，让它刚好能完整显示整张图片
-                window.SetPart(0, 0, imgHeight.I - 1, imgWidth.I - 1);
-                // 在窗口上把图像画出来
-                window.DispObj(m_Ho_Image);
+                HOperatorSet.GetImageSize(imageToShow, out HTuple imgWidth, out HTuple imgHeight);
 
+                DisplayWindow.HImagePart = new Rect(0, 0, imgWidth.I, imgHeight.I);
+                DisplayWindow.HalconWindow.ClearWindow();
+                DisplayWindow.HalconWindow.DispObj(imageToShow);
             }
             catch (HalconException)
             {
