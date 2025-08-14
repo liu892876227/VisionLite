@@ -107,9 +107,11 @@
     <Compile Include="DeviceInfo.cs" />
     <Compile Include="HikvisionCameraDevice.cs" />
     <Compile Include="ICameraDevice.cs" />
+    <Compile Include="InfoWindowAdorner.cs" />
     <Compile Include="ParameterTranslator.cs" />
     <Compile Include="RoiAdorner.cs" />
     <Compile Include="RoiUpdatedEventArgs.cs" />
+    <Compile Include="WindowInfo.cs" />
     <Page Include="CameraIcon.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

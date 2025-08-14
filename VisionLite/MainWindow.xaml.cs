@@ -68,6 +68,22 @@ namespace VisionLite
 
         #endregion
 
+        #region 窗口信息显示相关字段
+
+        /// <summary>
+        /// 存储每个显示窗口对应的数据模型。
+        /// Key: HSmartWindowControlWPF 实例
+        /// Value: 对应的 WindowInfo 数据对象
+        /// </summary>
+        private Dictionary<HSmartWindowControlWPF, WindowInfo> _windowInfos;
+
+        /// <summary>
+        /// 存储每个显示窗口对应的Adorner实例。
+        /// </summary>
+        private Dictionary<HSmartWindowControlWPF, InfoWindowAdorner> _infoAdorners;
+
+        #endregion
+
         #region ROI 和涂抹绘制相关字段
 
         /// <summary>
@@ -134,14 +150,43 @@ namespace VisionLite
                 HSmart1, HSmart2, HSmart3, HSmart4
             };
 
+            // 初始化信息字典
+            _windowInfos = new Dictionary<HSmartWindowControlWPF, WindowInfo>();
+            _infoAdorners = new Dictionary<HSmartWindowControlWPF, InfoWindowAdorner>();
+
             // 为每个窗口添加鼠标点击事件处理器
             foreach (var window in displayWindows)
             {
                 window.PreviewMouseDown += DisplayWindow_PreviewMouseDown;
-                
+                // 为每个窗口创建一个数据模型
+                _windowInfos.Add(window, new WindowInfo());
+
             }
             // 在窗口加载完成后，默认激活第一个显示窗口
             this.Loaded += (s, e) => {
+                // 新增：附加Adorner并初始化显示
+                foreach (var window in displayWindows)
+                {
+                    // 附加视图变化事件，用于更新缩放比例
+                    DependencyPropertyDescriptor.FromProperty(HSmartWindowControlWPF.HImagePartProperty, typeof(HSmartWindowControlWPF))
+                        .AddValueChanged(window, OnDisplayWindowViewChanged);
+
+                    // 附加尺寸变化事件，也用于更新缩放比例
+                    window.SizeChanged += DisplayWindow_SizeChanged;
+
+                    // 创建并附加Adorner
+                    var adornerLayer = AdornerLayer.GetAdornerLayer(window);
+                    if (adornerLayer != null)
+                    {
+                        var infoAdorner = new InfoWindowAdorner(window);
+                        adornerLayer.Add(infoAdorner);
+                        _infoAdorners.Add(window, infoAdorner);
+                    }
+
+                    // 初始化显示
+                    UpdateWindowInfoOnSourceChanged(window, "空闲");
+                }
+
                 SetActiveDisplayWindow(HSmart1);
             };
 
@@ -223,7 +268,20 @@ namespace VisionLite
             }
         }
 
-        
+        /// <summary>
+        /// 当任一显示窗口的尺寸变化时触发，用于更新缩放比例。
+        /// </summary>
+        private void DisplayWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (sender is HSmartWindowControlWPF window)
+            {
+                // 更新该窗口的信息
+                UpdateWindowZoom(window);
+            }
+        }
+
+
+
         #endregion
 
         #region 状态栏管理
@@ -403,6 +461,7 @@ namespace VisionLite
             {
                 oldImage.Dispose();
                 targetWindow.HalconWindow.ClearWindow();
+                targetWindow.Tag = null; // 清理Tag
             }
 
             ICameraDevice newCamera = (selectedDevice.SdkType == CameraSdkType.Hikvision)
@@ -415,8 +474,15 @@ namespace VisionLite
                 {
                     int windowIndex = displayWindows.IndexOf(targetWindow);
                     openCameras.Add(selectedDevice.UniqueID, newCamera);
-                    targetWindow.Tag = selectedDevice.UniqueID;
+                    targetWindow.Tag = selectedDevice.UniqueID; // 使用 UniqueID 标记窗口被相机占用
                     CameraListChanged?.Invoke(this, EventArgs.Empty);
+                    // 调用新的更新方法，并安全地传入图像以获取初始分辨率
+                    // 使用 using 语句确保临时拷贝的图像对象在使用后被立即释放，防止内存泄漏
+                    using (HObject initialImage = newCamera.GetCurrentImage()?.CopyObj(1, -1))
+                    {
+                        UpdateWindowInfoOnSourceChanged(targetWindow, selectedDevice.UniqueID, initialImage);
+                    }
+
                     return (true, $"设备 {selectedDevice.DisplayName} 打开成功，已绑定到窗口 {windowIndex + 1}。");
                 }
                 // newCamera.Open() 返回 false 的情况（虽然现在不太可能，因为我们改为抛出异常）
@@ -433,12 +499,15 @@ namespace VisionLite
         /// </summary>
         public (bool Success, string Message) CloseDevice(DeviceInfo selectedDevice)
         {
+
             if (selectedDevice == null)
             {
                 return (false, "请选择一个要关闭的设备。");
             }
             if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice cameraToClose))
             {
+                var windowToUpdate = cameraToClose.DisplayWindow; // 先保存窗口引用
+
                 // 在关闭相机前，检查是否需要清除该相机窗口的ROI
                 if (cameraToClose.DisplayWindow == _drawingObjectHost || (cameraToClose.DisplayWindow == _activeDisplayWindow && _isPaintingMode))
                 {
@@ -449,6 +518,10 @@ namespace VisionLite
                 cameraToClose.Close();
                 openCameras.Remove(selectedDevice.UniqueID);
                 CameraListChanged?.Invoke(this, EventArgs.Empty);
+                // 更新已变为空闲的窗口
+                UpdateWindowInfoOnSourceChanged(windowToUpdate, "空闲");
+
+
                 return (true, $"设备 {selectedDevice.DisplayName} 已成功关闭。");
             }
             return (false, $"设备 {selectedDevice.DisplayName} 并未打开，无需关闭。");
@@ -488,11 +561,16 @@ namespace VisionLite
         /// </summary>
         private void SingleCaptureToolbarButton_Click(object sender, RoutedEventArgs e)
         {
+            var camera = openCameras.Values.FirstOrDefault(c => c.DisplayWindow == _activeDisplayWindow);
+            if (camera == null)
+            {
+                UpdateStatus("提示：当前活动窗口没有连接相机。", true);
+                return;
+            }
+
             try
             {
-                var camera = GetCameraForActiveWindow();
-                if (camera == null) return;
-
+               
                 if (camera.IsContinuousGrabbing())
                 {
                     // 修改：使用状态栏提示
@@ -500,6 +578,11 @@ namespace VisionLite
                     return;
                 }
                 camera.GrabAndDisplay();
+                using (HObject capturedImage = camera.GetCurrentImage()?.CopyObj(1, -1))
+                {
+                    // 传入相机ID和安全的图像副本
+                    UpdateWindowInfoOnSourceChanged(_activeDisplayWindow, camera.DeviceID, capturedImage);
+                }
             }
             catch (Exception ex)
             {
@@ -546,11 +629,11 @@ namespace VisionLite
             }
 
             // 检查活动窗口是否已经被相机占用
-            if (targetWindow.Tag is string deviceId)
+            if (openCameras.Values.Any(c => c.DisplayWindow == targetWindow))
             {
-                // 如果Tag是字符串，说明它被一个相机锁定
+                string deviceId = openCameras.First(kvp => kvp.Value.DisplayWindow == targetWindow).Key;
                 UpdateStatus($"此窗口已被相机 '{deviceId}' 占用，无法加载图像。", true);
-                return; // 中断操作
+                return;
             }
 
             // --- 如果检查通过，才继续执行后续的文件选择和加载逻辑 ---
@@ -587,6 +670,7 @@ namespace VisionLite
                     if (targetWindow.Tag is HObject oldImage)
                     {
                         oldImage.Dispose();
+                        targetWindow.Tag = null; // 清理Tag
                     }
 
                     // 加载新图像
@@ -599,14 +683,30 @@ namespace VisionLite
                     // 清除窗口并显示
                     targetWindow.HalconWindow.ClearWindow();
                     targetWindow.HalconWindow.DispObj(loadedImage);
-
+                    // 将加载的图像对象存储在Tag中，以便后续操作（如保存）可以找到它
                     targetWindow.Tag = loadedImage;
+
+                    // 调用新的更新方法，传入文件名和加载的图像对象
+                    string fileName = System.IO.Path.GetFileName(openFileDialog.FileName);
+                    UpdateWindowInfoOnSourceChanged(targetWindow, fileName, loadedImage);
+
+                    // 将局部变量设为null，防止它在finally块中被错误地释放。
+                    // 因为它的所有权已经转移给了targetWindow.Tag。
                     loadedImage = null;
+
                 }
 
                 catch (Exception ex)
                 {
                     UpdateStatus($"加载图像时发生错误: {ex.Message}", true);
+                    // 如果发生异常，需要清理可能已加载的本地图像，并重置窗口状态
+                    if (targetWindow.Tag is HObject)
+                    {
+                        (targetWindow.Tag as HObject)?.Dispose();
+                        targetWindow.Tag = null;
+                    }
+                    UpdateWindowInfoOnSourceChanged(targetWindow, "空闲");
+                
                 }
                 finally
                 {
@@ -823,7 +923,91 @@ namespace VisionLite
 
         #endregion
 
-        
+
+
+        /// <summary>
+        /// 当图像源发生变化时（如打开相机、加载图像），更新窗口的基础信息。
+        /// 这个方法会处理HObject，并更新数据模型。
+        /// </summary>
+        /// <param name="window">目标窗口</param>
+        /// <param name="sourceName">新的来源名称 (相机ID 或 文件名)</param>
+        /// <param name="image">【可选】与来源关联的HObject，用于获取分辨率</param>
+        private void UpdateWindowInfoOnSourceChanged(HSmartWindowControlWPF window, string sourceName, HObject image = null)
+        {
+            if (window == null || !_windowInfos.ContainsKey(window)) return;
+            var info = _windowInfos[window];
+
+            info.SourceName = sourceName;
+
+            if (image != null && image.IsInitialized() && image.CountObj() > 0)
+            {
+                try
+                {
+                    HOperatorSet.GetImageSize(image, out HTuple width, out HTuple height);
+                    info.Resolution = $"{width.I} x {height.I}";
+                    // 【重要】存储原始尺寸
+                    info.OriginalImageSize = new Size(width.D, height.D);
+                }
+                catch (HalconException)
+                {
+                    info.Resolution = "N/A";
+                    info.OriginalImageSize = new Size(0, 0);
+                }
+            }
+            else
+            {
+                info.Resolution = "N/A";
+                info.OriginalImageSize = new Size(0, 0);
+            }
+
+            // 基础信息更新后，立即更新一次缩放并刷新UI
+            UpdateWindowZoom(window);
+        }
+
+        /// <summary>
+        /// 仅计算并更新指定窗口的缩放比例。
+        /// 这个方法是安全的，因为它不处理HObject，只使用已存储的数据。
+        /// </summary>
+        /// <param name="window">目标窗口</param>
+        private void UpdateWindowZoom(HSmartWindowControlWPF window)
+        {
+            if (window == null || !_windowInfos.ContainsKey(window)) return;
+            var info = _windowInfos[window];
+
+            if (info.OriginalImageSize.Width > 0)
+            {
+                Rect imagePart = window.HImagePart;
+                if (imagePart.Width > 0)
+                {
+                    // 【修正后的缩放公式】
+                    double zoom = info.OriginalImageSize.Width / imagePart.Width;
+                    info.ZoomFactor = $"{zoom:P0}";
+                }
+                else
+                {
+                    info.ZoomFactor = "N/A";
+                }
+            }
+            else
+            {
+                info.ZoomFactor = "100%"; // 如果没有图像，默认100%
+            }
+
+            // 触发Adorner重绘
+            RefreshInfoWindowAdorner(window);
+        }
+
+        /// <summary>
+        /// 仅负责触发Adorner的重绘，从数据模型读取数据。
+        /// </summary>
+        private void RefreshInfoWindowAdorner(HSmartWindowControlWPF window)
+        {
+            if (_infoAdorners.TryGetValue(window, out var adorner) && _windowInfos.TryGetValue(window, out var info))
+            {
+                adorner.Update(info);
+            }
+        }
+
 
         /// <summary>
         /// 根据选择的类型，在活动窗口上创建并附加一个交互式ROI。
@@ -883,6 +1067,9 @@ namespace VisionLite
                 ShowRoiAdorner();
                 // 再调用中央处理器来更新所有UI
                 ProcessRoiUpdate();
+
+                // 在ROI创建成功后，立即启用保存按钮
+                SaveRoiImageButton.IsEnabled = true;
             }
             catch (Exception ex)
             {
@@ -944,17 +1131,10 @@ namespace VisionLite
         /// </summary>
         private void ClearActiveRoi()
         {
-            // 如果处于涂抹模式，先禁用它
-            if (_isPaintingMode)
-            {
-                DisablePaintMode();
-            }
-
-            // 如果存在标准ROI对象，分离并销毁它
+            // --- 清除标准 HDrawingObject ROI ---
             if (_drawingObject != null && _drawingObject.ID != -1 && _drawingObjectHost != null)
             {
-                // 从ROI的宿主窗口移除Adorner
-                RemoveRoiAdorner(_drawingObjectHost); // <<--- 修改点：传入宿主窗口
+                RemoveRoiAdorner(_drawingObjectHost);
                 try
                 {
                     _drawingObjectHost.HalconWindow.DetachDrawingObjectFromWindow(_drawingObject);
@@ -965,12 +1145,24 @@ namespace VisionLite
                 _drawingObjectHost = null;
             }
 
-            // 清理状态栏
-            UpdateParameterBar(); // 这里继续调用UpdateParameterBar，因为它能正确处理无ROI的情况
+            // --- 【核心修正】清除涂抹式ROI ---
+            if (_paintedRoi != null)
+            {
+                _paintedRoi.Dispose();
+                _paintedRoi = null;
+            }
 
-            SaveRoiImageButton.IsEnabled = false;
-            // 重新显示干净的图像
-            RefreshActiveWindowDisplay();
+            // --- 禁用涂抹模式（如果正在进行中）---
+            // 这个会处理事件解绑和状态重置
+            if (_isPaintingMode)
+            {
+                DisablePaintMode();
+            }
+
+            // --- 统一的收尾工作 ---
+            UpdateParameterBar(); // 清理并隐藏参数面板
+            SaveRoiImageButton.IsEnabled = false; // 禁用保存按钮，因为没有ROI了
+            RefreshActiveWindowDisplay(); // 刷新显示，清除残留图形
         }
 
         /// <summary>
@@ -1496,6 +1688,12 @@ namespace VisionLite
         /// </summary>
         private void OnDisplayWindowViewChanged(object sender, EventArgs e)
         {
+            if (sender is HSmartWindowControlWPF window)
+            {
+                // 更新该窗口的信息
+                UpdateWindowZoom(window);
+            }
+
             // 确保事件来自于当前活动的窗口，并且缓存的ROI参数有效
             if (sender == _activeDisplayWindow && _roiAdorner != null && _lastRoiArgs != null)
             {
@@ -1533,6 +1731,14 @@ namespace VisionLite
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+
+            // 【新增】在所有操作之前，取消事件订阅，防止关闭过程中触发UI更新
+            foreach (var window in displayWindows)
+            {
+                DependencyPropertyDescriptor.FromProperty(HSmartWindowControlWPF.HImagePartProperty, typeof(HSmartWindowControlWPF))
+                    .RemoveValueChanged(window, OnDisplayWindowViewChanged);
+                window.SizeChanged -= DisplayWindow_SizeChanged;
+            }
             // 关闭相机管理窗口（如果它还开着）
             cameraManagementWindow?.Close();
 
