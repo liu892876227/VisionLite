@@ -160,6 +160,8 @@ namespace VisionLite
                 window.PreviewMouseDown += DisplayWindow_PreviewMouseDown;
                 // 为每个窗口创建一个数据模型
                 _windowInfos.Add(window, new WindowInfo());
+                // 订阅鼠标移动事件
+                window.HMouseMove += DisplayWindow_HMouseMove;
 
             }
             // 在窗口加载完成后，默认激活第一个显示窗口
@@ -198,6 +200,95 @@ namespace VisionLite
             };
             // 订阅Tick事件，这是我们真正执行更新的地方
             _roiUpdateDebounceTimer.Tick += RoiUpdateDebounceTimer_Tick;
+        }
+
+
+        //private void DisplayWindow_HMouseMove(object sender, HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        //{
+        //    if (sender is HSmartWindowControlWPF window && _windowInfos.TryGetValue(window, out var info))
+        //    {
+        //        // e.Row 和 e.Column 直接提供了Halcon图像坐标
+        //        // 我们用 "F0" 格式化，确保显示整数坐标
+        //        info.MouseCoordinates = $"R: {e.Row:F0}, C: {e.Column:F0}";
+
+        //        // 因为WindowInfo已经实现了INotifyPropertyChanged，Adorner会自动收到更新通知
+        //        // 所以我们只需要调用RefreshAdorner来触发重绘即可
+        //        RefreshInfoWindowAdorner(window);
+        //    }
+        //}
+
+        private void DisplayWindow_HMouseMove(object sender, HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        {
+            if (!(sender is HSmartWindowControlWPF window) || !_windowInfos.TryGetValue(window, out var info))
+            {
+                return;
+            }
+
+            // --- 1. 更新坐标 (这部分逻辑不变) ---
+            // 将坐标四舍五入为整数，因为像素索引是整数
+            long row = (long)Math.Round(e.Row);
+            long col = (long)Math.Round(e.Column);
+            info.MouseCoordinates = $"R: {row}, C: {col}";
+
+            // --- 2. 获取当前图像并查询像素值 ---
+            HObject currentImage = null;
+            try
+            {
+                // 使用我们之前编写的健壮的 GetImageFromActiveWindow 方法
+                // 注意：这里我们只对鼠标所在的活动窗口查询像素值，以优化性能
+                if (window == _activeDisplayWindow)
+                {
+                    currentImage = GetImageFromActiveWindow();
+                }
+
+                if (currentImage != null && currentImage.IsInitialized() && currentImage.CountObj() > 0)
+                {
+                    // 检查坐标是否在图像范围内
+                    HOperatorSet.GetImageSize(currentImage, out HTuple width, out HTuple height);
+                    if (row >= 0 && row < height && col >= 0 && col < width)
+                    {
+                        // 查询像素值
+                        HOperatorSet.GetGrayval(currentImage, row, col, out HTuple grayval);
+
+                        // 判断图像通道数来决定如何显示
+                        if (grayval.Length == 1) // 单通道（灰度）图像
+                        {
+                            info.PixelValue = $"Gray: {grayval.I}";
+                        }
+                        else if (grayval.Length == 3) // 三通道（彩色）图像
+                        {
+                            info.PixelValue = $"R:{grayval[0].I} G:{grayval[1].I} B:{grayval[2].I}";
+                        }
+                        else // 其他通道数
+                        {
+                            info.PixelValue = "Val: -";
+                        }
+                    }
+                    else
+                    {
+                        // 鼠标在图像范围外
+                        info.PixelValue = "Val: Out of bounds";
+                    }
+                }
+                else
+                {
+                    // 当前窗口没有图像
+                    info.PixelValue = "Val: -";
+                }
+            }
+            catch (HalconException)
+            {
+                // 在快速移动或图像更新时可能发生异常，静默处理
+                info.PixelValue = "Val: Error";
+            }
+            finally
+            {
+                // 确保释放从 GetImageFromActiveWindow 获取的图像拷贝
+                currentImage?.Dispose();
+            }
+
+            // --- 3. 触发UI重绘 ---
+            RefreshInfoWindowAdorner(window);
         }
 
         #region 窗口激活与视图管理
@@ -973,15 +1064,20 @@ namespace VisionLite
         {
             if (window == null || !_windowInfos.ContainsKey(window)) return;
             var info = _windowInfos[window];
-
+            // 检查是否存在有效的原始图像尺寸
             if (info.OriginalImageSize.Width > 0)
             {
+                // 获取HSmartWindowControlWPF当前显示的图像部分（视图）
                 Rect imagePart = window.HImagePart;
                 if (imagePart.Width > 0)
                 {
-                    // 【修正后的缩放公式】
+                    // 核心计算公式 
                     double zoom = info.OriginalImageSize.Width / imagePart.Width;
-                    info.ZoomFactor = $"{zoom:P0}";
+                    Console.WriteLine("OriginalImageSize:{0}    imagePart:{1}", info.OriginalImageSize.Width, imagePart.Width);
+                    
+                    // 格式化为百分比字符串并更新数据模型
+                    info.ZoomFactor = $"{zoom:P0}";// P0格式化为无小数的百分比，例如 1.25 -> "125 %"
+
                 }
                 else
                 {

@@ -31,7 +31,7 @@ namespace VisionLite
             }
             else
             {
-                _textToDisplay = $"{info.SourceName}\n{info.Resolution} | {info.ZoomFactor}";
+                _textToDisplay = $"{info.SourceName} | {info.Resolution} | {info.ZoomFactor} | {info.MouseCoordinates} | {info.PixelValue}";
             }
 
             // 强制WPF重新渲染这个Adorner

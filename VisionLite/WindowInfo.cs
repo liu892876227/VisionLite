@@ -14,8 +14,9 @@ namespace VisionLite
         private string _sourceName = "空闲";
         private string _resolution = "N/A";
         private string _zoomFactor = "100%";
+        private string _mouseCoordinates = "R: -, C: -";
+        private string _pixelValue = "Val: -";
         // 存储原始图像尺寸，用于精确计算缩放
-
         public Size OriginalImageSize { get; set; } = new Size(0, 0);
         public string SourceName
         {
@@ -33,6 +34,18 @@ namespace VisionLite
         {
             get => _zoomFactor;
             set { _zoomFactor = value; OnPropertyChanged(); }
+        }
+
+        public string MouseCoordinates
+        {
+            get => _mouseCoordinates;
+            set { _mouseCoordinates = value; OnPropertyChanged(); }
+        }
+
+        public string PixelValue
+        {
+            get => _pixelValue;
+            set { _pixelValue = value; OnPropertyChanged(); }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
