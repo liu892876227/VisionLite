@@ -151,7 +151,7 @@
                     <RowDefinition Height="*"/>
 
                     <!--状态栏-->
-                    <RowDefinition Height="25"/>
+                    <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
 
                 <Grid ShowGridLines="True" Grid.Row="0" Grid.Column="0">
@@ -214,7 +214,12 @@
 
                     <!-- 在状态栏右侧添加ROI参数显示区域 -->
                     <StatusBarItem HorizontalAlignment="Right">
-                        <TextBlock x:Name="RoiParametersTextBlock" Margin="0,0,10,0"/>
+                        <Border>
+                            <StackPanel x:Name="RoiParameterPanel" 
+                                        Orientation="Horizontal" 
+                                        Visibility="Collapsed"/>
+                            <!-- 你可以移除 StackPanel 里的 VerticalAlignment="Center"，也可以保留，现在它不再重要 -->
+                        </Border>
                     </StatusBarItem>
                 </StatusBar>
             </Grid>
