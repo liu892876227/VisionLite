@@ -107,7 +107,8 @@
                             <ComboBoxItem Content="椭圆 (Ellipse)"/>
                             <ComboBoxItem Content="直线 (Line)"/>
                             <ComboBoxItem Content="自由轮廓 (Contour)"/>
-                            <ComboBoxItem Content="涂抹式ROI (Paint)"/>
+                            <ComboBoxItem Content="掩膜 (Mask)"/>
+                            <ComboBoxItem Content="橡皮擦 (Eraser)"/>
                             <Separator/>
                             <ComboBoxItem Content="清除ROI"/>
                         </ComboBox>

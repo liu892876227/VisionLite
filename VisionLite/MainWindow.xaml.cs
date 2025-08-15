@@ -106,7 +106,12 @@ namespace VisionLite
         private bool _isPaintingMode = false;
 
         /// <summary>
-        /// 标记在涂抹模式下，鼠标左键是否按下以激活绘制。
+        /// 标记当前是否处于橡皮擦模式。
+        /// </summary>
+        private bool _isErasingMode = false;
+
+        /// <summary>
+        /// 标记在涂抹或橡皮擦模式下，鼠标左键是否按下以激活绘制或激活擦除。
         /// </summary>
         private bool _isPaintingActive = false;
 
@@ -127,9 +132,9 @@ namespace VisionLite
         private HTuple _lastPaintRow = -1;
         private HTuple _lastPaintCol = -1;
         private string _brushShape = "圆形";
-        private int _brushCircleRadius = 20;
-        private int _brushRectWidth = 20;
-        private int _brushRectHeight = 20;
+        private int _brushCircleRadius = 40;
+        private int _brushRectWidth = 40;
+        private int _brushRectHeight = 40;
 
         /// <summary>
         /// 防止UI控件和ROI对象之间双向更新导致无限循环的标志位。
@@ -419,21 +424,37 @@ namespace VisionLite
                     }
                 } // using语句确保currentImage被释放
 
-                // 在创建新ROI之前，先清除当前活动窗口上任何已存在的ROI
-                ClearActiveRoi();
-
                 // 根据选择执行操作
                 switch (selectedItem)
                 {
                     case "清除ROI":
-                        // ClearActiveRoi 已经在上面调用过了，这里不需要额外操作
+                        ClearActiveRoi(); // 只有选这个才清除所有
                         break;
-                    case "涂抹式ROI (Paint)":
-                        EnablePaintMode();
+
+                    case "橡皮擦 (Eraser)":
+                        EnableEraseMode();
                         break;
-                    default:
-                        // 创建标准的HDrawingObject ROI
-                        CreateDrawingObject(selectedItem);
+
+                    case "掩膜 (Mask)":
+                    case "矩形 (Rectangle)":
+                    case "带角度矩形 (Rectangle2)":
+                    case "圆形 (Circle)":
+                    case "椭圆 (Ellipse)":
+                    case "直线 (Line)":
+                    case "自由轮廓 (Contour)":
+                        // 对于所有“创建型”工具，逻辑完全一致：
+                        // 清除所有旧的ROI
+                        ClearActiveRoi();
+
+                        // 根据类型，调用相应的创建方法
+                        if (selectedItem == "掩膜 (Mask)")
+                        {
+                            EnablePaintMode();
+                        }
+                        else
+                        {
+                            CreateDrawingObject(selectedItem);
+                        }
                         break;
                 }
             }
@@ -1312,18 +1333,24 @@ namespace VisionLite
         private void EnablePaintMode()
         {
             if (_isPaintingMode) return;
+
+            // 在启用模式时，设置动态默认尺寸 
+            SetDefaultBrushSize();
+
             _isPaintingMode = true;
+            _isErasingMode = false; // 确保橡皮擦模式关闭
 
             _paintedRoi?.Dispose();
             HOperatorSet.GenEmptyRegion(out _paintedRoi);
 
             if (_activeDisplayWindow != null)
             {
-                _activeDisplayWindow.HMouseDown += PaintRoi_HMouseDown;
+                _activeDisplayWindow.PreviewMouseLeftButtonDown += PaintRoi_PreviewMouseLeftButtonDown;
+                _activeDisplayWindow.PreviewMouseLeftButtonUp += PaintRoi_PreviewMouseLeftButtonUp;
                 _activeDisplayWindow.HMouseMove += PaintRoi_HMouseMove;
             }
 
-            UpdateStatus("涂抹模式已激活：在图像上左键开始绘制，右键结束。", false);
+            UpdateStatus("掩膜模式已激活：按住左键在图像上拖动以绘制。", false);
             SaveRoiImageButton.IsEnabled = true; // 允许在绘制过程中保存
             // 显示涂抹式ROI的参数控件
             UpdateParameterBar();
@@ -1334,16 +1361,18 @@ namespace VisionLite
         /// </summary>
         private void DisablePaintMode()
         {
-            if (!_isPaintingMode) return;
+            if (!_isPaintingMode && !_isErasingMode) return;
             _isPaintingMode = false;
+            _isErasingMode = false;
             _isPaintingActive = false;
 
             if (_activeDisplayWindow != null)
             {
-                _activeDisplayWindow.HMouseDown -= PaintRoi_HMouseDown;
+                _activeDisplayWindow.PreviewMouseLeftButtonDown -= PaintRoi_PreviewMouseLeftButtonDown;
+                _activeDisplayWindow.PreviewMouseLeftButtonUp -= PaintRoi_PreviewMouseLeftButtonUp;
                 _activeDisplayWindow.HMouseMove -= PaintRoi_HMouseMove;
             }
-            RefreshActiveWindowDisplay();
+            //RefreshActiveWindowDisplay();
             // 隐藏涂抹参数控件（因为没有ROI了，会自然隐藏）
             UpdateParameterBar();
         }
@@ -1351,24 +1380,47 @@ namespace VisionLite
         /// <summary>
         /// 涂抹模式下的鼠标按下事件。
         /// </summary>
-        private void PaintRoi_HMouseDown(object sender, HSmartWindowControlWPF.HMouseEventArgsWPF e)
+       
+        private void PaintRoi_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.Button == MouseButton.Right)
+            // 捕获鼠标，确保即使鼠标移出窗口也能收到后续事件
+            (_activeDisplayWindow as IInputElement)?.CaptureMouse();
+
+            _isPaintingActive = true;
+
+            // 获取当前鼠标位置作为起始点
+            // HSmartWindowControlWPF没有直接的方法在此时获取Halcon坐标，
+            // 我们需要借助HMouseMove中的最新坐标，或者自己计算一次
+            // 一个简单的技巧是直接从WPF坐标转换
+            var pos = e.GetPosition(_activeDisplayWindow);
+            _activeDisplayWindow.HalconWindow.ConvertCoordinatesWindowToImage(pos.Y, pos.X, out HTuple row, out HTuple col);
+
+            _lastPaintRow = row;
+            _lastPaintCol = col;
+
+            PaintAtCurrentPosition(row.D, col.D);
+            UpdateStatus("正在涂抹... 松开左键以完成。", false); // 更新提示
+
+            // 【关键】阻止事件继续传递，禁用背景的拖动和缩放
+            e.Handled = true;
+        }
+
+        /// <summary>
+        /// 涂抹模式下的鼠标左键松开事件。结束绘制。
+        /// </summary>
+        private void PaintRoi_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // 只有在正在绘制时，松开左键才触发结束
+            if (_isPaintingActive)
             {
                 FinalizePainting();
-                return;
-            }
-
-            if (e.Button == MouseButton.Left)
-            {
-                _isPaintingActive = true;
-                _lastPaintRow = e.Row;
-                _lastPaintCol = e.Column;
-                PaintAtCurrentPosition(e.Row, e.Column);
-                UpdateStatus("正在涂抹... 右键单击以完成。", false);
+                // 释放鼠标捕获
+                (_activeDisplayWindow as IInputElement)?.ReleaseMouseCapture();
+                e.Handled = true;
             }
         }
-       
+
+
         /// <summary>
         /// 涂抹模式下的鼠标移动事件。
         /// </summary>
@@ -1393,27 +1445,43 @@ namespace VisionLite
             HObject lineRegion = null;
             HObject newRoi = null;
             HObject backgroundImage = null;
-            // 在开始绘制前，保存当前的视图（缩放/平移状态）。
+            // 在开始绘制前，保存当前的视图（缩放/平移状态），以防绘制过程中视图被意外改变
             Rect currentView = _activeDisplayWindow.HImagePart;
             try
             {
-                // 计算新的ROI形状
+                // 根据鼠标轨迹和画笔设置，生成一个“笔触”Region (brush)
                 if (_lastPaintRow > -1 && _lastPaintCol > -1)
                 {
+                    // 连续拖动：在上一个点和当前点之间生成线，然后膨胀
                     HOperatorSet.GenRegionLine(out lineRegion, _lastPaintRow, _lastPaintCol, row, col);
                     if (_brushShape == "圆形") HOperatorSet.DilationCircle(lineRegion, out brush, _brushCircleRadius);
-                    else HOperatorSet.DilationRectangle1(lineRegion, out brush, _brushRectWidth, _brushRectHeight);
+                    else HOperatorSet.DilationRectangle1(lineRegion, out brush, _brushRectWidth, _brushRectHeight);//矩形
                 }
                 else
                 {
+                    // 首次单击：直接在当前点生成一个画笔形状
                     if (_brushShape == "圆形") HOperatorSet.GenCircle(out brush, row, col, _brushCircleRadius);
                     else HOperatorSet.GenRectangle1(out brush, row - _brushRectHeight / 2.0, col - _brushRectWidth / 2.0, row + _brushRectHeight / 2.0, col + _brushRectWidth / 2.0);
                 }
-                HOperatorSet.Union2(_paintedRoi, brush, out newRoi);
+
+                // 根据当前是绘画模式还是橡皮擦模式，决定如何将笔触合并到总ROI中
+                if (_isErasingMode)
+                {
+                    // 橡皮擦模式：执行差集运算 (从已有区域中减去笔触)
+                    HOperatorSet.Difference(_paintedRoi, brush, out newRoi);
+                }
+                else // 默认是绘画模式
+                {
+                    // 绘画模式：执行并集运算 (将笔触添加到已有区域中)
+                    HOperatorSet.Union2(_paintedRoi, brush, out newRoi);
+                }
+
+                // 更新主ROI对象，并释放旧的内存
                 _paintedRoi.Dispose();
                 _paintedRoi = newRoi;
                 newRoi = null;
 
+                // 刷新UI显示
                 backgroundImage = GetImageFromActiveWindow();
                 if (backgroundImage == null || !backgroundImage.IsInitialized()) return;
 
@@ -1424,9 +1492,9 @@ namespace VisionLite
                 // 先显示背景
                 _activeDisplayWindow.HalconWindow.DispObj(backgroundImage);
 
-                // 2. 再叠加ROI
+
+                _activeDisplayWindow.HalconWindow.SetColor("#00FF0060");
                 _activeDisplayWindow.HalconWindow.SetDraw("fill");
-                _activeDisplayWindow.HalconWindow.SetColor("green");
                 _activeDisplayWindow.HalconWindow.DispObj(_paintedRoi);
             }
             catch (HalconException) { /* 忽略小错误 */ }
@@ -1444,26 +1512,153 @@ namespace VisionLite
         /// </summary>
         private void FinalizePainting()
         {
+            // 如果不是在绘制中，直接返回
+            if (!_isPaintingActive) return;
+
             _isPaintingActive = false;
-            _isPaintingMode = false;
+            _isPaintingMode = false; // 每次绘制完成都自动退出涂抹模式
+            _isErasingMode = false; // 重置橡皮擦模式
+
 
             if (_activeDisplayWindow != null)
             {
-                _activeDisplayWindow.HMouseDown -= PaintRoi_HMouseDown;
+                _activeDisplayWindow.PreviewMouseLeftButtonDown -= PaintRoi_PreviewMouseLeftButtonDown;
+                _activeDisplayWindow.PreviewMouseLeftButtonUp -= PaintRoi_PreviewMouseLeftButtonUp;
                 _activeDisplayWindow.HMouseMove -= PaintRoi_HMouseMove;
             }
 
             UpdateStatus("涂抹绘制已完成。ROI已创建。", false);
 
-            // 同样，在结束时也要用正确的逻辑刷新显示
+            /// 刷新显示，清除半透明填充，并画出最终轮廓
             RefreshActiveWindowDisplay();
-
             if (_activeDisplayWindow != null && _paintedRoi != null && _paintedRoi.IsInitialized())
             {
-                // 在背景图上把最终的ROI轮廓画出来
                 _activeDisplayWindow.HalconWindow.SetColor("green");
                 _activeDisplayWindow.HalconWindow.SetDraw("margin");
                 _activeDisplayWindow.HalconWindow.DispObj(_paintedRoi);
+            }
+            // 隐藏参数面板
+            UpdateParameterBar();
+        }
+
+        /// <summary>
+        /// 启用橡皮擦模式。
+        /// </summary>
+        private void EnableEraseMode()
+        {
+            // 在启用模式时，也设置动态默认尺寸 
+            SetDefaultBrushSize();
+
+            ConvertStandardRoiToPaintedRoi();
+
+            // --- 检查是否有可擦除的ROI ---
+            // 优先使用 _paintedRoi，如果没有，则检查是否存在一个有效的 _drawingObject
+            if (_paintedRoi == null || !_paintedRoi.IsInitialized() || _paintedRoi.CountObj() == 0)
+            {
+                UpdateStatus("画布上没有可供擦除的ROI。", true);
+                return;
+            }
+
+            if (_isErasingMode) return;
+            _isErasingMode = true;
+            _isPaintingMode = false;
+
+            if (_activeDisplayWindow != null)
+            {
+                _activeDisplayWindow.PreviewMouseLeftButtonDown += PaintRoi_PreviewMouseLeftButtonDown;
+                _activeDisplayWindow.PreviewMouseLeftButtonUp += PaintRoi_PreviewMouseLeftButtonUp;
+                _activeDisplayWindow.HMouseMove += PaintRoi_HMouseMove;
+            }
+
+            UpdateStatus("橡皮擦模式已激活：按住左键在ROI上拖动以擦除。", false);
+            UpdateParameterBar(); // 显示橡皮擦的参数面板
+        }
+
+        /// <summary>
+        /// 检查是否存在标准ROI (_drawingObject)，如果存在，则将其转换为可编辑的 _paintedRoi，
+        /// 并清除原来的 _drawingObject。这用于在涂抹或擦除前统一ROI类型。
+        /// </summary>
+        private void ConvertStandardRoiToPaintedRoi()
+        {
+            // 如果只有 standard ROI，需要将其转换为 _paintedRoi
+            if ((_paintedRoi == null || _paintedRoi.CountObj() == 0) && _drawingObject != null && _drawingObject.ID != -1)
+            {
+                try
+                {
+                    string roiType = _drawingObject.GetDrawingObjectParams("type").S;
+                    if (roiType == "line")
+                    {
+                        // 涂抹/擦除不适用于直线，可以选择清除或忽略
+                        ClearStandardRoi();
+                        return;
+                    }
+
+                    using (HObject iconic = _drawingObject.GetDrawingObjectIconic())
+                    {
+                        string iconicType = iconic.GetObjClass();
+                        if (iconicType == "region")
+                        {
+                            _paintedRoi = iconic.CopyObj(1, -1);
+                        }
+                        else if (iconicType == "xld_cont")
+                        {
+                            HOperatorSet.GenRegionContourXld(iconic, out _paintedRoi, "filled");
+                        }
+                    }
+                    ClearStandardRoi(); // 转换成功后清除旧的
+                    RefreshActiveWindowDisplay(); // 先刷新背景图，确保清除掉旧的ROI痕迹
+
+                    // 然后，立即将新转换的 _paintedRoi 用填充模式画出来
+                    if (_activeDisplayWindow != null && _paintedRoi != null && _paintedRoi.IsInitialized())
+                    {
+                        
+                        _activeDisplayWindow.HalconWindow.SetColor("#00FF0060");
+
+                        _activeDisplayWindow.HalconWindow.SetDraw("fill");
+                        _activeDisplayWindow.HalconWindow.DispObj(_paintedRoi);
+                    }
+                }
+                catch (HalconException)
+                {
+                    _paintedRoi?.Dispose();
+                    _paintedRoi = null;
+                    ClearStandardRoi(); // 转换失败也清除旧的
+                }
+            }
+        }
+
+        /// <summary>
+        /// 根据当前活动窗口的图像尺寸，计算并设置画笔的默认大小。
+        /// </summary>
+        private void SetDefaultBrushSize()
+        {
+            // 使用 using 语句确保图像对象被正确释放
+            using (HObject image = GetImageFromActiveWindow())
+            {
+                if (image == null || !image.IsInitialized()) return;
+
+                try
+                {
+                    HOperatorSet.GetImageSize(image, out HTuple width, out HTuple height);
+
+                    // 找出宽高的最小值
+                    double minDimension = Math.Min(width.D, height.D);
+
+                    // 计算其2%，并向上取整
+                    int defaultSize = (int)Math.Ceiling(minDimension * 0.02);
+
+                    // 确保尺寸至少为1
+                    if (defaultSize < 1) defaultSize = 1;
+
+                    // 更新所有画笔尺寸的默认值
+                    _brushCircleRadius = defaultSize;
+                    _brushRectWidth = defaultSize * 2; // 可以让矩形默认宽一点
+                    _brushRectHeight = defaultSize;
+                }
+                catch (HalconException)
+                {
+                    // 如果获取尺寸失败，则不做任何事，保持原有的硬编码默认值
+                }
             }
         }
 
@@ -1510,6 +1705,24 @@ namespace VisionLite
             RefreshActiveWindowDisplay(); // 刷新显示，清除残留图形
         }
 
+        // 只清除标准ROI
+        private void ClearStandardRoi()
+        {
+            if (_drawingObject != null && _drawingObject.ID != -1 && _drawingObjectHost != null)
+            {
+                RemoveRoiAdorner(_drawingObjectHost);
+                try
+                {
+                    _drawingObjectHost.HalconWindow.DetachDrawingObjectFromWindow(_drawingObject);
+                }
+                catch (HalconException) { /* 忽略分离错误 */ }
+                _drawingObject.Dispose();
+                _drawingObject = null;
+                _drawingObjectHost = null;
+                UpdateParameterBar(); // 清理标准ROI参数
+            }
+        }
+
         /// <summary>
         /// 更新主窗口状态栏的文本，并在一段时间后自动清除
         /// </summary>
@@ -1547,7 +1760,7 @@ namespace VisionLite
             RoiParameterPanel.Visibility = Visibility.Collapsed;
 
             // --- 情况1：处理涂抹式ROI ---
-            if (_isPaintingMode)
+            if (_isPaintingMode || _isErasingMode)
             {
                 RoiParameterPanel.Children.Add(new Label { Content = "画笔形状:" });
                 var shapeCombo = new ComboBox { Width = 80, VerticalContentAlignment = VerticalAlignment.Center };
