@@ -207,18 +207,19 @@ namespace VisionLite
            { "DecimationVertical", "垂直抽取" },
 
             // --- ROI 参数 ---
-            { "row1", "起始行 (Row1):" },
-            { "column1", "起始列 (Col1):" },
-            { "row2", "结束行 (Row2):" },
-            { "column2", "结束列 (Col2):" },
-            { "row", "中心行 (Row):" },
-            { "column", "中心列 (Col):" },
-            { "phi", "角度 (度):" },
-            { "radius", "半径 (Radius):" },
-            { "radius1", "半长轴 (Radius1):" },
-            { "radius2", "半短轴 (Radius2):" },
-            { "length1", "半长轴 (Length1):" },
-            { "length2", "半短轴 (Length2):" },
+            { "row1",    "起始行:" },
+            { "column1", "起始列:" },
+            { "row2",    "结束行:" },
+            { "column2", "结束列:" },
+            { "row",     "中心行:" },
+            { "column",  "中心列:" },
+
+            { "phi",     "角　度:" },
+            { "radius",  "半　径:" },
+            { "radius1", "半长轴:" },
+            { "radius2", "半短轴:" },
+            { "length1", "半长轴:" },
+            { "length2", "半短轴:" },
         };
 
         /// <summary>

@@ -33,19 +33,19 @@ namespace VisionLite
             // 创建用于显示的TextBlock
             _textBlock = new TextBlock
             {
-                Foreground = Brushes.White,
-                Padding = new Thickness(5),
-                FontSize = 12,
-                FontFamily = new FontFamily("Consolas")// 使用等宽字体，确保文本能完美对齐
+                Foreground = Brushes.White,             // 文字颜色
+                Padding = new Thickness(5),             // 文字内边距
+                FontSize = 12,                          // 字体大小
+                FontFamily = new FontFamily("Consolas") // 字体
             };
 
             // --- 创建一个Border来包裹TextBlock，以实现更丰富的视觉效果 ---
             _border = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0)),
-                BorderBrush = Brushes.DimGray,
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(3),
+                Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0)),  // 背景颜色和透明度
+                BorderBrush = Brushes.DimGray,                                  // 边框颜色               
+                BorderThickness = new Thickness(1),                             // 边框粗细
+                CornerRadius = new CornerRadius(3),                             // 边框圆角
                 Child = _textBlock
             };
             IsHitTestVisible = false; // 确保整个Adorner不拦截鼠标事件

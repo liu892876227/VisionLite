@@ -44,7 +44,7 @@ namespace VisionLite
             // 并利用字符串格式化功能（,-15）来创建对齐的文本列。
             // 最后用换行符将它们连接成一个多行字符串。
             ParametersAsString = string.Join(Environment.NewLine,
-                parameters.Select(kvp => $"{ParameterTranslator.Translate(kvp.Key),-15}{kvp.Value:F2}"));
+                parameters.Select(kvp => $"{ParameterTranslator.Translate(kvp.Key),-5}{kvp.Value:F2}"));
 
             // --- 使用Halcon的几何运算来精确定位 ---
             if (contour != null && contour.IsInitialized() && contour.CountObj() > 0)
