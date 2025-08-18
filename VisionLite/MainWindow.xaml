@@ -17,12 +17,6 @@
         <ResourceDictionary>
             <!-- 先定义本地资源 -->
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-
-            <!-- 再合并外部资源字典 -->
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="CameraIcon.xaml"/>
-                <ResourceDictionary Source="ToolbarIcons.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -66,73 +60,7 @@
                         <!-- 分隔符 -->
                         <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
 
-                        <!-- 采集控制按钮 -->
-                        <Button x:Name="SingleCaptureToolbarButton" Width="40" ToolTip="对活动窗口单次触发" Click="SingleCaptureToolbarButton_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                            <ContentPresenter Content="{StaticResource SingleCaptureIcon}"/>
-                        </Button>
-                        <Button x:Name="ContinueCaptureToolbarButton" Width="40" ToolTip="对活动窗口连续触发" Click="ContinueCaptureToolbarButton_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                            <ContentPresenter Content="{StaticResource ContinueCaptureIcon}"/>
-                        </Button>
-                        <Button x:Name="StopCaptureToolbarButton" Width="40" ToolTip="停止活动窗口采集" Click="StopCaptureToolbarButton_Click" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                            <ContentPresenter Content="{StaticResource StopCaptureIcon}"/>
-                        </Button>
-
-                        <!-- 分隔符 -->
-                        <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" />
-
-                        <!-- 加载图像和ROI工具按钮 -->
-                        <Button x:Name="LoadImgButton" 
-                                Width="40" 
-                                ToolTip="加载本地图像"
-                                Click="LoadImgButtonClick"
-                                Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                            <ContentPresenter Content="{StaticResource LoadImageIcon}"/>
-                        </Button>
-
-                        
-                        <ComboBox x:Name="RoiComboBox"
-                                  Width="40"
-                                  ToolTip="选择或创建ROI"
-                                  SelectionChanged="RoiComboBox_SelectionChanged"
-                                  SelectedIndex="0"
-                                  VerticalContentAlignment="Center"
-                                  Style="{StaticResource {x:Static ToolBar.ComboBoxStyleKey}}">
-                            <ComboBoxItem>
-                                <ContentPresenter Content="{StaticResource ROIToolIcon}" Width="20" Height="20" />
-                            </ComboBoxItem>
-                            <ComboBoxItem Content="ROI工具" IsEnabled="False"/>
-                            <ComboBoxItem Content="矩形 (Rectangle)"/>
-                            <ComboBoxItem Content="带角度矩形 (Rectangle2)"/>
-                            <ComboBoxItem Content="圆形 (Circle)"/>
-                            <ComboBoxItem Content="椭圆 (Ellipse)"/>
-                            <ComboBoxItem Content="直线 (Line)"/>
-                            <ComboBoxItem Content="自由轮廓 (Contour)"/>
-                            <ComboBoxItem Content="掩膜 (Mask)"/>
-                            <ComboBoxItem Content="橡皮擦 (Eraser)"/>
-                            <Separator/>
-                            <ComboBoxItem Content="清除ROI"/>
-                        </ComboBox>
-
-                        <!-- 保存原图和保存ROI的按钮 -->
-                        <Button x:Name="SaveOriginalImageButton" 
-                                Width="40" 
-                                ToolTip="保存活动窗口的原图"
-                                Click="SaveOriginalImageButton_Click"
-                                Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-                            <ContentPresenter Content="{StaticResource SaveImageIcon}"/>
-                        </Button>
-
-                        <Button x:Name="SaveRoiImageButton" 
-                                Width="40" 
-                                ToolTip="保存活动窗口的ROI区域图像"
-                                Click="SaveRoiImageButton_Click"
-                                Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}"
-                                IsEnabled="False">
-                            <ContentPresenter Content="{StaticResource SaveRoiImageIcon}"/>
-                        </Button>
-                        
-
-
+                       
                     </StackPanel>
                 </Border>
             </Grid>

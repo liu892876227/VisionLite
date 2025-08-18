@@ -103,6 +103,8 @@
     <Compile Include="CameraManagementWindow.xaml.cs">
       <DependentUpon>CameraManagementWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WindowRoiState.cs" />
+    <Compile Include="WindowToolbarAdorner.cs" />
     <Compile Include="HalconCameraDevice.cs" />
     <Compile Include="DeviceInfo.cs" />
     <Compile Include="HikvisionCameraDevice.cs" />

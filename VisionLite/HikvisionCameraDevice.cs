@@ -29,8 +29,6 @@ namespace VisionLite
 
         // 【新增】用于图像数据转换的缓冲区
         private byte[] m_pDataForRed;
-        private byte[] m_pDataForGreen;
-        private byte[] m_pDataForBlue;
         private IntPtr m_pBufForDriver;
         private uint m_nBufSizeForDriver;
 
@@ -277,7 +275,7 @@ namespace VisionLite
             });
         }
 
-        // 核心的同步取图和转换函数
+        
         // 核心的同步取图和转换函数
         private HObject GrabSingleFrame()
         {
