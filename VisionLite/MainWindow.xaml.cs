@@ -1108,6 +1108,10 @@ namespace VisionLite
                 _drawingObjectHost = _activeDisplayWindow;
                 _drawingObjectHost.HalconWindow.AttachDrawingObjectToWindow(_drawingObject);
 
+
+                // 设置控制点的大小。默认值大约是3或4，设置为7或8会有明显增大的效果。
+                _drawingObject.SetDrawingObjectParams(new HTuple("marker_size", "line_width"), new HTuple(13, 3));
+
                 // 订阅交互事件
                 _drawingObject.OnDrag(OnRoiUpdate);
                 _drawingObject.OnResize(OnRoiUpdate);
@@ -1380,7 +1384,6 @@ namespace VisionLite
         /// <summary>
         /// 涂抹模式下的鼠标按下事件。
         /// </summary>
-       
         private void PaintRoi_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             // 捕获鼠标，确保即使鼠标移出窗口也能收到后续事件
@@ -1401,7 +1404,7 @@ namespace VisionLite
             PaintAtCurrentPosition(row.D, col.D);
             UpdateStatus("正在涂抹... 松开左键以完成。", false); // 更新提示
 
-            // 【关键】阻止事件继续传递，禁用背景的拖动和缩放
+            // 阻止事件继续传递，禁用背景的拖动和缩放
             e.Handled = true;
         }
 
@@ -1529,14 +1532,14 @@ namespace VisionLite
 
             UpdateStatus("涂抹绘制已完成。ROI已创建。", false);
 
-            /// 刷新显示，清除半透明填充，并画出最终轮廓
-            RefreshActiveWindowDisplay();
-            if (_activeDisplayWindow != null && _paintedRoi != null && _paintedRoi.IsInitialized())
-            {
-                _activeDisplayWindow.HalconWindow.SetColor("green");
-                _activeDisplayWindow.HalconWindow.SetDraw("margin");
-                _activeDisplayWindow.HalconWindow.DispObj(_paintedRoi);
-            }
+            ///// 刷新显示，清除半透明填充，并画出最终轮廓
+            //RefreshActiveWindowDisplay();
+            //if (_activeDisplayWindow != null && _paintedRoi != null && _paintedRoi.IsInitialized())
+            //{
+            //    _activeDisplayWindow.HalconWindow.SetColor("green");
+            //    _activeDisplayWindow.HalconWindow.SetDraw("margin");
+            //    _activeDisplayWindow.HalconWindow.DispObj(_paintedRoi);
+            //}
             // 隐藏参数面板
             UpdateParameterBar();
         }
@@ -1645,7 +1648,7 @@ namespace VisionLite
                     double minDimension = Math.Min(width.D, height.D);
 
                     // 计算其2%，并向上取整
-                    int defaultSize = (int)Math.Ceiling(minDimension * 0.02);
+                    int defaultSize = (int)Math.Ceiling(minDimension * 0.03);
 
                     // 确保尺寸至少为1
                     if (defaultSize < 1) defaultSize = 1;
@@ -1685,7 +1688,7 @@ namespace VisionLite
                 _drawingObjectHost = null;
             }
 
-            // --- 【核心修正】清除涂抹式ROI ---
+            // --- 清除涂抹式ROI ---
             if (_paintedRoi != null)
             {
                 _paintedRoi.Dispose();
