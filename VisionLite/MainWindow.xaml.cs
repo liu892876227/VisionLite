@@ -112,9 +112,6 @@ namespace VisionLite
         /// </summary>
         private bool _isPaintingActive = false;
 
-        //  添加防抖计时器 
-        private DispatcherTimer _roiUpdateDebounceTimer;
-
         // --- 用于涂抹绘制的辅助变量 ---
         private HTuple _lastPaintRow = -1;
         private HTuple _lastPaintCol = -1;
@@ -192,38 +189,28 @@ namespace VisionLite
 
                 SetActiveDisplayWindow(HSmart1);
             };
-
-            // 第2步：初始化防抖计时器
-            _roiUpdateDebounceTimer = new DispatcherTimer
-            {
-                // 设置一个较短的延迟，例如50毫秒
-                Interval = TimeSpan.FromMilliseconds(50)
-            };
-            // 订阅Tick事件，这是我们真正执行更新的地方
-            _roiUpdateDebounceTimer.Tick += RoiUpdateDebounceTimer_Tick;
         }
 
         #region 工具栏按钮事件处理
 
         /// <summary>
-        /// "相机管理"工具栏按钮的点击事件处理程序。
-        /// 实现相机管理窗口的单例模式。
+        /// 打开或激活相机管理窗口（单例模式）。
+        /// 此方法是公共的，以便被各个窗口的Adorner调用。
         /// </summary>
-        private void CameraManagementButton_Click(object sender, RoutedEventArgs e)
+        public void OpenCameraManagementWindow(HSmartWindowControlWPF targetWindow)
         {
             if (cameraManagementWindow != null)
             {
-                // 在激活之前，检查窗口是否被最小化了
                 if (cameraManagementWindow.WindowState == WindowState.Minimized)
                 {
-                    // 如果是，则先将其恢复到正常大小
                     cameraManagementWindow.WindowState = WindowState.Normal;
                 }
-                cameraManagementWindow.Activate();// 如果已存在，则激活并置于顶层
+                cameraManagementWindow.SetTargetWindow(targetWindow);
+                cameraManagementWindow.Activate();
             }
             else
             {
-                cameraManagementWindow = new CameraManagementWindow(this);// 否则创建新实例
+                cameraManagementWindow = new CameraManagementWindow(this, targetWindow);
                 cameraManagementWindow.Show();
             }
         }
@@ -400,7 +387,7 @@ namespace VisionLite
             if (roiState.DrawingObject != null)
             {
                 // 只有当要清理的窗口是活动窗口时，才移除 Adorner
-                if (windowToClear == _activeDisplayWindow) RemoveRoiAdorner();
+                if (windowToClear == _activeDisplayWindow) RemoveRoiAdorner(_activeDisplayWindow);
 
                 try { windowToClear.HalconWindow.DetachDrawingObjectFromWindow(roiState.DrawingObject); }
                 catch (HalconException) { }
@@ -692,30 +679,32 @@ namespace VisionLite
             }
             _activeDisplayWindow = newActiveWindow; // 更新活动窗口的引用
 
-            // 更新所有窗口的UI边框
+            // 通过改变颜色而不是厚度来高亮，这不会触发子元素的重新布局
             Border1.BorderBrush = (newActiveWindow == HSmart1) ? Brushes.DodgerBlue : Brushes.Gray;
-            Border1.BorderThickness = new Thickness((newActiveWindow == HSmart1) ? 2 : 1);
             Border2.BorderBrush = (newActiveWindow == HSmart2) ? Brushes.DodgerBlue : Brushes.Gray;
-            Border2.BorderThickness = new Thickness((newActiveWindow == HSmart2) ? 2 : 1);
             Border3.BorderBrush = (newActiveWindow == HSmart3) ? Brushes.DodgerBlue : Brushes.Gray;
-            Border3.BorderThickness = new Thickness((newActiveWindow == HSmart3) ? 2 : 1);
             Border4.BorderBrush = (newActiveWindow == HSmart4) ? Brushes.DodgerBlue : Brushes.Gray;
-            Border4.BorderThickness = new Thickness((newActiveWindow == HSmart4) ? 2 : 1);
+
+            // 将所有 BorderThickness 硬编码为 1，不再改变它
+            Border1.BorderThickness = new Thickness(1);
+            Border2.BorderThickness = new Thickness(1);
+            Border3.BorderThickness = new Thickness(1);
+            Border4.BorderThickness = new Thickness(1);
 
             // 处理ROI Adorner（浮动参数框）的“迁移”
             // 从旧的活动窗口移除 Adorner
             if (oldActiveWindow != null)
             {
-                if (_windowRoiStates.TryGetValue(oldActiveWindow, out var oldRoiState) && oldRoiState.DrawingObject != null)
-                {
-                    RemoveRoiAdorner();
-                }
+                // 调用带参数的RemoveRoiAdorner
+                RemoveRoiAdorner(oldActiveWindow);
             }
 
             // 如果新的活动窗口有标准ROI，则为其重新创建并显示 Adorner
-            if (_windowRoiStates.TryGetValue(newActiveWindow, out var newRoiState) && newRoiState.DrawingObject != null)
+            if (_windowRoiStates.TryGetValue(newActiveWindow, out var newRoiState) && newRoiState.DrawingObject != null && newRoiState.DrawingObject.ID != -1)
             {
-                ShowRoiAdorner();
+                ShowRoiAdorner(newActiveWindow);
+                // 【重要】切换回来后，需要立即刷新一次Adorner的位置和内容
+                RefreshAdorner();
             }
 
             // 更新状态栏上的参数面板
@@ -909,43 +898,39 @@ namespace VisionLite
         /// </summary>
         /// <param name="selectedDevice">要打开的设备信息。</param>
         /// <returns>一个元组，包含操作是否成功(bool)和相应的提示信息(string)。</returns>
-        public (bool Success, string Message) OpenDevice(DeviceInfo selectedDevice)
+        public (bool Success, string Message) OpenDevice(DeviceInfo selectedDevice, HSmartWindowControlWPF targetWindow)
         {
             if (selectedDevice == null)
             {
                 return (false, "未选择任何有效设备。");
             }
+            if (targetWindow == null)
+            {
+                return (false, "内部错误：未指定目标窗口。");
+            }
+            // 检查设备是否已在其他窗口打开
             if (openCameras.ContainsKey(selectedDevice.UniqueID))
             {
                 return (false, $"设备 {selectedDevice.UniqueID} 已经打开了。");
             }
-            if (openCameras.Count >= 4)
+            // 检查目标窗口是否已被其他相机占用
+            if (targetWindow.Tag is string deviceId && deviceId != selectedDevice.UniqueID)
             {
-                return (false, "最多只能打开4个设备。");
-            }
-            HSmartWindowControlWPF targetWindow = null;
-
-            // 新的窗口选择逻辑
-            // 优先级1: 尝试使用当前激活的窗口，前提是它没被占用
-            if (_activeDisplayWindow != null && !(_activeDisplayWindow.Tag is string))
-            {
-                targetWindow = _activeDisplayWindow;
-            }
-            // 优先级2: 如果活动窗口已被占用，则查找第一个可用的窗口
-            else
-            {
-                targetWindow = displayWindows.FirstOrDefault(w => w.Tag == null || w.Tag is HObject);
+                return (false, $"操作失败：目标窗口已被相机 '{deviceId}' 占用。");
             }
 
-            if (targetWindow == null) return (false, "没有可用的显示窗口了。");
-
+            // --- 准备目标窗口 ---
+            // 如果目标窗口当前显示的是本地图像，先清理掉
             if (targetWindow.Tag is HObject oldImage)
             {
                 oldImage.Dispose();
                 targetWindow.HalconWindow.ClearWindow();
-                targetWindow.Tag = null; // 清理Tag
+                targetWindow.Tag = null;
             }
-
+            // 清理目标窗口上可能残留的ROI
+            ClearRoiForWindow(targetWindow);
+            // --- 创建并打开相机实例 ---
+            // 根据SDK类型创建对应的相机设备实例
             ICameraDevice newCamera = (selectedDevice.SdkType == CameraSdkType.Hikvision)
                 ? (ICameraDevice)new HikvisionCameraDevice(selectedDevice, targetWindow)
                 : new HalconCameraDevice(selectedDevice.UniqueID, targetWindow);
@@ -954,7 +939,7 @@ namespace VisionLite
             {
                 if (newCamera.Open())
                 {
-                    int windowIndex = displayWindows.IndexOf(targetWindow);
+                    int windowIndex = displayWindows.IndexOf(targetWindow) + 1;
                     openCameras.Add(selectedDevice.UniqueID, newCamera);
                     targetWindow.Tag = selectedDevice.UniqueID; // 使用 UniqueID 标记窗口被相机占用
                     CameraListChanged?.Invoke(this, EventArgs.Empty);
@@ -962,13 +947,16 @@ namespace VisionLite
                     // 使用 using 语句确保临时拷贝的图像对象在使用后被立即释放，防止内存泄漏
                     using (HObject initialImage = newCamera.GetCurrentImage()?.CopyObj(1, -1))
                     {
-                        UpdateWindowInfoOnSourceChanged(targetWindow, selectedDevice.UniqueID, initialImage);
+                        UpdateWindowInfoOnSourceChanged(targetWindow, selectedDevice.DisplayName, initialImage);
                     }
                    
-                    return (true, $"设备 {selectedDevice.DisplayName} 打开成功，已绑定到窗口 {windowIndex + 1}。");
+                    return (true, $"设备 {selectedDevice.DisplayName} 打开成功，已绑定到窗口 {windowIndex}。");
                 }
-                // newCamera.Open() 返回 false 的情况（虽然现在不太可能，因为我们改为抛出异常）
-                return (false, $"打开设备 {selectedDevice.DisplayName} 失败。");
+                else
+                {
+                    // 理论上，如果Open()内部有错误会抛出异常，这部分代码可能不会执行
+                    return (false, $"打开设备 {selectedDevice.DisplayName} 失败，无详细信息。");
+                }
             }
             catch (Exception ex)
             {
@@ -976,9 +964,39 @@ namespace VisionLite
                 return (false, ex.Message);
             }
         }
+
         /// <summary>
-        /// 关闭指定的相机设备并释放相关资源。
+        /// 关闭【指定目标窗口】上连接的相机设备并释放相关资源。
         /// </summary>
+        /// <param name="targetWindow">要关闭相机的目标窗口。</param>
+        /// <returns>一个元组，包含操作是否成功(bool)和相应的提示信息(string)。</returns>
+        public (bool Success, string Message) CloseDevice(HSmartWindowControlWPF targetWindow)
+        {
+            if (targetWindow == null)
+            {
+                return (false, "内部错误：未指定目标窗口。");
+            }
+            // 根据目标窗口，在已打开的相机字典中找到对应的相机条目
+            var cameraEntry = openCameras.FirstOrDefault(kvp => kvp.Value.DisplayWindow == targetWindow);
+            // 检查是否找到了相机
+            if (cameraEntry.Value == null) // FirstOrDefault 对于值类型（字典条目）会返回默认值，其Value会是null
+            {
+                return (false, "此窗口没有连接任何相机，无需关闭。");
+            }
+            // 从找到的条目中获取设备信息 (Key是UniqueID)
+            // 为了复用现有的关闭逻辑，我们构造一个临时的DeviceInfo对象
+            var deviceInfoToClose = new DeviceInfo { UniqueID = cameraEntry.Key, DisplayName = cameraEntry.Key };
+
+            // 调用通过DeviceInfo关闭相机的核心逻辑
+            return CloseDevice(deviceInfoToClose);
+        }
+
+
+        /// <summary>
+        /// 根据设备信息关闭指定的相机设备并释放相关资源。
+        /// </summary>
+        /// <param name="selectedDevice">要关闭的设备信息。</param>
+        /// <returns>一个元组，包含操作是否成功(bool)和相应的提示信息(string)。</returns>
         public (bool Success, string Message) CloseDevice(DeviceInfo selectedDevice)
         {
 
@@ -986,18 +1004,12 @@ namespace VisionLite
             {
                 return (false, "请选择一个要关闭的设备。");
             }
+
             // 尝试从已打开的相机字典中找到要关闭的相机
             if (openCameras.TryGetValue(selectedDevice.UniqueID, out ICameraDevice cameraToClose))
             {
                 // 在操作前，先获取该相机绑定的显示窗口
                 var windowToUpdate = cameraToClose.DisplayWindow;
-
-                // 更新该窗口的浮动工具栏状态为 "Idle"
-                if (_captureAdorners.TryGetValue(windowToUpdate, out var adorner))
-                {
-                    // 在多窗口模式下，我们希望工具栏一直显示，所以注释掉状态切换
-                    // adorner.UpdateState(WindowToolbarAdorner.ToolbarState.Idle);
-                }
 
                 // 调用针对特定窗口的ROI清理方法
                 ClearRoiForWindow(windowToUpdate);
@@ -1017,11 +1029,37 @@ namespace VisionLite
                 {
                     windowToUpdate.HalconWindow.ClearWindow();
                 }
+                // 为了在状态栏显示更友好的名称，我们可以从原始列表中查找
+                var allDevices = GetFoundDevices();
+                var originalDeviceInfo = allDevices.FirstOrDefault(d => d.UniqueID == selectedDevice.UniqueID);
+                string displayName = originalDeviceInfo?.DisplayName ?? selectedDevice.UniqueID;
+
                 return (true, $"设备 {selectedDevice.DisplayName} 已成功关闭。");
             }
             // 如果在字典中找不到，说明该设备并未打开
             return (false, $"设备 {selectedDevice.DisplayName} 并未打开，无需关闭。");
 
+        }
+
+        // --- 用于填充下拉框 ---
+        public List<DeviceInfo> GetAvailableDevicesForWindow(HSmartWindowControlWPF targetWindow)
+        {
+            var allDevices = GetFoundDevices();
+            var openDeviceIds = new HashSet<string>(openCameras.Keys);
+
+            // 获取当前目标窗口已连接的相机ID (如果有)
+            string currentDeviceOnTarget = null;
+            if (openCameras.Values.FirstOrDefault(cam => cam.DisplayWindow == targetWindow) is ICameraDevice currentCam)
+            {
+                currentDeviceOnTarget = currentCam.DeviceID;
+            }
+
+            var availableDevices = allDevices.Where(dev =>
+                    !openDeviceIds.Contains(dev.UniqueID) // 设备未被打开
+                    || dev.UniqueID == currentDeviceOnTarget  // 或者，就是当前窗口已连接的那个设备
+                ).ToList();
+
+            return availableDevices;
         }
 
         /// <summary>
@@ -1323,9 +1361,9 @@ namespace VisionLite
                 roiState.DrawingObject.OnSelect(OnRoiUpdate);
 
                 // 先显示Adorner
-                ShowRoiAdorner();
+                ShowRoiAdorner(_activeDisplayWindow);
                 // 再调用中央处理器来更新所有UI
-                ProcessRoiUpdate();
+                ProcessRoiUpdate(roiState.DrawingObject);
 
                 if (_captureAdorners.TryGetValue(_activeDisplayWindow, out var adorner))
                     adorner.SetSaveRoiButtonState(true);
@@ -1352,105 +1390,90 @@ namespace VisionLite
             if (dobj == null || dobj.ID == -1) return;
             // 确认当前交互的ROI是否属于当前的活动窗口。
             // 这是一个重要的保险措施，防止在窗口切换的瞬间处理了错误的ROI。
-            if (!_windowRoiStates.TryGetValue(_activeDisplayWindow, out var roiState) || roiState.DrawingObject != dobj)
+            if (!_windowRoiStates.TryGetValue(_activeDisplayWindow, out var roiState) || roiState.DrawingObject == null || roiState.DrawingObject.ID != dobj.ID)
             {
                 return;
             }
-            // 获取ROI的类型
-            string roiType;
-            try
+            Dispatcher.Invoke(() =>
             {
-                roiType = dobj.GetDrawingObjectParams("type").S;
-            }
-            catch (HalconException)
-            {
-                // 在极少数情况下，如果连获取类型都失败，则直接返回
-                return;
-            }
+                // 将事件提供的、包含最新数据的dobj直接传递给处理函数
+                ProcessRoiUpdate(dobj);
+                if (_captureAdorners.TryGetValue(_activeDisplayWindow, out var adorner))
+                    adorner.SetSaveRoiButtonState(true);
+            });
 
-            // --- 智能判断 ---
-            if (roiType == "xld_contour")
-            {
-                // 使用防抖计时器。无论事件触发多频繁，我们都只是重置计时器。
-                // 这样可以避免大量异常，因为真正的更新只在拖动停止后执行一次。
-                _roiUpdateDebounceTimer.Stop();
-                _roiUpdateDebounceTimer.Start();
-            }
-            else
-            {
-                // 【策略2：对于所有其他简单ROI（矩形、圆形等）】
-                // 立即在UI线程上执行更新，以保证参数的实时反馈。
-                Dispatcher.Invoke(() =>
-                {
-                    ProcessRoiUpdate();
-                    if (_captureAdorners.TryGetValue(_activeDisplayWindow, out var adorner))
-                        adorner.SetSaveRoiButtonState(true);
-                });
-            }
         }
 
         /// <summary>
         /// 处理ROI更新的中央方法。
         /// 它负责获取ROI的最新参数，并触发状态栏和浮动Adorner的更新。
         /// </summary>
-        private void ProcessRoiUpdate()
+        private void ProcessRoiUpdate(HDrawingObject drawingObject)
         {
-            // 检查活动窗口是否存在
-            if (_activeDisplayWindow == null) return;
-            // 获取当前活动窗口的ROI状态
-            var roiState = _windowRoiStates[_activeDisplayWindow];
-            // 检查该窗口是否存在一个有效的标准ROI
-            if (roiState.DrawingObject == null || roiState.DrawingObject.ID == -1) return;
-            // 读取ROI的几何参数
-            var parameters = new Dictionary<string, double>();
-            string roiType = roiState.DrawingObject.GetDrawingObjectParams("type").S;
+            // 安全检查：传入的对象是否有效
+            if (drawingObject == null || drawingObject.ID == -1) return;
+           
+            // 检查活动窗口，我们需要它来更新UI和存储状态
+            if (_activeDisplayWindow == null || !_windowRoiStates.TryGetValue(_activeDisplayWindow, out var roiState))
+            {
+                return;
+            }
 
             try
             {
+                string roiType = drawingObject.GetDrawingObjectParams("type").S;
+                // --- 首先处理特殊的自由轮廓 ---
+                if (roiType == "xld")
+                {
+                    // 对于自由轮廓，我们不尝试获取任何几何参数或iconic对象，
+                    // 我们只清空UI，因为在拖动过程中显示参数没有意义。
+                    roiState.LastRoiArgs = null;
+                    UpdateAdornerPosition(null);
+                    UpdateParameterBar();
+                    // 直接返回，绝对不执行下面的危险代码。
+                    return;
+
+                }
                 // 根据类型获取参数字典
+                var parameters = new Dictionary<string, double>();
                 switch (roiType)
                 {
                     case "rectangle1":
-                        parameters["row1"] = roiState.DrawingObject.GetDrawingObjectParams("row1");
-                        parameters["column1"] = roiState.DrawingObject.GetDrawingObjectParams("column1");
-                        parameters["row2"] = roiState.DrawingObject.GetDrawingObjectParams("row2");
-                        parameters["column2"] = roiState.DrawingObject.GetDrawingObjectParams("column2");
+                        parameters["row1"] = drawingObject.GetDrawingObjectParams("row1").D;
+                        parameters["column1"] = drawingObject.GetDrawingObjectParams("column1").D;
+                        parameters["row2"] = drawingObject.GetDrawingObjectParams("row2").D;
+                        parameters["column2"] = drawingObject.GetDrawingObjectParams("column2").D;
                         break;
                     case "rectangle2":
-                        parameters["row"] = roiState.DrawingObject.GetDrawingObjectParams("row");
-                        parameters["column"] = roiState.DrawingObject.GetDrawingObjectParams("column");
-                        parameters["phi"] = (roiState.DrawingObject.GetDrawingObjectParams("phi")); // 保持弧度
-                        parameters["length1"] = roiState.DrawingObject.GetDrawingObjectParams("length1");
-                        parameters["length2"] = roiState.DrawingObject.GetDrawingObjectParams("length2");
+                        parameters["row"] = drawingObject.GetDrawingObjectParams("row").D;
+                        parameters["column"] = drawingObject.GetDrawingObjectParams("column").D;
+                        parameters["phi"] = drawingObject.GetDrawingObjectParams("phi").D; // 保持弧度
+                        parameters["length1"] = drawingObject.GetDrawingObjectParams("length1").D;
+                        parameters["length2"] = drawingObject.GetDrawingObjectParams("length2").D;
                         break;
                     case "circle":
-                        parameters["row"] = roiState.DrawingObject.GetDrawingObjectParams("row");
-                        parameters["column"] = roiState.DrawingObject.GetDrawingObjectParams("column");
-                        parameters["radius"] = roiState.DrawingObject.GetDrawingObjectParams("radius");
+                        parameters["row"] = drawingObject.GetDrawingObjectParams("row").D;
+                        parameters["column"] = drawingObject.GetDrawingObjectParams("column").D;
+                        parameters["radius"] = drawingObject.GetDrawingObjectParams("radius").D;
                         break;
                     case "ellipse":
-                        parameters["row"] = roiState.DrawingObject.GetDrawingObjectParams("row");
-                        parameters["column"] = roiState.DrawingObject.GetDrawingObjectParams("column");
-                        parameters["phi"] = (roiState.DrawingObject.GetDrawingObjectParams("phi")); // 保持弧度
-                        parameters["radius1"] = roiState.DrawingObject.GetDrawingObjectParams("radius1");
-                        parameters["radius2"] = roiState.DrawingObject.GetDrawingObjectParams("radius2");
+                        parameters["row"] = drawingObject.GetDrawingObjectParams("row").D;
+                        parameters["column"] = drawingObject.GetDrawingObjectParams("column").D;
+                        parameters["phi"] = drawingObject.GetDrawingObjectParams("phi").D; // 保持弧度
+                        parameters["radius1"] = drawingObject.GetDrawingObjectParams("radius1").D;
+                        parameters["radius2"] = drawingObject.GetDrawingObjectParams("radius2").D;
                         break;
                     case "line":
-                        parameters["row1"] = roiState.DrawingObject.GetDrawingObjectParams("row1");
-                        parameters["column1"] = roiState.DrawingObject.GetDrawingObjectParams("column1");
-                        parameters["row2"] = roiState.DrawingObject.GetDrawingObjectParams("row2");
-                        parameters["column2"] = roiState.DrawingObject.GetDrawingObjectParams("column2");
+                        parameters["row1"] = drawingObject.GetDrawingObjectParams("row1").D;
+                        parameters["column1"] = drawingObject.GetDrawingObjectParams("column1").D;
+                        parameters["row2"] = drawingObject.GetDrawingObjectParams("row2").D;
+                        parameters["column2"] = drawingObject.GetDrawingObjectParams("column2").D;
                         break;
-                    case "xld_contour":
-                        // 对于自由轮廓，我们不需要参数，但需要清空UI
-                        roiState.LastRoiArgs = null;
-                        UpdateAdornerPosition(null);
-                        UpdateParameterBar();
-                        return;
+                  
                 }
 
                 // 使用参数字典创建一个统一的数据对象
-                using (HObject iconic = roiState.DrawingObject.GetDrawingObjectIconic())
+                using (HObject iconic = drawingObject.GetDrawingObjectIconic())
                 {
                     // 将这个新的数据对象存储在当前窗口的ROI状态中
                     roiState.LastRoiArgs = new RoiUpdatedEventArgs(parameters, iconic.CopyObj(1, -1));
@@ -1464,20 +1487,6 @@ namespace VisionLite
         }
         
         /// <summary>
-        /// 防抖计时器的Tick事件，用于处理自由轮廓ROI的更新。
-        /// </summary>
-        private void RoiUpdateDebounceTimer_Tick(object sender, EventArgs e)
-        {
-            // 计时器触发后，首先将它停止，因为它是一次性的
-            _roiUpdateDebounceTimer.Stop();
-
-            // 在这里执行我们真正的、重量级的更新逻辑
-            ProcessRoiUpdate();
-            if (_captureAdorners.TryGetValue(_activeDisplayWindow, out var adorner))
-                adorner.SetSaveRoiButtonState(true);
-        }
-
-        /// <summary>
         /// 当参数控件的值被用户修改时触发，用于反向更新ROI对象。
         /// </summary>
         private void OnParameterControlValueChanged(object sender, RoutedEventArgs e)
@@ -1485,69 +1494,59 @@ namespace VisionLite
             // 如果是代码在更新UI，则直接返回，防止无限循环
             if (_isUpdatingFromRoi) return;
 
-            // 检查活动窗口是否存在
-            if (_activeDisplayWindow == null) return;
-
-            // 获取当前活动窗口的ROI状态
-            var roiState = _windowRoiStates[_activeDisplayWindow];
-
-            if (roiState.DrawingObject != null && roiState.DrawingObject.ID != -1)
+            // 检查活动窗口和ROI状态
+            if (_activeDisplayWindow == null || !_windowRoiStates.TryGetValue(_activeDisplayWindow, out var roiState) || roiState.DrawingObject == null || roiState.DrawingObject.ID == -1)
             {
-                try
-                {
-                    // 收集面板上所有控件的当前值
-                    var newParams = new Dictionary<string, double>();
-                    foreach (var child in RoiParameterPanel.Children)
-                    {
-                        if (child is Xceed.Wpf.Toolkit.DoubleUpDown numeric && numeric.Value.HasValue)
-                        {
-                            newParams[numeric.Tag.ToString()] = numeric.Value.Value;
-                        }
-                    }
-
-                    // 根据ROI类型，调用正确的SetDrawingObjectParams重载
-                    string roiType = roiState.DrawingObject.GetDrawingObjectParams("type").S;
-                    switch (roiType)
-                    {
-                        case "rectangle1":
-                            roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row1", "column1", "row2", "column2"),
-                                new HTuple(newParams["row1"], newParams["column1"], newParams["row2"], newParams["column2"]));
-                            break;
-                        case "rectangle2":
-                            roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row", "column", "phi", "length1", "length2"),
-                                new HTuple(newParams["row"], newParams["column"], newParams["phi"] * Math.PI / 180, newParams["length1"], newParams["length2"]));
-                            break;
-                        case "circle":
-                            roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row", "column", "radius"),
-                               new HTuple(newParams["row"], newParams["column"], newParams["radius"]));
-                            break;
-                        case "ellipse":
-                            roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row", "column", "phi", "radius1", "radius2"),
-                               new HTuple(newParams["row"], newParams["column"], newParams["phi"] * Math.PI / 180, newParams["radius1"], newParams["radius2"]));
-                            break;
-                        case "line":
-                            roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row1", "column1", "row2", "column2"),
-                               new HTuple(newParams["row1"], newParams["column1"], newParams["row2"], newParams["column2"]));
-                            break;
-                    }
-
-                    // 手动重新生成缓存数据 _lastRoiArgs
-                    using (HObject iconic = roiState.DrawingObject.GetDrawingObjectIconic())
-                    {
-                        // 我们需要从修改后的ROI对象中重新获取参数来构建EventArgs
-                        var currentParameters = new Dictionary<string, double>();
-                        foreach (var key in newParams.Keys)
-                        {
-                            currentParameters[key] = roiState.DrawingObject.GetDrawingObjectParams(key).D;
-                        }
-                        roiState.LastRoiArgs = new RoiUpdatedEventArgs(currentParameters, iconic.CopyObj(1, -1));
-                    }
-
-                    // 调用轻量级的 RefreshAdorner 方法，只更新浮动框，不触碰状态栏
-                    RefreshAdorner();
-                }
-                catch (HalconException) { /* 忽略设置过程中的小错误 */ }
+                return;
             }
+
+
+            try
+            {
+                // 收集面板上所有控件的当前值
+                var newParams = new Dictionary<string, double>();
+                foreach (var child in RoiParameterPanel.Children)
+                {
+                    if (child is Xceed.Wpf.Toolkit.DoubleUpDown numeric && numeric.Value.HasValue)
+                    {
+                        newParams[numeric.Tag.ToString()] = numeric.Value.Value;
+                    }
+                }
+                if (newParams.Count == 0) return; // 如果没有收集到任何参数，则退出
+                // 根据ROI类型，调用正确的SetDrawingObjectParams重载
+                string roiType = roiState.DrawingObject.GetDrawingObjectParams("type").S;
+                switch (roiType)
+                {
+                    case "rectangle1":
+                        roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row1", "column1", "row2", "column2"),
+                            new HTuple(newParams["row1"], newParams["column1"], newParams["row2"], newParams["column2"]));
+                        break;
+                    case "rectangle2":
+                        roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row", "column", "phi", "length1", "length2"),
+                            new HTuple(newParams["row"], newParams["column"], newParams["phi"] * Math.PI / 180, newParams["length1"], newParams["length2"]));
+                        break;
+                    case "circle":
+                        roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row", "column", "radius"),
+                           new HTuple(newParams["row"], newParams["column"], newParams["radius"]));
+                        break;
+                    case "ellipse":
+                        roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row", "column", "phi", "radius1", "radius2"),
+                           new HTuple(newParams["row"], newParams["column"], newParams["phi"] * Math.PI / 180, newParams["radius1"], newParams["radius2"]));
+                        break;
+                    case "line":
+                        roiState.DrawingObject.SetDrawingObjectParams(new HTuple("row1", "column1", "row2", "column2"),
+                           new HTuple(newParams["row1"], newParams["column1"], newParams["row2"], newParams["column2"]));
+                        break;
+                }
+
+                // 调用唯一的、权威的“主更新”方法。
+                // 它会从刚刚更新的ROI对象中重新读取最准确的参数，然后用这些数据
+                // 来刷新数据模型(LastRoiArgs)、浮动框(Adorner)和状态栏(ParameterBar)。
+                // 这保证了数据流的闭环和UI的完全同步。
+                ProcessRoiUpdate(roiState.DrawingObject);
+            }
+            catch (HalconException) { /* 忽略设置过程中的小错误 */ }
+
         }
 
         #endregion
@@ -1895,15 +1894,15 @@ namespace VisionLite
                     double minDimension = Math.Min(width.D, height.D);
 
                     // 计算其2%，并向上取整
-                    int defaultSize = (int)Math.Ceiling(minDimension * 0.03);
+                    int defaultSize = (int)Math.Ceiling(minDimension * 0.04);
 
                     // 确保尺寸至少为1
                     if (defaultSize < 1) defaultSize = 1;
 
                     // 更新所有画笔尺寸的默认值
                     _brushCircleRadius = defaultSize;
-                    _brushRectWidth = defaultSize * 2; // 可以让矩形默认宽一点
-                    _brushRectHeight = defaultSize;
+                    _brushRectWidth = defaultSize * 2;
+                    _brushRectHeight = defaultSize * 2;
                 }
                 catch (HalconException)
                 {
@@ -1930,7 +1929,7 @@ namespace VisionLite
             if (roiState.DrawingObject != null)
             {
                 // 从活动窗口移除浮动参数框
-                RemoveRoiAdorner();
+                RemoveRoiAdorner(_activeDisplayWindow);
                 try
                 {
                     _activeDisplayWindow.HalconWindow.DetachDrawingObjectFromWindow(roiState.DrawingObject);
@@ -1972,12 +1971,8 @@ namespace VisionLite
             // 检查该窗口是否存在一个有效的标准ROI
             if (roiState.DrawingObject != null && roiState.DrawingObject.ID != -1)
             {
-                // 如果要清除的窗口正好是活动窗口，则移除浮动参数框
-                // 因为RoiAdorner总是附着在活动窗口上
-                if (targetWindow == _activeDisplayWindow)
-                {
-                    RemoveRoiAdorner(); 
-                }
+                // 调用带参数的版本
+                RemoveRoiAdorner(targetWindow);
                 try
                 {
                     // 从Halcon窗口分离ROI对象
@@ -2028,18 +2023,21 @@ namespace VisionLite
             // 在操作UI前，先设置标志位，防止触发不必要的事件
             _isUpdatingFromRoi = true;
 
-            RoiParameterPanel.Children.Clear();
-            RoiParameterPanel.Visibility = Visibility.Collapsed;
-            // 检查是否存在有效的活动窗口
+            // 获取当前活动窗口的ROI状态
             if (_activeDisplayWindow == null || !_windowRoiStates.TryGetValue(_activeDisplayWindow, out var roiState))
             {
+                RoiParameterPanel.Children.Clear();
+                RoiParameterPanel.Visibility = Visibility.Collapsed;
                 _isUpdatingFromRoi = false;
                 return;
             }
 
-            // --- 情况1：处理涂抹式ROI ---
+            // --- 情况1：处理涂抹式ROI或橡皮擦模式 ---
             if (_isPaintingMode || _isErasingMode)
             {
+                // 对于画笔UI，逻辑简单，直接重建即可
+                RoiParameterPanel.Children.Clear();
+
                 RoiParameterPanel.Children.Add(new Label { Content = "画笔形状:" });
                 var shapeCombo = new ComboBox { Width = 80, VerticalContentAlignment = VerticalAlignment.Center };
                 shapeCombo.Items.Add("圆形");
@@ -2063,7 +2061,7 @@ namespace VisionLite
                     {
                         Value = _brushCircleRadius,
                         Minimum = 1,
-                        Maximum = 100, // 遵从您的要求，设置最大值
+                        Maximum = 800, // 设置最大值
                         Width = 60
                     };
                     sizeNumeric.ValueChanged += (s, e) => {
@@ -2081,7 +2079,7 @@ namespace VisionLite
                     {
                         Value = _brushRectWidth,
                         Minimum = 1,
-                        Maximum = 100,
+                        Maximum = 1600,
                         Width = 60
                     };
                     widthNumeric.ValueChanged += (s, e) => {
@@ -2096,7 +2094,7 @@ namespace VisionLite
                     {
                         Value = _brushRectHeight,
                         Minimum = 1,
-                        Maximum = 100,
+                        Maximum = 1600,
                         Width = 60
                     };
                     heightNumeric.ValueChanged += (s, e) => {
@@ -2115,48 +2113,53 @@ namespace VisionLite
                 //  直接从当前窗口的ROI状态中获取参数
                 var parameters = roiState.LastRoiArgs.Parameters;
 
-                // 遍历参数字典来创建UI控件
-                foreach (var kvp in parameters)
+                // 检查面板是否需要重建 (例如从无到有，或ROI类型变化)
+                if (RoiParameterPanel.Children.OfType<Xceed.Wpf.Toolkit.DoubleUpDown>().Count() != parameters.Count)
+                {
+                    RoiParameterPanel.Children.Clear(); // 只有在绝对必要时才重建
+                }
+
+                // --- 非破坏性地更新或创建控件 ---
+                foreach (var kvp in parameters.OrderBy(p => p.Key)) // 排序以保证UI控件顺序稳定
                 {
                     string paramName = kvp.Key;
                     double paramValue = kvp.Value;
 
-                    // 角度(phi)需要特殊处理（从弧度转为度），所以在这里跳过
-                    if (paramName == "phi") continue;
+                    var existingNumeric = RoiParameterPanel.Children.OfType<Xceed.Wpf.Toolkit.DoubleUpDown>()
+                                    .FirstOrDefault(n => n.Tag as string == paramName);
 
-                    RoiParameterPanel.Children.Add(new Label { Content = $"{ParameterTranslator.Translate(paramName)}" });
-                    var numeric = new Xceed.Wpf.Toolkit.DoubleUpDown
+                    if (existingNumeric != null)
                     {
-                        Value = paramValue, // 直接使用字典中的值
-                        Width = 80,
-                        Tag = paramName, // 使用Tag来标记这个控件对应哪个参数
-                        Increment = 1.0,
-                        FormatString = "F2"
-                    };
-                    numeric.ValueChanged += OnParameterControlValueChanged;
-                    RoiParameterPanel.Children.Add(numeric);
-                }
-
-                // 单独处理角度 phi
-                if (parameters.ContainsKey("phi"))
-                {
-                    double phiValueRad = parameters["phi"]; // 从字典获取弧度值
-                    RoiParameterPanel.Children.Add(new Label { Content = $"{ParameterTranslator.Translate("phi")}" });
-                    var numericPhi = new Xceed.Wpf.Toolkit.DoubleUpDown
+                        // 如果控件已存在，只更新其值
+                        double displayValue = paramName == "phi" ? paramValue * 180 / Math.PI : paramValue;
+                        if (Math.Abs(existingNumeric.Value.GetValueOrDefault() - displayValue) > 0.001)
+                        {
+                            existingNumeric.Value = displayValue;
+                        }
+                    }
+                    else
                     {
-                        Value = phiValueRad * 180 / Math.PI, // 转换为度进行显示
-                        Width = 80,
-                        Tag = "phi",
-                        Increment = 1.0,
-                        FormatString = "F2"
-                    };
-                    numericPhi.ValueChanged += OnParameterControlValueChanged;
-                    RoiParameterPanel.Children.Add(numericPhi);
+                        RoiParameterPanel.Children.Add(new Label { Content = $"{ParameterTranslator.Translate(paramName)}" });
+                        var numeric = new Xceed.Wpf.Toolkit.DoubleUpDown
+                        {
+                            Value = (paramName == "phi" ? paramValue * 180 / Math.PI : paramValue), 
+                            Width = 80,
+                            Tag = paramName, // 使用Tag来标记这个控件对应哪个参数
+                            Increment = 1.0,
+                            FormatString = "F2"
+                        };
+                        numeric.ValueChanged += OnParameterControlValueChanged;
+                        RoiParameterPanel.Children.Add(numeric);
+                    }
                 }
-
                 RoiParameterPanel.Visibility = Visibility.Visible;
             }
-
+            // --- 没有任何有效ROI ---
+            else
+            {
+                RoiParameterPanel.Children.Clear();
+                RoiParameterPanel.Visibility = Visibility.Collapsed;
+            }
             // 所有UI操作完成后，解除标志位
             _isUpdatingFromRoi = false;
         }
@@ -2246,21 +2249,20 @@ namespace VisionLite
         /// <summary>
         /// 创建并显示Adorner，同时开始监听窗口视图的变化。
         /// </summary>
-        private void ShowRoiAdorner()
+        private void ShowRoiAdorner(HSmartWindowControlWPF targetWindow)
         {
-            if (_activeDisplayWindow == null) return;
+            if (targetWindow == null) return;
 
-            // 获取当前活动窗口的ROI状态容器
-            var roiState = _windowRoiStates[_activeDisplayWindow];
+            if (!_windowRoiStates.TryGetValue(targetWindow, out var roiState)) return;
 
-            AdornerLayer adornerLayer = AdornerLayer.GetAdornerLayer(_activeDisplayWindow);
+            AdornerLayer adornerLayer = AdornerLayer.GetAdornerLayer(targetWindow);
             if (adornerLayer != null)
             {
                 // 如果已存在，先移除旧的
                 if (roiState.RoiAdorner != null) { adornerLayer.Remove(roiState.RoiAdorner); }
 
                 // 创建一个新的Adorner，并将其存储在当前窗口的ROI状态中
-                roiState.RoiAdorner = new RoiAdorner(_activeDisplayWindow);
+                roiState.RoiAdorner = new RoiAdorner(targetWindow);
                 adornerLayer.Add(roiState.RoiAdorner);
                 //// 监听 HImagePart 属性变化，以便在缩放/平移时更新Adorner位置
                 //DependencyPropertyDescriptor.FromProperty(HSmartWindowControlWPF.HImagePartProperty, typeof(HSmartWindowControlWPF))
@@ -2273,19 +2275,18 @@ namespace VisionLite
         /// 从指定的窗口移除Adorner，并停止监听该窗口的视图变化。
         /// </summary>
         /// <param name="window">要移除Adorner的WPF窗口控件。</param>
-        private void RemoveRoiAdorner()
+        private void RemoveRoiAdorner(HSmartWindowControlWPF targetWindow)
         {
-            if (_activeDisplayWindow == null) return;
+            if (targetWindow == null) return;
 
-            var roiState = _windowRoiStates[_activeDisplayWindow];
-
+            if (!_windowRoiStates.TryGetValue(targetWindow, out var roiState)) return;
             if (roiState.RoiAdorner != null)
             {
                 //// 停止监听这个特定窗口的视图变化事件
                 //DependencyPropertyDescriptor.FromProperty(HSmartWindowControlWPF.HImagePartProperty, typeof(HSmartWindowControlWPF))
                 //    .RemoveValueChanged(window, OnDisplayWindowViewChanged);
 
-                AdornerLayer.GetAdornerLayer(_activeDisplayWindow)?.Remove(roiState.RoiAdorner);
+                AdornerLayer.GetAdornerLayer(targetWindow)?.Remove(roiState.RoiAdorner);
                 // 重置Adorner实例和缓存
                 roiState.RoiAdorner = null;
                 roiState.LastRoiArgs = null;

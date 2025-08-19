@@ -40,11 +40,18 @@ namespace VisionLite
         {
             Parameters = parameters;
             // --- 格式化参数字符串 ---
-            // 使用LINQ的Select来遍历字典中的每个键值对，
-            // 并利用字符串格式化功能（,-15）来创建对齐的文本列。
-            // 最后用换行符将它们连接成一个多行字符串。
-            ParametersAsString = string.Join(Environment.NewLine,
-                parameters.Select(kvp => $"{ParameterTranslator.Translate(kvp.Key),-5}{kvp.Value:F2}"));
+            var formattedParams = parameters.Select(kvp =>
+            {
+                // 【优化】如果参数是phi，则转换为角度显示
+                if (kvp.Key == "phi")
+                {
+                    return $"{ParameterTranslator.Translate(kvp.Key),-5}{kvp.Value * 180 / Math.PI:F2}°";
+                }
+                return $"{ParameterTranslator.Translate(kvp.Key),-5}{kvp.Value:F2}";
+            });
+
+            // 【优化】调整对齐宽度，让中文显示更美观
+            ParametersAsString = string.Join(Environment.NewLine, formattedParams);
 
             // --- 使用Halcon的几何运算来精确定位 ---
             if (contour != null && contour.IsInitialized() && contour.CountObj() > 0)

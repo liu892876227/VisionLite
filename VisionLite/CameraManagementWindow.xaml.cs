@@ -16,20 +16,30 @@ namespace VisionLite
     public partial class CameraManagementWindow : Window
     {
         private readonly MainWindow m_pMainWindow; // 对主窗口的引用
+        private HSmartWindowControlWPF m_pTargetWindow; // 存储当前操作的目标窗口
         private ICameraDevice m_pCurrentDevice; // 当前在参数面板中显示的设备
 
-        public CameraManagementWindow(MainWindow owner)
+        public CameraManagementWindow(MainWindow owner, HSmartWindowControlWPF targetWindow)
         {
             InitializeComponent();
             this.Owner = owner;
             m_pMainWindow = owner;
-
+            m_pTargetWindow = targetWindow;// 保存目标窗口
             // 窗口加载后立即查找设备
             Loaded += (s, e) => FindAndPopulateDevices();
 
             // 订阅主窗口的相机列表变化事件，以便同步UI
             m_pMainWindow.CameraListChanged += OnCameraListChanged;
         }
+
+        // 从外部更新目标窗口
+        public void SetTargetWindow(HSmartWindowControlWPF targetWindow)
+        {
+            m_pTargetWindow = targetWindow;
+            // 目标窗口改变后，立即刷新设备列表以反映新的上下文
+            FindAndPopulateDevices();
+        }
+
 
         // 当主窗口的相机列表发生变化时，此方法被调用
         private void OnCameraListChanged(object sender, EventArgs e)
@@ -67,7 +77,7 @@ namespace VisionLite
             if (DeviceComboBox.SelectedItem is DeviceInfo selectedDevice)
             {
                 // 调用主窗口的公共方法，并获取返回结果
-                var (success, message) = m_pMainWindow.OpenDevice(selectedDevice);
+                var (success, message) = m_pMainWindow.OpenDevice(selectedDevice, m_pTargetWindow);
                 // 将结果显示在状态栏
                 UpdateStatus(message, !success);
             }
@@ -82,7 +92,7 @@ namespace VisionLite
             if (DeviceComboBox.SelectedItem is DeviceInfo selectedDevice)
             {
                 // 调用主窗口的公共方法，并获取返回结果
-                var (success, message) = m_pMainWindow.CloseDevice(selectedDevice);
+                var (success, message) = m_pMainWindow.CloseDevice(m_pTargetWindow);
                 // 将结果显示在状态栏
                 UpdateStatus(message, !success);
             }
@@ -94,11 +104,15 @@ namespace VisionLite
 
         public void FindAndPopulateDevices()
         {
-            var currentSelection = DeviceComboBox.SelectedItem as DeviceInfo;
+            if (m_pTargetWindow == null) return;
+            
             DeviceComboBox.Items.Clear();
 
-            // 从主窗口获取最新的设备列表
-            var foundDevices = m_pMainWindow.GetFoundDevices();
+            // 调用MainWindow的新方法，获取为【特定窗口】过滤后的设备列表
+            //    这个列表只包含：
+            //    a) 所有当前未被任何窗口占用的相机。
+            //    b) 当前m_pTargetWindow已经连接的那个相机（如果有的话）。
+            var foundDevices = m_pMainWindow.GetAvailableDevicesForWindow(m_pTargetWindow);
 
             if (foundDevices.Any())
             {
@@ -107,15 +121,23 @@ namespace VisionLite
                     DeviceComboBox.Items.Add(dev);
                 }
 
-                // 尝试恢复之前的选择
-                if (currentSelection != null)
+                // 设置默认选中项
+                // 查找当前目标窗口是否已经连接了相机
+                var currentCameraOnTarget = m_pMainWindow.openCameras.Values
+                                                .FirstOrDefault(c => c.DisplayWindow == m_pTargetWindow);
+                if (currentCameraOnTarget != null)
                 {
-                    var newSelection = foundDevices.FirstOrDefault(d => d.UniqueID == currentSelection.UniqueID);
-                    if (newSelection != null) DeviceComboBox.SelectedItem = newSelection;
-                    else DeviceComboBox.SelectedIndex = 0;
+                    // 如果已连接，则在列表中找到它并设为选中项
+                    var selection = foundDevices.FirstOrDefault(d => d.UniqueID == currentCameraOnTarget.DeviceID);
+                    if (selection != null)
+                    {
+                        DeviceComboBox.SelectedItem = selection;
+                    }
+                   
                 }
-                else
+                else if (DeviceComboBox.Items.Count > 0)
                 {
+                    // 如果未连接，并且列表不为空，则默认选中第一项
                     DeviceComboBox.SelectedIndex = 0;
                 }
 
@@ -124,8 +146,11 @@ namespace VisionLite
             }
             else
             {
+                // 如果没有任何可用设备（所有设备都已被其他窗口占用，且当前窗口也未连接）
+                DeviceComboBox.Items.Add("没有可用的设备");
+                DeviceComboBox.SelectedIndex = 0;
                 OpenCamButton.IsEnabled = false;
-               
+
             }
         }
 

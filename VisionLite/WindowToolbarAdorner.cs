@@ -26,12 +26,15 @@ namespace VisionLite
         /// <param name="mainWindow">对主窗口的引用。</param>
         public WindowToolbarAdorner(UIElement adornedElement, MainWindow mainWindow) : base(adornedElement)
         {
+            
             _adornedWindow = adornedElement as HSmartWindowControlWPF;
             _mainWindow = mainWindow;
             _visuals = new VisualCollection(this);
             var toolbar = new StackPanel { Orientation = Orientation.Horizontal };
 
             // --- 创建并添加所有按钮和控件 ---
+            toolbar.Children.Add(CreateToolbarButton("CameraIcon", "打开相机管理中心", CameraManagement_Click));
+            toolbar.Children.Add(new Separator { Style = Application.Current.FindResource(ToolBar.SeparatorStyleKey) as Style });
             toolbar.Children.Add(CreateToolbarButton("SingleCaptureIcon", "单次采集", SingleCapture_Click));
             toolbar.Children.Add(CreateToolbarButton("ContinueCaptureIcon", "连续采集", ContinueCapture_Click));
             toolbar.Children.Add(CreateToolbarButton("StopCaptureIcon", "停止采集", StopCapture_Click));
@@ -66,6 +69,12 @@ namespace VisionLite
         // 所有按钮的点击事件都直接调用MainWindow中的公共方法，
         // 并把自己所在的窗口 (_adornedWindow) 作为参数传递，以表明操作的目标。
 
+        private void CameraManagement_Click(object sender, RoutedEventArgs e)
+        {
+            // 直接调用主窗口的公共（或internal）方法
+            // 这个操作是全局的，所以不需要传递 _adornedWindow
+            _mainWindow.OpenCameraManagementWindow(_adornedWindow);
+        }
 
         private void SingleCapture_Click(object sender, RoutedEventArgs e) => _mainWindow.TriggerSingleCapture(_adornedWindow);
         private void ContinueCapture_Click(object sender, RoutedEventArgs e) => _mainWindow.TriggerContinueCapture(_adornedWindow);
@@ -163,8 +172,7 @@ namespace VisionLite
                 // 先测量控件以获取其期望尺寸
                 _container.Measure(finalSize);
 
-                // 计算右上角的位置 (x = 窗口总宽度 - 工具栏宽度 - 边距, y = 边距)
-                double x = finalSize.Width - _container.DesiredSize.Width - 5;
+                double x = 5;
                 double y = 5;
 
                 // 将工具栏放置在计算出的位置
