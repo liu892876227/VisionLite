@@ -74,9 +74,14 @@ namespace VisionLite.Communication
         private void RefreshConnectionList()
         {
             ConnectionListBox.Items.Clear();
-            foreach (var comm in _mainWindow.communications.Values)
+            
+            // 空检查：确保 communications 字典已初始化
+            if (_mainWindow?.communications != null)
             {
-                ConnectionListBox.Items.Add(comm.Name);
+                foreach (var comm in _mainWindow.communications.Values)
+                {
+                    ConnectionListBox.Items.Add(comm.Name);
+                }
             }
         }
         
@@ -84,6 +89,10 @@ namespace VisionLite.Communication
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
+            // 空检查：确保 communications 字典已初始化
+            if (_mainWindow?.communications == null)
+                return;
+                
             // 根据当前选择的连接类型创建不同的实例
             bool isServer = ConnectionTypeComboBox.SelectedIndex == 1;
             
@@ -106,6 +115,10 @@ namespace VisionLite.Communication
 
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
+            // 空检查：确保 communications 字典已初始化
+            if (_mainWindow?.communications == null)
+                return;
+                
             if (ConnectionListBox.SelectedItem is string selectedName)
             {
                 if (_mainWindow.communications.TryGetValue(selectedName, out var commToDelete))
@@ -120,6 +133,10 @@ namespace VisionLite.Communication
 
         private void ConnectionListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // 空检查：确保 communications 字典已初始化
+            if (_mainWindow?.communications == null)
+                return;
+                
             if (ConnectionListBox.SelectedItem is string selectedName)
             {
                 if (_mainWindow.communications.TryGetValue(selectedName, out var comm))
@@ -161,9 +178,18 @@ namespace VisionLite.Communication
                         IpTextBox.Text = "0.0.0.0";
                         IpTextBox.IsEnabled = false;
                         
-                        // 使用反射获取端口信息
-                        var portField = typeof(TcpServer).GetField("_port", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                        PortTextBox.Text = portField?.GetValue(server).ToString();
+                        // 使用反射获取端口信息（添加空检查）
+                        try
+                        {
+                            var portField = typeof(TcpServer).GetField("_port", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                            var portValue = portField?.GetValue(server);
+                            PortTextBox.Text = portValue?.ToString() ?? "8080";
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Console.WriteLine($"获取TCP服务器端口信息时发生异常: {ex.Message}");
+                            PortTextBox.Text = "8080"; // 默认端口
+                        }
                         
                         ServerInfoPanel.Visibility = Visibility.Visible;
                         UpdateClientList();
@@ -174,10 +200,24 @@ namespace VisionLite.Communication
                         IpLabel.Content = "IP 地址:";
                         IpTextBox.IsEnabled = true;
                         
-                        var ipField = typeof(TcpCommunication).GetField("_ipAddress", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                        var portField = typeof(TcpCommunication).GetField("_port", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                        IpTextBox.Text = ipField?.GetValue(tcp).ToString();
-                        PortTextBox.Text = portField?.GetValue(tcp).ToString();
+                        // 使用反射获取TCP客户端信息（添加空检查）
+                        try
+                        {
+                            var ipField = typeof(TcpCommunication).GetField("_ipAddress", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                            var portField = typeof(TcpCommunication).GetField("_port", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                            
+                            var ipValue = ipField?.GetValue(tcp);
+                            var portValue = portField?.GetValue(tcp);
+                            
+                            IpTextBox.Text = ipValue?.ToString() ?? "127.0.0.1";
+                            PortTextBox.Text = portValue?.ToString() ?? "8080";
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Console.WriteLine($"获取TCP客户端信息时发生异常: {ex.Message}");
+                            IpTextBox.Text = "127.0.0.1"; // 默认IP
+                            PortTextBox.Text = "8080"; // 默认端口
+                        }
                         
                         ServerInfoPanel.Visibility = Visibility.Collapsed;
                     }
@@ -221,17 +261,34 @@ namespace VisionLite.Communication
         /// </summary>
         private void UpdateClientList()
         {
-            if (_selectedTcpServer == null)
+            // 空检查：确保服务器对象和UI控件都已初始化
+            if (_selectedTcpServer == null || ClientListBox == null || ClientCountTextBlock == null)
                 return;
 
-            ClientListBox.Items.Clear();
-            var clients = _selectedTcpServer.GetConnectedClients();
-            foreach (var client in clients)
+            try
             {
-                ClientListBox.Items.Add(client);
+                ClientListBox.Items.Clear();
+                var clients = _selectedTcpServer.GetConnectedClients();
+                
+                // 空检查：确保客户端列表不为空
+                if (clients != null)
+                {
+                    foreach (var client in clients)
+                    {
+                        if (!string.IsNullOrEmpty(client))
+                        {
+                            ClientListBox.Items.Add(client);
+                        }
+                    }
+                }
+                
+                ClientCountTextBlock.Text = $"连接数: {_selectedTcpServer.ClientCount}";
             }
-            
-            ClientCountTextBlock.Text = $"连接数: {_selectedTcpServer.ClientCount}";
+            catch (Exception ex)
+            {
+                // 记录异常但不抛出，避免影响UI
+                System.Console.WriteLine($"更新客户端列表时发生异常: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -239,6 +296,12 @@ namespace VisionLite.Communication
         /// </summary>
         private void ConnectionTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // 卫兵语句：检查UI控件是否已完全初始化
+            if (IpLabel == null || IpTextBox == null || ServerInfoPanel == null)
+            {
+                return;
+            }
+            
             bool isServer = ConnectionTypeComboBox.SelectedIndex == 1;
             
             if (isServer)

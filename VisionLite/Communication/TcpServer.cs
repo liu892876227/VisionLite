@@ -223,7 +223,7 @@ namespace VisionLite.Communication
             // 断开所有客户端连接
             foreach (var client in _clients.Values)
             {
-                DisconnectClient(client);
+                CleanupClientConnection(client);
             }
             _clients.Clear();
 
@@ -307,7 +307,7 @@ namespace VisionLite.Communication
         {
             if (_clients.TryRemove(clientId, out var client))
             {
-                DisconnectClient(client);
+                CleanupClientConnection(client);
                 System.Console.WriteLine($"主动断开客户端: {clientId}");
                 
                 // 触发客户端断开事件
@@ -428,7 +428,7 @@ namespace VisionLite.Communication
                 // 移除并清理客户端连接
                 if (_clients.TryRemove(client.Id, out _))
                 {
-                    DisconnectClient(client);
+                    CleanupClientConnection(client);
                     System.Console.WriteLine($"客户端 {client.Id} 已移除，剩余连接数: {_clients.Count}");
                     
                     // 触发客户端断开事件
@@ -441,7 +441,7 @@ namespace VisionLite.Communication
         /// 断开并清理客户端连接
         /// </summary>
         /// <param name="client">要断开的客户端连接</param>
-        private void DisconnectClient(ClientConnection client)
+        private void CleanupClientConnection(ClientConnection client)
         {
             try
             {

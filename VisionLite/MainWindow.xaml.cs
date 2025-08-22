@@ -20,6 +20,7 @@ using MvCamCtrl.NET;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
 using System.Windows.Threading;
+using VisionLite.Communication;
 
 namespace VisionLite
 {
@@ -65,6 +66,12 @@ namespace VisionLite
         /// </summary>
         private HSmartWindowControlWPF _activeDisplayWindow;
 
+        #endregion
+
+        #region 通讯相关字段
+        // 管理所有通讯实例
+        internal Dictionary<string, ICommunication> communications = new Dictionary<string, ICommunication>();
+        private CommunicationWindow communicationWindow = null;
         #endregion
 
         #region 窗口信息显示相关字段
@@ -655,6 +662,23 @@ namespace VisionLite
             return null;
         }
 
+        #endregion
+
+
+        #region 通讯窗口管理
+        private void CommunicationButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (communicationWindow == null || !communicationWindow.IsVisible)
+            {
+                communicationWindow = new CommunicationWindow(this);
+                communicationWindow.Closed += (s, args) => communicationWindow = null;
+                communicationWindow.Show();
+            }
+            else
+            {
+                communicationWindow.Activate();
+            }
+        }
         #endregion
 
         #region 窗口激活与视图管理
@@ -2364,6 +2388,8 @@ namespace VisionLite
             window.DispObj(imageToShow);
         }
 
+        
+
         /// <summary>
         /// 主窗口关闭时触发，用于安全地释放所有资源。
         /// </summary>
@@ -2377,8 +2403,10 @@ namespace VisionLite
                     .RemoveValueChanged(window, OnDisplayWindowViewChanged);
                 window.SizeChanged -= DisplayWindow_SizeChanged;
             }
-            // 关闭相机管理窗口（如果它还开着）
+            // 关闭相机管理窗口
             cameraManagementWindow?.Close();
+
+            communicationWindow?.Close();
 
             // 清理所有ROI资源
             ClearActiveRoi();
@@ -2387,6 +2415,11 @@ namespace VisionLite
             foreach (var camera in openCameras.Values)
             {
                 camera.Close();
+            }
+            // 关闭所有通讯连接
+            foreach (var comm in communications.Values)
+            {
+                comm.Dispose();
             }
         }
 
