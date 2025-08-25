@@ -107,15 +107,6 @@
     <Compile Include="CameraManagementWindow.xaml.cs">
       <DependentUpon>CameraManagementWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Communication\CommunicationWindow.xaml.cs">
-      <DependentUpon>CommunicationWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Communication\CommunicationConfigWindow.xaml.cs">
-      <DependentUpon>CommunicationConfigWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Communication\NewCommunicationWindow.xaml.cs">
-      <DependentUpon>NewCommunicationWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Communication\SimpleCommunicationWindow.xaml.cs">
       <DependentUpon>SimpleCommunicationWindow.xaml</DependentUpon>
     </Compile>
@@ -127,18 +118,9 @@
     <Compile Include="Communication\IMessageProtocol.cs" />
     <Compile Include="Communication\ITcpServer.cs" />
     <Compile Include="Communication\Message.cs" />
-    <Compile Include="Communication\MessageBuilder.cs" />
     <Compile Include="Communication\TcpCommunication.cs" />
     <Compile Include="Communication\TcpServer.cs" />
     <Compile Include="Communication\VisionLiteProtocol.cs" />
-    <Compile Include="Communication\Models\ParameterDefinition.cs" />
-    <Compile Include="Communication\Models\CommunicationConfig.cs" />
-    <Compile Include="Communication\Protocols\ICommunicationProtocol.cs" />
-    <Compile Include="Communication\Protocols\TcpClientProtocol.cs" />
-    <Compile Include="Communication\Protocols\TcpServerProtocol.cs" />
-    <Compile Include="Communication\Managers\CommunicationProtocolManager.cs" />
-    <Compile Include="Communication\Managers\CommunicationConfigManager.cs" />
-    <Compile Include="Communication\UI\ParameterControlGenerator.cs" />
     <Compile Include="WindowRoiState.cs" />
     <Compile Include="WindowToolbarAdorner.cs" />
     <Compile Include="HalconCameraDevice.cs" />
@@ -155,18 +137,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="CameraManagementWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Communication\CommunicationWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Communication\CommunicationConfigWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Communication\NewCommunicationWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

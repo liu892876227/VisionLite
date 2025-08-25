@@ -196,8 +196,7 @@ namespace VisionLite
 
                 SetActiveDisplayWindow(HSmart1);
                 
-                // 加载保存的通讯配置
-                LoadSavedCommunications();
+                // 通讯功能使用简化架构，无需加载保存的配置
             };
         }
 
@@ -683,27 +682,6 @@ namespace VisionLite
             }
         }
 
-        /// <summary>
-        /// 加载保存的通讯配置并恢复连接
-        /// </summary>
-        private void LoadSavedCommunications()
-        {
-            try
-            {
-                // 使用配置管理器恢复通讯连接
-                var restoredCount = VisionLite.Communication.Managers.CommunicationConfigManager.RestoreCommunications(this);
-                
-                if (restoredCount > 0)
-                {
-                    UpdateStatus($"成功恢复 {restoredCount} 个通讯连接配置", false);
-                }
-            }
-            catch (Exception ex)
-            {
-                UpdateStatus($"加载通讯配置时发生异常: {ex.Message}", true);
-                System.Diagnostics.Debug.WriteLine($"加载通讯配置失败: {ex.Message}");
-            }
-        }
         #endregion
 
         #region 窗口激活与视图管理
