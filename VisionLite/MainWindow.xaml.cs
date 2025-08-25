@@ -71,7 +71,7 @@ namespace VisionLite
         #region 通讯相关字段
         // 管理所有通讯实例
         internal Dictionary<string, ICommunication> communications = new Dictionary<string, ICommunication>();
-        private CommunicationWindow communicationWindow = null;
+        private SimpleCommunicationWindow communicationWindow = null;
         #endregion
 
         #region 窗口信息显示相关字段
@@ -195,6 +195,9 @@ namespace VisionLite
                 }
 
                 SetActiveDisplayWindow(HSmart1);
+                
+                // 加载保存的通讯配置
+                LoadSavedCommunications();
             };
         }
 
@@ -670,13 +673,35 @@ namespace VisionLite
         {
             if (communicationWindow == null || !communicationWindow.IsVisible)
             {
-                communicationWindow = new CommunicationWindow(this);
+                communicationWindow = new SimpleCommunicationWindow(this);
                 communicationWindow.Closed += (s, args) => communicationWindow = null;
                 communicationWindow.Show();
             }
             else
             {
                 communicationWindow.Activate();
+            }
+        }
+
+        /// <summary>
+        /// 加载保存的通讯配置并恢复连接
+        /// </summary>
+        private void LoadSavedCommunications()
+        {
+            try
+            {
+                // 使用配置管理器恢复通讯连接
+                var restoredCount = VisionLite.Communication.Managers.CommunicationConfigManager.RestoreCommunications(this);
+                
+                if (restoredCount > 0)
+                {
+                    UpdateStatus($"成功恢复 {restoredCount} 个通讯连接配置", false);
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"加载通讯配置时发生异常: {ex.Message}", true);
+                System.Diagnostics.Debug.WriteLine($"加载通讯配置失败: {ex.Message}");
             }
         }
         #endregion

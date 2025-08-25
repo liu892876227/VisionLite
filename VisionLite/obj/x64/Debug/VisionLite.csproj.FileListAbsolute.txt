@@ -55,3 +55,12 @@ E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\CommunicationWin
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\CommunicationWindow.g.cs
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.xml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\CommunicationConfigWindow.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\NewCommunicationWindow.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\CommunicationConfigWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\NewCommunicationWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\GeneratedInternalTypeHelper.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.baml

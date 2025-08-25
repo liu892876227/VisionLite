@@ -3,110 +3,83 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 项目概述
+VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Framework 4.7.2 开发。系统集成了多家相机厂商的 SDK，提供图像采集、ROI 管理、通讯模块等功能。
 
-VisionLite 是一个基于 WPF 的机器视觉应用程序，使用 C# 和 .NET Framework 4.7.2 开发。该项目主要用于相机设备管理、图像采集处理和 ROI 区域选择等机器视觉任务。
-
-## 构建命令
-
-### Visual Studio 构建
-- **构建解决方案**: 在 Visual Studio 中打开 `VisionLite.sln`，然后使用 Build → Build Solution (Ctrl+Shift+B)
-- **清理和重建**: Build → Rebuild Solution
-- **命令行构建**: 
-  ```cmd
+## 开发环境和构建
+- **开发工具**: Visual Studio 2017 或更高版本
+- **目标框架**: .NET Framework 4.7.2
+- **构建命令**:
+  ```
+  # 使用 MSBuild 构建解决方案
   msbuild VisionLite.sln /p:Configuration=Debug /p:Platform=x64
   msbuild VisionLite.sln /p:Configuration=Release /p:Platform=x64
+  
+  # 或在 Visual Studio 中直接构建
+  # 支持 Debug|Any CPU, Debug|x64, Release|Any CPU, Release|x64 配置
   ```
-
-### 调试运行
-- **Visual Studio**: 按 F5 启动调试，或 Ctrl+F5 启动不调试
-- **命令行**: 构建后运行 `VisionLite\bin\x64\Debug\VisionLite.exe`
 
 ## 核心架构
 
-### 相机设备抽象层
-- **接口**: `ICameraDevice` - 定义所有相机设备的统一接口
-- **实现类**: 
-  - `HalconCameraDevice` - 基于 HALCON 库的相机实现
-  - `HikvisionCameraDevice` - 海康威视相机的具体实现
-- **设备管理**: `MainWindow.openCameras` 字典管理所有打开的相机设备
+### 硬件抽象层
+- **ICameraDevice**: 所有相机设备的统一接口，支持不同厂商的相机
+- **HalconCameraDevice**: Halcon 相机设备实现  
+- **HikvisionCameraDevice**: 海康威视相机设备实现
+- 相机设备通过 `MainWindow.openCameras` 字典统一管理
 
-### 通信子系统
-- **通信抽象**: `ICommunication` 接口定义通信协议
-- **TCP 实现**: `TcpCommunication` 提供 TCP 网络通信
-- **消息协议**: `VisionLiteProtocol` 实现自定义消息协议
-- **消息结构**: `Message` 类定义标准消息格式
+### 通讯模块 (Communication/)
+- **ICommunication**: 通讯接口抽象，支持多种通讯协议
+- **TcpCommunication**: TCP 客户端通讯实现
+- **TcpServer**: TCP 服务器端实现
+- **VisionLiteProtocol**: 自定义消息协议
+- **Message**: 结构化消息对象
 
-### 用户界面组件
-- **主窗口**: `MainWindow` - 应用程序的主控制中心
-- **相机管理**: `CameraManagementWindow` - 相机设备的配置和管理界面
-- **通信窗口**: `CommunicationWindow` - 网络通信的管理界面
-- **ROI 工具**: `RoiAdorner` - 图像区域选择和绘制工具
+### 主要依赖库
+- **HalconDotNet**: 机器视觉算法库，用于图像处理和显示
+- **MvCameraControl.Net**: 海康威视相机 SDK
+- **AForge**: 视频采集和处理框架
+- **Xceed.Wpf.Toolkit**: WPF 扩展控件库
+- **Newtonsoft.Json**: JSON 序列化
 
-### WPF 界面增强
-- **装饰器**: 
-  - `InfoWindowAdorner` - 信息显示覆盖层
-  - `WindowToolbarAdorner` - 工具栏装饰器
-- **状态管理**: `WindowRoiState` - ROI 状态跟踪
-
-## 重要依赖项
-
-### 外部 SDK 依赖
-- **HALCON**: 机器视觉库，需要本地安装 HALCON 24.11
-  - 路径: `..\..\..\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll`
-- **海康威视 SDK**: 相机控制库
-  - 路径: `..\..\..\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll`
-
-### NuGet 包依赖
-- `AForge` (2.2.5) - 图像处理库
-- `AForge.Video` (2.2.5) - 视频处理
-- `Extended.Wpf.Toolkit` (4.7.25104.5739) - WPF 扩展控件
-- `Newtonsoft.Json` (13.0.3) - JSON 序列化
-- `System.Drawing.Common` (9.0.7) - 图形处理
+### UI 架构
+- **MainWindow**: 主窗口，管理所有相机显示和工具栏交互
+- **CameraManagementWindow**: 相机管理窗口，处理设备枚举和连接
+- **CommunicationWindow**: 通讯配置窗口
+- **Adorner 系统**: 用于 ROI 绘制和工具栏显示
+  - `RoiAdorner`: ROI 区域绘制和编辑
+  - `WindowToolbarAdorner`: 窗口内嵌工具栏
+  - `InfoWindowAdorner`: 信息显示层
 
 ## 开发注意事项
 
-### 平台配置
-- 项目支持 x64 和 AnyCPU 两种平台配置
-- HALCON 和相机 SDK 依赖于 x64 架构
-- 建议使用 x64 配置进行开发和部署
+### 相机设备开发
+- 新相机类型需实现 `ICameraDevice` 接口
+- 必须提供 `HSmartWindowControlWPF` 显示控件
+- 确保线程安全，图像回调在工作线程执行
+- 参数设置需处理不同采集状态的限制
 
-### 相机设备集成
-- 新的相机品牌需要实现 `ICameraDevice` 接口
-- 参考 `HalconCameraDevice` 和 `HikvisionCameraDevice` 的实现模式
-- 设备 ID 必须唯一，通常使用相机序列号
+### 通讯模块开发
+- 新通讯方式需实现 `ICommunication` 接口
+- 消息协议通过 `IMessageProtocol` 进行解析
+- 使用异步模式处理网络 I/O 操作
+- 状态变化通过事件通知上层
 
-### ROI 功能扩展
-- ROI 相关逻辑集中在 `RoiAdorner` 类中
-- 支持多种 ROI 类型：矩形、圆形、自由轮廓、涂抹式
-- ROI 状态通过 `WindowRoiState` 和 `RoiUpdatedEventArgs` 管理
+### ROI 和图像处理
+- ROI 操作基于 Halcon 的坐标系统
+- 图像显示使用 `HSmartWindowControlWPF` 控件
+- ROI 数据通过 `RoiUpdatedEventArgs` 传递
 
-### 通信协议扩展
-- 实现 `ICommunication` 接口添加新的通信方式
-- 实现 `IMessageProtocol` 接口定义自定义消息格式
-- 使用 `MessageBuilder` 构建标准化消息
+### 项目文件说明
+- `VisionLite.sln`: Visual Studio 解决方案文件
+- `VisionLite/VisionLite.csproj`: 项目文件，包含所有依赖和配置
+- `VisionLite/packages.config`: NuGet 包配置
+- `VisionLite/Properties/AssemblyInfo.cs`: 程序集信息
 
-## 项目文件结构
+### 外部 SDK 依赖
+- Halcon SDK 路径: `C:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\`
+- 海康威视 SDK 路径: `C:\Study\MVS\Development\DotNet\win64\`
+- 确保开发环境已安装对应 SDK
 
-```
-VisionLite/
-├── MainWindow.xaml(.cs)           # 主窗口和核心业务逻辑
-├── Communication/                 # 通信子系统
-│   ├── ICommunication.cs          # 通信接口定义
-│   ├── TcpCommunication.cs        # TCP 通信实现
-│   ├── Message.cs                 # 消息数据结构
-│   └── VisionLiteProtocol.cs      # 自定义协议实现
-├── CameraManagementWindow.xaml(.cs) # 相机管理界面
-├── ICameraDevice.cs               # 相机设备接口
-├── HalconCameraDevice.cs          # HALCON 相机实现
-├── HikvisionCameraDevice.cs       # 海康相机实现
-├── RoiAdorner.cs                  # ROI 绘制和交互
-└── Properties/                    # 项目属性和资源
-```
-
-## 版本信息
-
-当前版本基于最近的提交信息，项目持续迭代中，主要功能包括：
-- 多窗口图像显示和工具栏集成
-- ROI 区域选择和编辑功能
-- 相机设备管理和参数配置
-- TCP 网络通信支持
+### 调试配置
+- 主要使用 x64 平台配置进行开发和部署
+- Debug 配置输出到 `bin\x64\Debug\`
+- Release 配置输出到 `bin\x64\Release\`
