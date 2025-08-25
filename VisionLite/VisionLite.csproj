@@ -120,6 +120,8 @@
     <Compile Include="Communication\Message.cs" />
     <Compile Include="Communication\TcpCommunication.cs" />
     <Compile Include="Communication\TcpServer.cs" />
+    <Compile Include="Communication\UdpCommunication.cs" />
+    <Compile Include="Communication\UdpServer.cs" />
     <Compile Include="Communication\VisionLiteProtocol.cs" />
     <Compile Include="WindowRoiState.cs" />
     <Compile Include="WindowToolbarAdorner.cs" />

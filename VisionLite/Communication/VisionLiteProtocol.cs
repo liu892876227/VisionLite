@@ -113,6 +113,18 @@ namespace VisionLite.Communication
             System.Console.WriteLine($"本次接收: {bytesRead}字节, 数据: {BitConverter.ToString(buffer, 0, bytesRead)}");
             System.Console.WriteLine($"解码时间: {DateTime.Now:HH:mm:ss.fff}");
             
+            // 检查是否为纯文本消息（用于测试兼容性）
+            // 如果数据不以STX开头，尝试作为纯文本处理
+            if (bytesRead > 0 && buffer[0] != STX)
+            {
+                var result = TryParseAsPlainText(buffer, bytesRead);
+                if (result != null)
+                {
+                    yield return result;
+                    yield break;
+                }
+            }
+            
             // 将新数据添加到接收缓冲区
             _receiveBuffer.AddRange(buffer.Take(bytesRead));
             System.Console.WriteLine($"缓冲区总长度: {_receiveBuffer.Count}字节");
@@ -300,6 +312,36 @@ namespace VisionLite.Communication
 
         #region 私有辅助方法
         
+        /// <summary>
+        /// 尝试将字节数据解析为纯文本消息（用于测试兼容性）
+        /// </summary>
+        /// <param name="buffer">接收到的字节数组</param>
+        /// <param name="bytesRead">实际接收的字节数</param>
+        /// <returns>解析成功的消息对象，失败返回null</returns>
+        private Message TryParseAsPlainText(byte[] buffer, int bytesRead)
+        {
+            try
+            {
+                string textMessage = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+                System.Console.WriteLine($"检测到纯文本消息: {textMessage}");
+                
+                // 创建一个简单的Message对象
+                var message = new Message
+                {
+                    Command = textMessage,
+                    Type = MessageType.Command
+                };
+                
+                System.Console.WriteLine($"解析出纯文本消息: {message}");
+                return message;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"纯文本解析失败: {ex.Message}");
+                return null;
+            }
+        }
+
         /// <summary>
         /// 计算CRC16校验值
         /// 使用CRC-16-CCITT算法，多项式0x1021，初始值0xFFFF

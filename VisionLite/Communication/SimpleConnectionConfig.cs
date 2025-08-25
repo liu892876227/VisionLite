@@ -17,7 +17,17 @@ namespace VisionLite.Communication
         /// <summary>
         /// TCP服务器
         /// </summary>
-        TcpServer
+        TcpServer,
+        
+        /// <summary>
+        /// UDP客户端
+        /// </summary>
+        UdpClient,
+        
+        /// <summary>
+        /// UDP服务器
+        /// </summary>
+        UdpServer
     }
 
     /// <summary>
@@ -59,6 +69,8 @@ namespace VisionLite.Communication
                 {
                     CommunicationType.TcpClient => "TCP客户端",
                     CommunicationType.TcpServer => "TCP服务器",
+                    CommunicationType.UdpClient => "UDP客户端",
+                    CommunicationType.UdpServer => "UDP服务器",
                     _ => "未知"
                 };
             }
@@ -75,6 +87,8 @@ namespace VisionLite.Communication
                 {
                     CommunicationType.TcpClient => $"{IpAddress}:{Port}",
                     CommunicationType.TcpServer => $"监听端口:{Port}",
+                    CommunicationType.UdpClient => $"{IpAddress}:{Port}",
+                    CommunicationType.UdpServer => $"监听端口:{Port}",
                     _ => ""
                 };
             }
@@ -94,8 +108,8 @@ namespace VisionLite.Communication
             if (Port < 1 || Port > 65535)
                 return (false, "端口号必须在1-65535范围内");
 
-            // TCP客户端需要验证IP地址
-            if (Type == CommunicationType.TcpClient)
+            // TCP客户端和UDP客户端需要验证IP地址
+            if (Type == CommunicationType.TcpClient || Type == CommunicationType.UdpClient)
             {
                 if (string.IsNullOrWhiteSpace(IpAddress))
                     return (false, "IP地址不能为空");
@@ -136,6 +150,8 @@ namespace VisionLite.Communication
             {
                 CommunicationType.TcpClient => new TcpCommunication(Name, IpAddress, Port),
                 CommunicationType.TcpServer => new TcpServer(Name, Port),
+                CommunicationType.UdpClient => new UdpCommunication(Name, IpAddress, Port),
+                CommunicationType.UdpServer => new UdpServer(Name, Port),
                 _ => throw new NotSupportedException($"不支持的协议类型: {Type}")
             };
         }
@@ -166,6 +182,35 @@ namespace VisionLite.Communication
                 Name = "TCP服务器",
                 Type = CommunicationType.TcpServer,
                 Port = 8080
+            };
+        }
+
+        /// <summary>
+        /// 获取默认的UDP客户端配置
+        /// </summary>
+        /// <returns>默认UDP客户端配置</returns>
+        public static SimpleConnectionConfig GetDefaultUdpClient()
+        {
+            return new SimpleConnectionConfig
+            {
+                Name = "UDP客户端",
+                Type = CommunicationType.UdpClient,
+                IpAddress = "127.0.0.1",
+                Port = 8081
+            };
+        }
+
+        /// <summary>
+        /// 获取默认的UDP服务器配置
+        /// </summary>
+        /// <returns>默认UDP服务器配置</returns>
+        public static SimpleConnectionConfig GetDefaultUdpServer()
+        {
+            return new SimpleConnectionConfig
+            {
+                Name = "UDP服务器",
+                Type = CommunicationType.UdpServer,
+                Port = 8081
             };
         }
     }

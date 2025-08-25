@@ -64,6 +64,8 @@
                       SelectionChanged="ProtocolTypeComboBox_SelectionChanged">
                 <ComboBoxItem Content="TCP客户端" Tag="TcpClient"/>
                 <ComboBoxItem Content="TCP服务器" Tag="TcpServer"/>
+                <ComboBoxItem Content="UDP客户端" Tag="UdpClient"/>
+                <ComboBoxItem Content="UDP服务器" Tag="UdpServer"/>
             </ComboBox>
         </Grid>
 

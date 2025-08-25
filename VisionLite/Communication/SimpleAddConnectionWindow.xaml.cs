@@ -106,8 +106,15 @@ namespace VisionLite.Communication
         {
             ConnectionNameTextBox.Text = _config.Name;
             
-            // 设置协议类型
-            ProtocolTypeComboBox.SelectedIndex = _config.Type == CommunicationType.TcpClient ? 0 : 1;
+            // 设置协议类型（按照XAML中ComboBoxItem的顺序：TcpClient=0, TcpServer=1, UdpClient=2, UdpServer=3）
+            ProtocolTypeComboBox.SelectedIndex = _config.Type switch
+            {
+                CommunicationType.TcpClient => 0,
+                CommunicationType.TcpServer => 1,
+                CommunicationType.UdpClient => 2,
+                CommunicationType.UdpServer => 3,
+                _ => 0
+            };
             
             // 在参数面板更新后设置参数值
             Dispatcher.BeginInvoke(new Action(() =>
@@ -137,15 +144,32 @@ namespace VisionLite.Communication
             if (selectedItem == null) return;
 
             var protocolType = selectedItem.Tag.ToString();
-            _config.Type = protocolType == "TcpClient" ? CommunicationType.TcpClient : CommunicationType.TcpServer;
-
-            if (_config.Type == CommunicationType.TcpClient)
+            _config.Type = protocolType switch
             {
-                CreateTcpClientParameterPanel();
+                "TcpClient" => CommunicationType.TcpClient,
+                "TcpServer" => CommunicationType.TcpServer,
+                "UdpClient" => CommunicationType.UdpClient,
+                "UdpServer" => CommunicationType.UdpServer,
+                _ => CommunicationType.TcpClient
+            };
+
+            // 根据协议类型设置默认端口
+            if (_config.Type == CommunicationType.UdpClient || _config.Type == CommunicationType.UdpServer)
+            {
+                _config.Port = 8081; // UDP默认端口
             }
             else
             {
-                CreateTcpServerParameterPanel();
+                _config.Port = 8080; // TCP默认端口
+            }
+
+            if (_config.Type == CommunicationType.TcpClient || _config.Type == CommunicationType.UdpClient)
+            {
+                CreateTcpClientParameterPanel(); // 客户端参数面板（IP+端口）
+            }
+            else
+            {
+                CreateTcpServerParameterPanel(); // 服务器参数面板（仅端口）
             }
 
             UpdateButtonStates();

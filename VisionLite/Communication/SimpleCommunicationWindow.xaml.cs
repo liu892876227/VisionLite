@@ -309,7 +309,7 @@ namespace VisionLite.Communication
             {
                 Dispatcher.Invoke(() =>
                 {
-                    LogMessage($"接收: {message.Command}");
+                    LogMessage($"接收: [{message.Id}] {message.Command}");
                 });
             };
 
@@ -322,6 +322,29 @@ namespace VisionLite.Communication
                     {
                         UpdateConnectionControl();
                     }
+                    
+                    // 记录连接状态变化到日志
+                    string statusText = status switch
+                    {
+                        ConnectionStatus.Connecting => "正在连接",
+                        ConnectionStatus.Connected => "连接成功",
+                        ConnectionStatus.Disconnected => "连接断开",
+                        ConnectionStatus.Error => "连接错误",
+                        _ => status.ToString()
+                    };
+                    
+                    // 对于UDP客户端连接成功时，显示分配的本地端口
+                    if (status == ConnectionStatus.Connected && communication is UdpCommunication udpClient)
+                    {
+                        var localPort = udpClient.LocalPort;
+                        if (localPort.HasValue)
+                        {
+                            LogMessage($"状态: {statusText} - UDP客户端本地监听端口: {localPort.Value}");
+                            return;
+                        }
+                    }
+                    
+                    LogMessage($"状态: {statusText}");
                 });
             };
         }
@@ -548,12 +571,12 @@ namespace VisionLite.Communication
                 
                 if (success)
                 {
-                    LogMessage($"发送: {messageText}");
+                    LogMessage($"发送: [{message.Id}] {message.Command}");
                     SendTextBox.Clear();
                 }
                 else
                 {
-                    LogMessage($"发送失败: {messageText}");
+                    LogMessage($"发送失败: [{message.Id}] {message.Command}");
                 }
             }
             catch (Exception ex)
@@ -710,6 +733,8 @@ namespace VisionLite.Communication
                 {
                     CommunicationType.TcpClient => "TCP客户端",
                     CommunicationType.TcpServer => "TCP服务器",
+                    CommunicationType.UdpClient => "UDP客户端",
+                    CommunicationType.UdpServer => "UDP服务器",
                     _ => "未知"
                 };
             }
