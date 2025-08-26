@@ -167,7 +167,7 @@ namespace VisionLite.Communication
         /// 异步启动UDP服务器
         /// </summary>
         /// <returns>启动是否成功</returns>
-        public async Task<bool> OpenAsync()
+        public Task<bool> OpenAsync()
         {
             try
             {
@@ -186,13 +186,13 @@ namespace VisionLite.Communication
                 _cleanupTask = ClientCleanupLoop(_cancellationTokenSource.Token);
                 
                 Status = ConnectionStatus.Connected;
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 Status = ConnectionStatus.Error;
                 System.Diagnostics.Debug.WriteLine($"UDP服务器启动失败: {ex.Message}");
-                return false;
+                return Task.FromResult(false);
             }
         }
         
@@ -233,8 +233,8 @@ namespace VisionLite.Communication
                 // 清空客户端列表
                 _clients.Clear();
                 
-                // 异步清理任务，不阻塞UI线程
-                Task.Run(() =>
+                // 异步清理任务，不阻塞UI线程（明确忽略返回值）
+                _ = Task.Run(() =>
                 {
                     try
                     {

@@ -171,10 +171,10 @@ namespace VisionLite.Communication
         /// 开始监听指定端口，等待客户端连接
         /// </summary>
         /// <returns>启动成功返回true，否则返回false</returns>
-        public async Task<bool> OpenAsync()
+        public Task<bool> OpenAsync()
         {
             if (Status == ConnectionStatus.Connected || Status == ConnectionStatus.Connecting)
-                return true;
+                return Task.FromResult(true);
 
             try
             {
@@ -193,14 +193,14 @@ namespace VisionLite.Communication
                 
                 UpdateStatus(ConnectionStatus.Connected);
                 System.Console.WriteLine($"TCP服务器已启动，监听端口: {_port}");
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine($"TCP服务器启动失败: {ex.Message}");
                 Close();
                 UpdateStatus(ConnectionStatus.Error);
-                return false;
+                return Task.FromResult(false);
             }
         }
 

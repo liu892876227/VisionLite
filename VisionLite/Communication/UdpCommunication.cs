@@ -183,7 +183,7 @@ namespace VisionLite.Communication
         /// 异步打开UDP连接
         /// </summary>
         /// <returns>连接是否成功</returns>
-        public async Task<bool> OpenAsync()
+        public Task<bool> OpenAsync()
         {
             try
             {
@@ -205,13 +205,13 @@ namespace VisionLite.Communication
                 Status = ConnectionStatus.Connected;
                 int localPort = ((IPEndPoint)_client.Client.LocalEndPoint).Port;
                 System.Diagnostics.Debug.WriteLine($"UDP客户端启动成功，本地监听端口: {localPort}");
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 Status = ConnectionStatus.Error;
                 System.Diagnostics.Debug.WriteLine($"UDP连接失败: {ex.Message}");
-                return false;
+                return Task.FromResult(false);
             }
         }
         
@@ -249,8 +249,8 @@ namespace VisionLite.Communication
                 
                 _client = null;
                 
-                // 异步清理任务，不阻塞UI线程
-                Task.Run(() =>
+                // 异步清理任务，不阻塞UI线程（明确忽略返回值）
+                _ = Task.Run(() =>
                 {
                     try
                     {
