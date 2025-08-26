@@ -27,6 +27,20 @@ namespace VisionLite
             m_pTargetWindow = targetWindow;// 保存目标窗口
             // 窗口加载后立即查找设备
             Loaded += (s, e) => FindAndPopulateDevices();
+            
+            // 添加窗口关闭事件处理
+            Closed += (s, e) =>
+            {
+                try
+                {
+                    if (m_pMainWindow != null)
+                    {
+                        m_pMainWindow.Activate();
+                        m_pMainWindow.Focus();
+                    }
+                }
+                catch { }
+            };
 
             // 订阅主窗口的相机列表变化事件，以便同步UI
             m_pMainWindow.CameraListChanged += OnCameraListChanged;

@@ -629,6 +629,18 @@ namespace VisionLite.Communication
             }
             
             _activeCommunications.Clear();
+            
+            // 激活主窗口，确保它显示在最前层
+            try
+            {
+                if (_mainWindow != null)
+                {
+                    _mainWindow.Activate();
+                    _mainWindow.Focus();
+                }
+            }
+            catch { }
+            
             base.OnClosed(e);
         }
 
