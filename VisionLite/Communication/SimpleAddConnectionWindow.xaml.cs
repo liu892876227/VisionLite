@@ -31,6 +31,26 @@ namespace VisionLite.Communication
         private TextBox _portTextBox;
 
         /// <summary>
+        /// ModbusTCP单元ID输入框
+        /// </summary>
+        private TextBox _unitIdTextBox;
+
+        /// <summary>
+        /// ModbusTCP最大客户端数输入框
+        /// </summary>
+        private TextBox _maxClientsTextBox;
+
+        /// <summary>
+        /// ModbusTCP启用日志复选框
+        /// </summary>
+        private CheckBox _enableLoggingCheckBox;
+
+        /// <summary>
+        /// ModbusTCP字节序选择框
+        /// </summary>
+        private ComboBox _byteOrderComboBox;
+
+        /// <summary>
         /// 是否为编辑模式
         /// </summary>
         public bool IsEditMode { get; private set; }
@@ -106,13 +126,14 @@ namespace VisionLite.Communication
         {
             ConnectionNameTextBox.Text = _config.Name;
             
-            // 设置协议类型（按照XAML中ComboBoxItem的顺序：TcpClient=0, TcpServer=1, UdpClient=2, UdpServer=3）
+            // 设置协议类型（按照XAML中ComboBoxItem的顺序：TcpClient=0, TcpServer=1, UdpClient=2, UdpServer=3, ModbusTcpServer=4）
             ProtocolTypeComboBox.SelectedIndex = _config.Type switch
             {
                 CommunicationType.TcpClient => 0,
                 CommunicationType.TcpServer => 1,
                 CommunicationType.UdpClient => 2,
                 CommunicationType.UdpServer => 3,
+                CommunicationType.ModbusTcpServer => 4,
                 _ => 0
             };
             
@@ -123,6 +144,12 @@ namespace VisionLite.Communication
                     _ipTextBox.Text = _config.IpAddress;
                 if (_portTextBox != null)
                     _portTextBox.Text = _config.Port.ToString();
+                if (_unitIdTextBox != null)
+                    _unitIdTextBox.Text = _config.ModbusTcp.UnitId.ToString();
+                if (_maxClientsTextBox != null)
+                    _maxClientsTextBox.Text = _config.ModbusTcp.MaxClients.ToString();
+                if (_enableLoggingCheckBox != null)
+                    _enableLoggingCheckBox.IsChecked = _config.ModbusTcp.EnableLogging;
                     
                 UpdateButtonStates();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
@@ -150,6 +177,7 @@ namespace VisionLite.Communication
                 "TcpServer" => CommunicationType.TcpServer,
                 "UdpClient" => CommunicationType.UdpClient,
                 "UdpServer" => CommunicationType.UdpServer,
+                "ModbusTcpServer" => CommunicationType.ModbusTcpServer,
                 _ => CommunicationType.TcpClient
             };
 
@@ -157,6 +185,10 @@ namespace VisionLite.Communication
             if (_config.Type == CommunicationType.UdpClient || _config.Type == CommunicationType.UdpServer)
             {
                 _config.Port = 8081; // UDP默认端口
+            }
+            else if (_config.Type == CommunicationType.ModbusTcpServer)
+            {
+                _config.Port = 502; // ModbusTCP默认端口
             }
             else
             {
@@ -166,6 +198,10 @@ namespace VisionLite.Communication
             if (_config.Type == CommunicationType.TcpClient || _config.Type == CommunicationType.UdpClient)
             {
                 CreateTcpClientParameterPanel(); // 客户端参数面板（IP+端口）
+            }
+            else if (_config.Type == CommunicationType.ModbusTcpServer)
+            {
+                CreateModbusTcpServerParameterPanel(); // ModbusTCP服务器参数面板
             }
             else
             {
@@ -242,6 +278,108 @@ namespace VisionLite.Communication
         }
 
         /// <summary>
+        /// 创建ModbusTCP服务器参数面板
+        /// </summary>
+        private void CreateModbusTcpServerParameterPanel()
+        {
+            // 创建六行：监听IP、监听端口、单元ID、最大客户端数、字节序、启用日志
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+
+            ParameterGrid.ColumnDefinitions.Clear();
+            ParameterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // IP地址输入
+            var ipLabel = new Label { Content = "监听IP:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(ipLabel, 0);
+            Grid.SetColumn(ipLabel, 0);
+            ParameterGrid.Children.Add(ipLabel);
+
+            _ipTextBox = new TextBox { Text = _config.IpAddress ?? "127.0.0.1", Style = (Style)Resources["InputStyle"] };
+            _ipTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_ipTextBox, 0);
+            Grid.SetColumn(_ipTextBox, 1);
+            ParameterGrid.Children.Add(_ipTextBox);
+
+            // 端口输入
+            var portLabel = new Label { Content = "监听端口:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(portLabel, 1);
+            Grid.SetColumn(portLabel, 0);
+            ParameterGrid.Children.Add(portLabel);
+
+            _portTextBox = new TextBox { Text = _config.Port.ToString(), Style = (Style)Resources["InputStyle"] };
+            _portTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_portTextBox, 1);
+            Grid.SetColumn(_portTextBox, 1);
+            ParameterGrid.Children.Add(_portTextBox);
+
+            // 单元ID输入
+            var unitIdLabel = new Label { Content = "单元ID:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(unitIdLabel, 2);
+            Grid.SetColumn(unitIdLabel, 0);
+            ParameterGrid.Children.Add(unitIdLabel);
+
+            _unitIdTextBox = new TextBox { Text = _config.ModbusTcp.UnitId.ToString(), Style = (Style)Resources["InputStyle"] };
+            _unitIdTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_unitIdTextBox, 2);
+            Grid.SetColumn(_unitIdTextBox, 1);
+            ParameterGrid.Children.Add(_unitIdTextBox);
+
+            // 最大客户端数输入
+            var maxClientsLabel = new Label { Content = "最大客户端:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(maxClientsLabel, 3);
+            Grid.SetColumn(maxClientsLabel, 0);
+            ParameterGrid.Children.Add(maxClientsLabel);
+
+            _maxClientsTextBox = new TextBox { Text = _config.ModbusTcp.MaxClients.ToString(), Style = (Style)Resources["InputStyle"] };
+            _maxClientsTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_maxClientsTextBox, 3);
+            Grid.SetColumn(_maxClientsTextBox, 1);
+            ParameterGrid.Children.Add(_maxClientsTextBox);
+
+            // 字节序选择
+            var byteOrderLabel = new Label { Content = "字节序:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(byteOrderLabel, 4);
+            Grid.SetColumn(byteOrderLabel, 0);
+            ParameterGrid.Children.Add(byteOrderLabel);
+
+            _byteOrderComboBox = new ComboBox 
+            { 
+                Height = 25, 
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 0)
+            };
+            _byteOrderComboBox.Items.Add(new ComboBoxItem { Content = "ABCD（大端序，标准）", Tag = ByteOrder.ABCD });
+            _byteOrderComboBox.Items.Add(new ComboBoxItem { Content = "BADC（字节内交换）", Tag = ByteOrder.BADC });
+            _byteOrderComboBox.Items.Add(new ComboBoxItem { Content = "CDAB（寄存器交换）", Tag = ByteOrder.CDAB });
+            _byteOrderComboBox.Items.Add(new ComboBoxItem { Content = "DCBA（完全反序）", Tag = ByteOrder.DCBA });
+            _byteOrderComboBox.SelectedIndex = (int)_config.ModbusTcp.DataByteOrder;
+            _byteOrderComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_byteOrderComboBox, 4);
+            Grid.SetColumn(_byteOrderComboBox, 1);
+            ParameterGrid.Children.Add(_byteOrderComboBox);
+
+            // 启用日志复选框
+            _enableLoggingCheckBox = new CheckBox 
+            { 
+                Content = "启用请求日志", 
+                IsChecked = _config.ModbusTcp.EnableLogging,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 0)
+            };
+            _enableLoggingCheckBox.Checked += (s, e) => UpdateButtonStates();
+            _enableLoggingCheckBox.Unchecked += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_enableLoggingCheckBox, 5);
+            Grid.SetColumn(_enableLoggingCheckBox, 1);
+            ParameterGrid.Children.Add(_enableLoggingCheckBox);
+        }
+
+        /// <summary>
         /// 更新按钮状态
         /// </summary>
         private void UpdateButtonStates()
@@ -269,6 +407,20 @@ namespace VisionLite.Communication
 
             if (_portTextBox != null && int.TryParse(_portTextBox.Text, out int port))
                 _config.Port = port;
+
+            // ModbusTCP特有参数
+            if (_unitIdTextBox != null && byte.TryParse(_unitIdTextBox.Text, out byte unitId))
+                _config.ModbusTcp.UnitId = unitId;
+
+            if (_maxClientsTextBox != null && int.TryParse(_maxClientsTextBox.Text, out int maxClients))
+                _config.ModbusTcp.MaxClients = maxClients;
+
+            if (_enableLoggingCheckBox != null)
+                _config.ModbusTcp.EnableLogging = _enableLoggingCheckBox.IsChecked ?? true;
+
+            // 字节序配置
+            if (_byteOrderComboBox != null && _byteOrderComboBox.SelectedItem is ComboBoxItem selectedItem)
+                _config.ModbusTcp.DataByteOrder = (ByteOrder)selectedItem.Tag;
         }
 
         #endregion

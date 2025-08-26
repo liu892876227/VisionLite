@@ -58,3 +58,5 @@ E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnect
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.baml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\NModbus4.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\NModbus4.xml

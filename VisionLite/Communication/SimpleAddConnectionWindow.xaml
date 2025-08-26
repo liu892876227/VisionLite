@@ -5,7 +5,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="添加通讯连接" Height="350" Width="400"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-        ResizeMode="CanResize" MinHeight="300" MinWidth="350">
+        ResizeMode="CanResize" MinHeight="450" MinWidth="350">
     
     <!-- 窗口样式 -->
     <Window.Resources>
@@ -66,14 +66,19 @@
                 <ComboBoxItem Content="TCP服务器" Tag="TcpServer"/>
                 <ComboBoxItem Content="UDP客户端" Tag="UdpClient"/>
                 <ComboBoxItem Content="UDP服务器" Tag="UdpServer"/>
+                <ComboBoxItem Content="ModbusTCP服务器" Tag="ModbusTcpServer"/>
             </ComboBox>
         </Grid>
 
         <!-- 参数配置区域 -->
         <GroupBox Grid.Row="2" Header="连接参数" Margin="0,0,0,10" Padding="10">
-            <Grid x:Name="ParameterGrid">
-                <!-- 动态内容将在这里显示 -->
-            </Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                          HorizontalScrollBarVisibility="Disabled"
+                          MaxHeight="200">
+                <Grid x:Name="ParameterGrid">
+                    <!-- 动态内容将在这里显示 -->
+                </Grid>
+            </ScrollViewer>
         </GroupBox>
 
         <!-- 操作按钮 -->

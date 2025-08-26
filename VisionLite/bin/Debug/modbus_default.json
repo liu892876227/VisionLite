@@ -1,0 +1,86 @@
+{
+  "Name": "默认ModbusTCP地址映射",
+  "Description": "VisionLite工业视觉系统的标准Modbus地址映射配置",
+  "Items": [
+    {
+      "Name": "系统启动状态",
+      "FunctionArea": 0,
+      "Address": 1,
+      "DataType": 0,
+      "DefaultValue": "false",
+      "Enabled": true
+    },
+    {
+      "Name": "相机连接状态",
+      "FunctionArea": 0,
+      "Address": 2,
+      "DataType": 0,
+      "DefaultValue": "false",
+      "Enabled": true
+    },
+    {
+      "Name": "检测完成信号",
+      "FunctionArea": 0,
+      "Address": 10,
+      "DataType": 0,
+      "DefaultValue": "false",
+      "Enabled": true
+    },
+    {
+      "Name": "触发拍照",
+      "FunctionArea": 1,
+      "Address": 1,
+      "DataType": 0,
+      "DefaultValue": "false",
+      "Enabled": true
+    },
+    {
+      "Name": "系统复位",
+      "FunctionArea": 1,
+      "Address": 2,
+      "DataType": 0,
+      "DefaultValue": "false",
+      "Enabled": true
+    },
+    {
+      "Name": "曝光时间",
+      "FunctionArea": 3,
+      "Address": 100,
+      "DataType": 1,
+      "DefaultValue": "1000",
+      "Enabled": true
+    },
+    {
+      "Name": "增益值",
+      "FunctionArea": 3,
+      "Address": 101,
+      "DataType": 1,
+      "DefaultValue": "100",
+      "Enabled": true
+    },
+    {
+      "Name": "检测结果X坐标",
+      "FunctionArea": 2,
+      "Address": 200,
+      "DataType": 2,
+      "DefaultValue": "0",
+      "Enabled": true
+    },
+    {
+      "Name": "检测结果Y坐标",
+      "FunctionArea": 2,
+      "Address": 201,
+      "DataType": 2,
+      "DefaultValue": "0",
+      "Enabled": true
+    },
+    {
+      "Name": "检测合格率",
+      "FunctionArea": 2,
+      "Address": 300,
+      "DataType": 3,
+      "DefaultValue": "0.0",
+      "Enabled": true
+    }
+  ]
+}

@@ -27,7 +27,50 @@ namespace VisionLite.Communication
         /// <summary>
         /// UDP服务器
         /// </summary>
-        UdpServer
+        UdpServer,
+        
+        /// <summary>
+        /// ModbusTCP服务器
+        /// </summary>
+        ModbusTcpServer
+    }
+
+    /// <summary>
+    /// 32位数据字节序枚举
+    /// 针对Float、Long等32位数据在两个16位寄存器中的存储方式
+    /// </summary>
+    public enum ByteOrder
+    {
+        ABCD = 0,    // 大端序（Modbus标准）：高寄存器=AB, 低寄存器=CD
+        BADC = 1,    // 字节内交换：高寄存器=BA, 低寄存器=DC
+        CDAB = 2,    // 寄存器交换（小端序）：高寄存器=CD, 低寄存器=AB
+        DCBA = 3     // 完全反序：高寄存器=DC, 低寄存器=BA
+    }
+
+    /// <summary>
+    /// ModbusTCP配置类
+    /// </summary>
+    public class ModbusTcpConfig
+    {
+        /// <summary>
+        /// 设备单元ID
+        /// </summary>
+        public byte UnitId { get; set; } = 1;
+
+        /// <summary>
+        /// 是否启用请求日志
+        /// </summary>
+        public bool EnableLogging { get; set; } = true;
+
+        /// <summary>
+        /// 最大客户端连接数
+        /// </summary>
+        public int MaxClients { get; set; } = 10;
+
+        /// <summary>
+        /// 数据字节序
+        /// </summary>
+        public ByteOrder DataByteOrder { get; set; } = ByteOrder.ABCD;
     }
 
     /// <summary>
@@ -59,6 +102,11 @@ namespace VisionLite.Communication
         public int Port { get; set; } = 8080;
 
         /// <summary>
+        /// ModbusTCP特有配置
+        /// </summary>
+        public ModbusTcpConfig ModbusTcp { get; set; } = new ModbusTcpConfig();
+
+        /// <summary>
         /// 获取协议类型的显示名称
         /// </summary>
         public string TypeDisplayName
@@ -71,6 +119,7 @@ namespace VisionLite.Communication
                     CommunicationType.TcpServer => "TCP服务器",
                     CommunicationType.UdpClient => "UDP客户端",
                     CommunicationType.UdpServer => "UDP服务器",
+                    CommunicationType.ModbusTcpServer => "ModbusTCP服务器",
                     _ => "未知"
                 };
             }
@@ -89,6 +138,7 @@ namespace VisionLite.Communication
                     CommunicationType.TcpServer => $"监听端口:{Port}",
                     CommunicationType.UdpClient => $"{IpAddress}:{Port}",
                     CommunicationType.UdpServer => $"监听端口:{Port}",
+                    CommunicationType.ModbusTcpServer => $"监听端口:{Port}, 单元ID:{ModbusTcp.UnitId}",
                     _ => ""
                 };
             }
@@ -118,6 +168,16 @@ namespace VisionLite.Communication
                     return (false, "IP地址格式不正确");
             }
 
+            // ModbusTCP特殊验证
+            if (Type == CommunicationType.ModbusTcpServer)
+            {
+                if (ModbusTcp.UnitId == 0)
+                    return (false, "ModbusTCP单元ID不能为0");
+                
+                if (ModbusTcp.MaxClients <= 0)
+                    return (false, "最大客户端数必须大于0");
+            }
+
             return (true, null);
         }
 
@@ -132,7 +192,14 @@ namespace VisionLite.Communication
                 Name = this.Name,
                 Type = this.Type,
                 IpAddress = this.IpAddress,
-                Port = this.Port
+                Port = this.Port,
+                ModbusTcp = new ModbusTcpConfig
+                {
+                    UnitId = this.ModbusTcp.UnitId,
+                    EnableLogging = this.ModbusTcp.EnableLogging,
+                    MaxClients = this.ModbusTcp.MaxClients,
+                    DataByteOrder = this.ModbusTcp.DataByteOrder
+                }
             };
         }
 
@@ -152,6 +219,7 @@ namespace VisionLite.Communication
                 CommunicationType.TcpServer => new TcpServer(Name, Port),
                 CommunicationType.UdpClient => new UdpCommunication(Name, IpAddress, Port),
                 CommunicationType.UdpServer => new UdpServer(Name, Port),
+                CommunicationType.ModbusTcpServer => new ModbusTcpServer(IpAddress, Port, ModbusTcp),
                 _ => throw new NotSupportedException($"不支持的协议类型: {Type}")
             };
         }
@@ -211,6 +279,28 @@ namespace VisionLite.Communication
                 Name = "UDP服务器",
                 Type = CommunicationType.UdpServer,
                 Port = 8081
+            };
+        }
+
+        /// <summary>
+        /// 获取默认的ModbusTCP服务器配置
+        /// </summary>
+        /// <returns>默认ModbusTCP服务器配置</returns>
+        public static SimpleConnectionConfig GetDefaultModbusTcpServer()
+        {
+            return new SimpleConnectionConfig
+            {
+                Name = "ModbusTCP服务器",
+                Type = CommunicationType.ModbusTcpServer,
+                IpAddress = "127.0.0.1",
+                Port = 502,
+                ModbusTcp = new ModbusTcpConfig
+                {
+                    UnitId = 1,
+                    EnableLogging = true,
+                    MaxClients = 10,
+                    DataByteOrder = ByteOrder.ABCD
+                }
             };
         }
     }

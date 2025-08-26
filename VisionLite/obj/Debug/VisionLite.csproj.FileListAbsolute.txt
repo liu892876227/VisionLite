@@ -58,3 +58,5 @@ E:\mySoftware\VisionLite\VisionLite\obj\Debug\GeneratedInternalTypeHelper.g.cs
 E:\mySoftware\VisionLite\VisionLite\obj\Debug\App.baml
 E:\mySoftware\VisionLite\VisionLite\obj\Debug\CameraManagementWindow.baml
 E:\mySoftware\VisionLite\VisionLite\obj\Debug\Communication\SimpleCommunicationWindow.baml
+E:\mySoftware\VisionLite\VisionLite\bin\Debug\NModbus4.dll
+E:\mySoftware\VisionLite\VisionLite\bin\Debug\NModbus4.xml

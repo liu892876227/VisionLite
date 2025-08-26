@@ -747,6 +747,7 @@ namespace VisionLite.Communication
                     CommunicationType.TcpServer => "TCP服务器",
                     CommunicationType.UdpClient => "UDP客户端",
                     CommunicationType.UdpServer => "UDP服务器",
+                    CommunicationType.ModbusTcpServer => "ModbusTCP服务器",
                     _ => "未知"
                 };
             }
