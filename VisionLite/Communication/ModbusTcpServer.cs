@@ -114,8 +114,16 @@ namespace VisionLite.Communication
                 Status = ConnectionStatus.Connected;
                 OnStatusChanged();
                 
-                System.Diagnostics.Debug.WriteLine(
-                    $"Modbus TCP服务器启动成功: {_ipAddress}:{_port}, 单元ID: {_config.UnitId}");
+                // 多种方式输出调试信息
+                System.Diagnostics.Debug.WriteLine("=== ModbusTCP调试信息测试 ===");
+                System.Diagnostics.Debug.WriteLine($"Modbus TCP服务器启动成功: {_ipAddress}:{_port}, 单元ID: {_config.UnitId}");
+                
+                // 同时输出到控制台（如果有的话）
+                Console.WriteLine("=== ModbusTCP控制台信息测试 ===");
+                Console.WriteLine($"Modbus TCP服务器启动成功: {_ipAddress}:{_port}, 单元ID: {_config.UnitId}");
+                
+                // 触发日志事件测试
+                LogReceived?.Invoke("[测试] ModbusTCP服务器启动成功，调试信息正常工作");
                 System.Diagnostics.Debug.WriteLine(
                     $"地址映射: {_addressManager.CurrentMap.Items.Count(i => i.Enabled)} 项已配置");
                 
@@ -666,11 +674,18 @@ namespace VisionLite.Communication
 
         #region Modbus 事件处理
         
+        // 操作计数器，用于调试验证
+        private static int _operationCount = 0;
+        
         /// <summary>
         /// 处理Modbus请求接收事件
         /// </summary>
         private void OnModbusRequestReceived(object sender, Modbus.Device.ModbusSlaveRequestEventArgs e)
         {
+            _operationCount++;
+            System.Diagnostics.Debug.WriteLine($"=== ModbusTCP事件触发 第{_operationCount}次 ===");
+            System.Diagnostics.Debug.WriteLine($"[事件] 收到Modbus请求，准备记录日志");
+            
             LogModbusOperation(e.Message);
         }
         
@@ -681,18 +696,39 @@ namespace VisionLite.Communication
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[日志] 开始处理第{_operationCount}次操作日志");
+                
                 // 解析功能码和操作类型
                 string operation = GetOperationDescription(message.FunctionCode);
                 
-                // 构建日志消息
-                string logMessage = $"[客户端操作] {operation} | " +
-                                   $"从站地址: {message.SlaveAddress} | " +
-                                   $"功能码: 0x{message.FunctionCode:X2} | " +
-                                   $"事务ID: {message.TransactionId} | " +
-                                   $"报文: {BitConverter.ToString(message.MessageFrame)}";
+                // 解析操作地址和参数
+                string parameters = ParseOperationParameters(message);
+                
+                // 构建日志消息（包含地址信息）
+                string logMessage = $"[客户端操作] {operation}";
+                if (!string.IsNullOrEmpty(parameters))
+                {
+                    logMessage += $" ({parameters})";
+                }
+                logMessage += $" | 从站地址: {message.SlaveAddress} | " +
+                             $"功能码: 0x{message.FunctionCode:X2} | " +
+                             $"事务ID: {message.TransactionId} | " +
+                             $"报文: {BitConverter.ToString(message.MessageFrame)}";
+                
+                System.Diagnostics.Debug.WriteLine($"[日志] 构建的日志消息: {logMessage}");
+                System.Diagnostics.Debug.WriteLine($"[日志] LogReceived事件订阅者数量: {LogReceived?.GetInvocationList()?.Length ?? 0}");
                 
                 // 触发日志事件，让UI显示
-                LogReceived?.Invoke(logMessage);
+                if (LogReceived != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[日志] 正在触发LogReceived事件...");
+                    LogReceived.Invoke(logMessage);
+                    System.Diagnostics.Debug.WriteLine($"[日志] LogReceived事件已触发");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[日志] 警告：LogReceived事件为null，没有订阅者");
+                }
                 
                 // 保留调试输出用于开发调试
                 System.Diagnostics.Debug.WriteLine($"[ModbusTCP操作] {logMessage}");
@@ -723,6 +759,72 @@ namespace VisionLite.Communication
                 0x17 => "读写多个寄存器",
                 _ => $"未知功能(0x{functionCode:X2})"
             };
+        }
+        
+        /// <summary>
+        /// 解析Modbus操作的地址和参数信息
+        /// </summary>
+        private string ParseOperationParameters(Modbus.Message.IModbusMessage message)
+        {
+            try
+            {
+                var pdu = message.ProtocolDataUnit;
+                if (pdu == null || pdu.Length < 5) return "";
+                
+                var functionCode = message.FunctionCode;
+                
+                // PDU格式: [功能码][起始地址高字节][起始地址低字节][数量/数值高字节][数量/数值低字节][其他数据...]
+                var startAddress = (ushort)((pdu[1] << 8) | pdu[2]);
+                var quantityOrValue = (ushort)((pdu[3] << 8) | pdu[4]);
+                
+                return functionCode switch
+                {
+                    // 读取操作 - 显示起始地址和数量
+                    0x01 or 0x02 or 0x03 or 0x04 => $"地址: {startAddress}, 数量: {quantityOrValue}",
+                    
+                    // 写单个操作 - 显示地址和数值
+                    0x05 => $"地址: {startAddress}, 值: {(quantityOrValue == 0xFF00 ? "ON" : "OFF")}",
+                    0x06 => $"地址: {startAddress}, 值: {quantityOrValue}",
+                    
+                    // 写多个操作 - 显示起始地址和数量
+                    0x0F or 0x10 => $"地址: {startAddress}, 数量: {quantityOrValue}",
+                    
+                    // 读写多个寄存器 - 更复杂的解析
+                    0x17 => ParseReadWriteMultipleRegisters(pdu),
+                    
+                    _ => ""
+                };
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[解析] 解析操作参数时出错: {ex.Message}");
+                return "";
+            }
+        }
+        
+        /// <summary>
+        /// 解析读写多个寄存器操作(功能码0x17)
+        /// </summary>
+        private string ParseReadWriteMultipleRegisters(byte[] pdu)
+        {
+            try
+            {
+                if (pdu.Length < 11) return "";
+                
+                // 读取部分
+                var readStartAddress = (ushort)((pdu[1] << 8) | pdu[2]);
+                var readQuantity = (ushort)((pdu[3] << 8) | pdu[4]);
+                
+                // 写入部分
+                var writeStartAddress = (ushort)((pdu[5] << 8) | pdu[6]);
+                var writeQuantity = (ushort)((pdu[7] << 8) | pdu[8]);
+                
+                return $"读地址: {readStartAddress}({readQuantity}个), 写地址: {writeStartAddress}({writeQuantity}个)";
+            }
+            catch
+            {
+                return "";
+            }
         }
         
         #endregion

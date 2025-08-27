@@ -543,6 +543,15 @@ namespace VisionLite.Communication
                     if (connected)
                     {
                         LogConnection($"连接成功: {_selectedConfig.Name}");
+                        
+                        // 立即订阅ModbusTCP事件（修复时机问题）
+                        if (_selectedCommunication is ModbusTcpServer server)
+                        {
+                            server.LogReceived -= OnModbusTcpLogReceived; // 防止重复订阅
+                            server.LogReceived += OnModbusTcpLogReceived;
+                            LogSystem("已订阅ModbusTCP操作日志事件");
+                            System.Diagnostics.Debug.WriteLine("[连接] ModbusTCP事件订阅成功");
+                        }
                     }
                     else
                     {
@@ -659,9 +668,15 @@ namespace VisionLite.Communication
         /// </summary>
         private void OnModbusTcpLogReceived(string message)
         {
+            // 多种方式输出调试信息
+            System.Diagnostics.Debug.WriteLine($"=== UI调试信息 ===");
+            System.Diagnostics.Debug.WriteLine($"[UI] 收到ModbusTCP日志: {message}");
+            Console.WriteLine($"[UI控制台] 收到ModbusTCP日志: {message}");
+            
             Dispatcher.Invoke(() =>
             {
                 LogReceive(message);
+                System.Diagnostics.Debug.WriteLine($"[UI] 日志已显示到界面");
             });
         }
 
@@ -887,13 +902,6 @@ namespace VisionLite.Communication
                         }
                     }
                 }
-            }
-            
-            // 订阅ModbusTCP日志事件
-            if (_selectedCommunication is ModbusTcpServer server)
-            {
-                server.LogReceived -= OnModbusTcpLogReceived; // 先取消订阅防止重复
-                server.LogReceived += OnModbusTcpLogReceived;
             }
         }
 
