@@ -37,7 +37,12 @@ namespace VisionLite.Communication
         /// <summary>
         /// ModbusTCP客户端
         /// </summary>
-        ModbusTcpClient
+        ModbusTcpClient,
+        
+        /// <summary>
+        /// 串口通讯
+        /// </summary>
+        SerialPort
     }
 
     /// <summary>
@@ -50,6 +55,97 @@ namespace VisionLite.Communication
         BADC = 1,    // 字节内交换：高寄存器=BA, 低寄存器=DC
         CDAB = 2,    // 寄存器交换（小端序）：高寄存器=CD, 低寄存器=AB
         DCBA = 3     // 完全反序：高寄存器=DC, 低寄存器=BA
+    }
+
+    /// <summary>
+    /// 串口数据格式枚举
+    /// </summary>
+    public enum SerialDataFormat
+    {
+        Text = 0,       // 文本格式（默认）
+        Hex = 1,        // 十六进制格式
+        Binary = 2      // 二进制格式
+    }
+
+    /// <summary>
+    /// 串口通讯配置类
+    /// </summary>
+    public class SerialConfig
+    {
+        /// <summary>
+        /// 串口名称
+        /// </summary>
+        public string PortName { get; set; } = "COM1";
+
+        /// <summary>
+        /// 波特率
+        /// </summary>
+        public int BaudRate { get; set; } = 9600;
+
+        /// <summary>
+        /// 数据位
+        /// </summary>
+        public int DataBits { get; set; } = 8;
+
+        /// <summary>
+        /// 停止位
+        /// </summary>
+        public System.IO.Ports.StopBits StopBits { get; set; } = System.IO.Ports.StopBits.One;
+
+        /// <summary>
+        /// 奇偶校验
+        /// </summary>
+        public System.IO.Ports.Parity Parity { get; set; } = System.IO.Ports.Parity.None;
+
+        /// <summary>
+        /// 流控制
+        /// </summary>
+        public System.IO.Ports.Handshake Handshake { get; set; } = System.IO.Ports.Handshake.None;
+
+        /// <summary>
+        /// 读取超时时间(毫秒)
+        /// </summary>
+        public int ReadTimeout { get; set; } = 3000;
+
+        /// <summary>
+        /// 写入超时时间(毫秒)
+        /// </summary>
+        public int WriteTimeout { get; set; } = 3000;
+
+        /// <summary>
+        /// 数据格式
+        /// </summary>
+        public SerialDataFormat DataFormat { get; set; } = SerialDataFormat.Text;
+
+        /// <summary>
+        /// 消息结束符
+        /// </summary>
+        public string MessageTerminator { get; set; } = "\r\n";
+
+        /// <summary>
+        /// 接收缓冲区大小
+        /// </summary>
+        public int ReadBufferSize { get; set; } = 4096;
+
+        /// <summary>
+        /// 发送缓冲区大小
+        /// </summary>
+        public int WriteBufferSize { get; set; } = 2048;
+
+        /// <summary>
+        /// 是否启用日志
+        /// </summary>
+        public bool EnableLogging { get; set; } = true;
+
+        /// <summary>
+        /// 是否启用自动重连
+        /// </summary>
+        public bool AutoReconnect { get; set; } = true;
+
+        /// <summary>
+        /// 重连间隔(毫秒)
+        /// </summary>
+        public int ReconnectInterval { get; set; } = 5000;
     }
 
     /// <summary>
@@ -163,6 +259,11 @@ namespace VisionLite.Communication
         public ModbusTcpClientConfig ModbusTcpClient { get; set; } = new ModbusTcpClientConfig();
 
         /// <summary>
+        /// 串口通讯配置
+        /// </summary>
+        public SerialConfig Serial { get; set; } = new SerialConfig();
+
+        /// <summary>
         /// 获取协议类型的显示名称
         /// </summary>
         public string TypeDisplayName
@@ -177,6 +278,7 @@ namespace VisionLite.Communication
                     CommunicationType.UdpServer => "UDP服务器",
                     CommunicationType.ModbusTcpServer => "ModbusTCP服务器",
                     CommunicationType.ModbusTcpClient => "ModbusTCP客户端",
+                    CommunicationType.SerialPort => "串口通讯",
                     _ => "未知"
                 };
             }
@@ -197,6 +299,7 @@ namespace VisionLite.Communication
                     CommunicationType.UdpServer => $"监听端口:{Port}",
                     CommunicationType.ModbusTcpServer => $"监听端口:{Port}, 单元ID:{ModbusTcp.UnitId}",
                     CommunicationType.ModbusTcpClient => $"服务器:{IpAddress}:{Port}, 单元ID:{ModbusTcpClient.UnitId}",
+                    CommunicationType.SerialPort => $"串口:{Serial.PortName}, 波特率:{Serial.BaudRate}",
                     _ => ""
                 };
             }
@@ -215,6 +318,28 @@ namespace VisionLite.Communication
             // 验证端口范围
             if (Port < 1 || Port > 65535)
                 return (false, "端口号必须在1-65535范围内");
+
+            // 串口通讯验证
+            if (Type == CommunicationType.SerialPort)
+            {
+                if (string.IsNullOrWhiteSpace(Serial.PortName))
+                    return (false, "串口名称不能为空");
+
+                if (Serial.BaudRate <= 0)
+                    return (false, "波特率必须大于0");
+
+                if (Serial.DataBits < 5 || Serial.DataBits > 8)
+                    return (false, "数据位必须在5-8范围内");
+
+                if (Serial.ReadTimeout <= 0)
+                    return (false, "读取超时必须大于0毫秒");
+
+                if (Serial.WriteTimeout <= 0)
+                    return (false, "写入超时必须大于0毫秒");
+
+                if (Serial.ReconnectInterval <= 0)
+                    return (false, "重连间隔必须大于0毫秒");
+            }
 
             // TCP客户端、UDP客户端和ModbusTCP客户端需要验证IP地址
             if (Type == CommunicationType.TcpClient || Type == CommunicationType.UdpClient || Type == CommunicationType.ModbusTcpClient)
@@ -287,6 +412,24 @@ namespace VisionLite.Communication
                     WriteTimeout = this.ModbusTcpClient.WriteTimeout,
                     AutoReconnect = this.ModbusTcpClient.AutoReconnect,
                     ReconnectInterval = this.ModbusTcpClient.ReconnectInterval
+                },
+                Serial = new SerialConfig
+                {
+                    PortName = this.Serial.PortName,
+                    BaudRate = this.Serial.BaudRate,
+                    DataBits = this.Serial.DataBits,
+                    StopBits = this.Serial.StopBits,
+                    Parity = this.Serial.Parity,
+                    Handshake = this.Serial.Handshake,
+                    ReadTimeout = this.Serial.ReadTimeout,
+                    WriteTimeout = this.Serial.WriteTimeout,
+                    DataFormat = this.Serial.DataFormat,
+                    MessageTerminator = this.Serial.MessageTerminator,
+                    ReadBufferSize = this.Serial.ReadBufferSize,
+                    WriteBufferSize = this.Serial.WriteBufferSize,
+                    EnableLogging = this.Serial.EnableLogging,
+                    AutoReconnect = this.Serial.AutoReconnect,
+                    ReconnectInterval = this.Serial.ReconnectInterval
                 }
             };
         }
@@ -309,6 +452,7 @@ namespace VisionLite.Communication
                 CommunicationType.UdpServer => new UdpServer(Name, Port),
                 CommunicationType.ModbusTcpServer => new ModbusTcpServer(IpAddress, Port, ModbusTcp),
                 CommunicationType.ModbusTcpClient => new ModbusTcpClient(Name, IpAddress, Port, ModbusTcpClient),
+                CommunicationType.SerialPort => new SerialCommunication(Name, Serial),
                 _ => throw new NotSupportedException($"不支持的协议类型: {Type}")
             };
         }
@@ -413,6 +557,37 @@ namespace VisionLite.Communication
                     ConnectionTimeout = 5000,
                     ReadTimeout = 3000,
                     WriteTimeout = 3000,
+                    AutoReconnect = true,
+                    ReconnectInterval = 5000
+                }
+            };
+        }
+
+        /// <summary>
+        /// 获取默认的串口通讯配置
+        /// </summary>
+        /// <returns>默认串口通讯配置</returns>
+        public static SimpleConnectionConfig GetDefaultSerialPort()
+        {
+            return new SimpleConnectionConfig
+            {
+                Name = "串口通讯",
+                Type = CommunicationType.SerialPort,
+                Serial = new SerialConfig
+                {
+                    PortName = "COM1",
+                    BaudRate = 9600,
+                    DataBits = 8,
+                    StopBits = System.IO.Ports.StopBits.One,
+                    Parity = System.IO.Ports.Parity.None,
+                    Handshake = System.IO.Ports.Handshake.None,
+                    ReadTimeout = 3000,
+                    WriteTimeout = 3000,
+                    DataFormat = SerialDataFormat.Text,
+                    MessageTerminator = "\r\n",
+                    ReadBufferSize = 4096,
+                    WriteBufferSize = 2048,
+                    EnableLogging = true,
                     AutoReconnect = true,
                     ReconnectInterval = 5000
                 }

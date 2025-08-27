@@ -79,6 +79,11 @@ namespace VisionLite.Communication
 #pragma warning restore CS0067
 
         /// <summary>
+        /// ModbusTCP操作日志事件
+        /// </summary>
+        public event Action<string> LogReceived;
+
+        /// <summary>
         /// 异步启动Modbus TCP服务器
         /// </summary>
         public Task<bool> OpenAsync()
@@ -98,6 +103,9 @@ namespace VisionLite.Communication
                 // 创建Modbus从站
                 _slave = ModbusTcpSlave.CreateTcp(_config.UnitId, _tcpListener);
                 _slave.DataStore = _dataStore;
+                
+                // 订阅Modbus请求接收事件
+                _slave.ModbusSlaveRequestReceived += OnModbusRequestReceived;
                 
                 // 启动服务器
                 _cancellationTokenSource = new CancellationTokenSource();
@@ -159,8 +167,13 @@ namespace VisionLite.Communication
                 _connectedClients.Clear();
                 
                 // 停止Modbus从站
-                _slave?.Dispose();
-                _slave = null;
+                if (_slave != null)
+                {
+                    // 取消事件订阅
+                    _slave.ModbusSlaveRequestReceived -= OnModbusRequestReceived;
+                    _slave.Dispose();
+                    _slave = null;
+                }
                 
                 // 停止TCP监听器
                 _tcpListener?.Stop();
@@ -651,6 +664,69 @@ namespace VisionLite.Communication
 
         #endregion
 
+        #region Modbus 事件处理
+        
+        /// <summary>
+        /// 处理Modbus请求接收事件
+        /// </summary>
+        private void OnModbusRequestReceived(object sender, Modbus.Device.ModbusSlaveRequestEventArgs e)
+        {
+            LogModbusOperation(e.Message);
+        }
+        
+        /// <summary>
+        /// 记录Modbus操作日志
+        /// </summary>
+        private void LogModbusOperation(Modbus.Message.IModbusMessage message)
+        {
+            try
+            {
+                // 解析功能码和操作类型
+                string operation = GetOperationDescription(message.FunctionCode);
+                
+                // 构建日志消息
+                string logMessage = $"[客户端操作] {operation} | " +
+                                   $"从站地址: {message.SlaveAddress} | " +
+                                   $"功能码: 0x{message.FunctionCode:X2} | " +
+                                   $"事务ID: {message.TransactionId} | " +
+                                   $"报文: {BitConverter.ToString(message.MessageFrame)}";
+                
+                // 触发日志事件，让UI显示
+                LogReceived?.Invoke(logMessage);
+                
+                // 保留调试输出用于开发调试
+                System.Diagnostics.Debug.WriteLine($"[ModbusTCP操作] {logMessage}");
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = $"[错误] 记录操作日志时出错: {ex.Message}";
+                LogReceived?.Invoke(errorMessage);
+                System.Diagnostics.Debug.WriteLine($"[ModbusTCP] {errorMessage}");
+            }
+        }
+        
+        /// <summary>
+        /// 根据功能码获取操作描述
+        /// </summary>
+        private string GetOperationDescription(byte functionCode)
+        {
+            return functionCode switch
+            {
+                0x01 => "读取线圈",
+                0x02 => "读取离散输入",
+                0x03 => "读取保持寄存器",
+                0x04 => "读取输入寄存器",
+                0x05 => "写单个线圈",
+                0x06 => "写单个寄存器",
+                0x0F => "写多个线圈",
+                0x10 => "写多个寄存器",
+                0x17 => "读写多个寄存器",
+                _ => $"未知功能(0x{functionCode:X2})"
+            };
+        }
+        
+        #endregion
+
         #region IDisposable实现
 
         public void Dispose()
@@ -658,6 +734,7 @@ namespace VisionLite.Communication
             if (_disposed) return;
             
             Close();
+            
             
             _cancellationTokenSource?.Dispose();
             _dataStore = null;
@@ -668,4 +745,5 @@ namespace VisionLite.Communication
 
         #endregion
     }
+
 }

@@ -68,6 +68,7 @@
                 <ComboBoxItem Content="UDP服务器" Tag="UdpServer"/>
                 <ComboBoxItem Content="ModbusTCP服务器" Tag="ModbusTcpServer"/>
                 <ComboBoxItem Content="ModbusTCP客户端" Tag="ModbusTcpClient"/>
+                <ComboBoxItem Content="串口通讯" Tag="SerialPort"/>
             </ComboBox>
         </Grid>
 

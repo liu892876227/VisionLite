@@ -129,8 +129,8 @@ namespace VisionLite.Communication
                 // 更新发送控制
                 SendButton.IsEnabled = _selectedCommunication?.Status == ConnectionStatus.Connected;
                 
-                // 更新ModbusTCP专用界面显示
-                UpdateModbusTcpPanel();
+                // 更新专用操作面板显示
+                UpdateOperationPanels();
             }
             else
             {
@@ -315,20 +315,33 @@ namespace VisionLite.Communication
             {
                 Dispatcher.Invoke(() =>
                 {
-                    // 如果是日志消息，直接输出内容；否则按原格式输出
-                    if (message.Command == "LOG" && message.Parameters.ContainsKey("content"))
+                    // 处理不同类型的消息
+                    if (message.Command == "LOG")
                     {
-                        var logContent = message.Parameters["content"]?.ToString();
+                        // 处理系统日志消息
+                        string logContent = null;
+                        if (message.Parameters.ContainsKey("Message"))
+                            logContent = message.Parameters["Message"]?.ToString();
+                        else if (message.Parameters.ContainsKey("content"))
+                            logContent = message.Parameters["content"]?.ToString();
+                            
                         if (!string.IsNullOrEmpty(logContent))
                         {
-                            // 直接输出日志内容，因为它已经包含时间戳格式
-                            LogTextBox.AppendText($"{logContent}\r\n");
-                            LogTextBox.ScrollToEnd();
+                            // 解析系统日志并使用适当的分类
+                            ParseAndLogSystemMessage(logContent);
                         }
                     }
                     else
                     {
-                        LogMessage($"接收: [{message.Id}] {message.Command}");
+                        // 处理接收到的实际数据，显示格式：[ID] Command
+                        if (!string.IsNullOrEmpty(message.Id))
+                        {
+                            LogReceive($"[{message.Id}] {message.Command}");
+                        }
+                        else
+                        {
+                            LogReceive(message.Command);
+                        }
                     }
                 });
             };
@@ -511,29 +524,35 @@ namespace VisionLite.Communication
                 
                 if (_selectedCommunication.Status == ConnectionStatus.Connected)
                 {
+                    // 取消ModbusTCP事件订阅
+                    if (_selectedCommunication is ModbusTcpServer server)
+                    {
+                        server.LogReceived -= OnModbusTcpLogReceived;
+                    }
+                    
                     // 断开连接
                     _selectedCommunication.Close();
-                    LogMessage($"已断开连接: {_selectedConfig.Name}");
+                    LogConnection($"已断开连接: {_selectedConfig.Name}");
                 }
                 else
                 {
                     // 建立连接
-                    LogMessage($"正在连接: {_selectedConfig.Name}...");
+                    LogConnection($"正在连接: {_selectedConfig.Name}...");
                     bool connected = await _selectedCommunication.OpenAsync();
                     
                     if (connected)
                     {
-                        LogMessage($"连接成功: {_selectedConfig.Name}");
+                        LogConnection($"连接成功: {_selectedConfig.Name}");
                     }
                     else
                     {
-                        LogMessage($"连接失败: {_selectedConfig.Name}");
+                        LogError($"连接失败: {_selectedConfig.Name}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                LogMessage($"连接操作异常: {ex.Message}");
+                LogError($"连接操作异常: {ex.Message}");
             }
             finally
             {
@@ -591,29 +610,135 @@ namespace VisionLite.Communication
                 
                 if (success)
                 {
-                    LogMessage($"发送: [{message.Id}] {message.Command}");
+                    LogSend($"[{message.Id}] {message.Command}");
                     SendTextBox.Clear();
                 }
                 else
                 {
-                    LogMessage($"发送失败: [{message.Id}] {message.Command}");
+                    LogError($"发送失败: [{message.Id}] {message.Command}");
                 }
             }
             catch (Exception ex)
             {
-                LogMessage($"发送异常: {ex.Message}");
+                LogError($"发送异常: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 记录日志消息
+        /// 记录连接相关日志
         /// </summary>
+        private void LogConnection(string message) => LogWithCategory("连接", message);
+        
+        /// <summary>
+        /// 记录发送数据日志
+        /// </summary>
+        private void LogSend(string message) => LogWithCategory("发送", message);
+        
+        /// <summary>
+        /// 记录接收数据日志
+        /// </summary>
+        private void LogReceive(string message) => LogWithCategory("接收", message);
+        
+        /// <summary>
+        /// 记录错误日志
+        /// </summary>
+        private void LogError(string message) => LogWithCategory("错误", message);
+        
+        /// <summary>
+        /// 记录警告日志
+        /// </summary>
+        private void LogWarning(string message) => LogWithCategory("警告", message);
+        
+        /// <summary>
+        /// 记录系统操作日志
+        /// </summary>
+        private void LogSystem(string message) => LogWithCategory("系统", message);
+
+        /// <summary>
+        /// ModbusTCP日志接收处理方法
+        /// </summary>
+        private void OnModbusTcpLogReceived(string message)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                LogReceive(message);
+            });
+        }
+
+        /// <summary>
+        /// 带分类标识的日志记录方法
+        /// </summary>
+        /// <param name="category">日志分类</param>
         /// <param name="message">消息内容</param>
-        private void LogMessage(string message)
+        private void LogWithCategory(string category, string message)
         {
             string timeStamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            LogTextBox.AppendText($"[{timeStamp}] {message}\r\n");
+            LogTextBox.AppendText($"[{timeStamp}] [{category}] {message}\r\n");
             LogTextBox.ScrollToEnd();
+        }
+        
+        /// <summary>
+        /// 记录普通日志消息（保持向后兼容）
+        /// </summary>
+        /// <param name="message">消息内容</param>
+        private void LogMessage(string message) => LogSystem(message);
+        
+        /// <summary>
+        /// 解析系统消息并使用适当的日志分类
+        /// </summary>
+        /// <param name="logContent">原始日志内容</param>
+        private void ParseAndLogSystemMessage(string logContent)
+        {
+            // 去掉原有的时间戳和前缀，提取实际消息内容
+            string actualMessage = logContent;
+            
+            // 去掉 [SerialCommunication] 等前缀
+            var prefixPattern = @"^\[.*?\]\s*";
+            actualMessage = System.Text.RegularExpressions.Regex.Replace(actualMessage, prefixPattern, "");
+            
+            // 根据消息内容判断分类
+            if (actualMessage.Contains("连接成功") || actualMessage.Contains("已连接") || actualMessage.Contains("连接已关闭"))
+            {
+                LogConnection(actualMessage);
+            }
+            else if (actualMessage.Contains("发送:") || actualMessage.Contains("发送"))
+            {
+                // 提取发送的实际数据
+                var sendMatch = System.Text.RegularExpressions.Regex.Match(actualMessage, @"发送:\s*(.+)");
+                if (sendMatch.Success)
+                {
+                    LogSend(sendMatch.Groups[1].Value);
+                }
+                else
+                {
+                    LogSend(actualMessage.Replace("发送:", "").Trim());
+                }
+            }
+            else if (actualMessage.Contains("接收:") || actualMessage.Contains("接收"))
+            {
+                // 提取接收的实际数据
+                var receiveMatch = System.Text.RegularExpressions.Regex.Match(actualMessage, @"接收:\s*(.+)");
+                if (receiveMatch.Success)
+                {
+                    LogReceive(receiveMatch.Groups[1].Value);
+                }
+                else
+                {
+                    LogReceive(actualMessage.Replace("接收:", "").Trim());
+                }
+            }
+            else if (actualMessage.Contains("错误") || actualMessage.Contains("失败") || actualMessage.Contains("异常"))
+            {
+                LogError(actualMessage);
+            }
+            else if (actualMessage.Contains("警告"))
+            {
+                LogWarning(actualMessage);
+            }
+            else
+            {
+                LogSystem(actualMessage);
+            }
         }
 
         #endregion
@@ -669,18 +794,28 @@ namespace VisionLite.Communication
         #region ModbusTCP专用操作面板
 
         /// <summary>
-        /// 更新ModbusTCP专用操作面板的显示状态
+        /// 更新专用操作面板的显示状态
         /// </summary>
-        private void UpdateModbusTcpPanel()
+        private void UpdateOperationPanels()
         {
+            // 检查控件是否已初始化
+            if (ModbusTcpOperationPanel == null || SerialOperationPanel == null)
+                return;
+                
+            // 隐藏所有专用操作面板
+            ModbusTcpOperationPanel.Visibility = Visibility.Collapsed;
+            SerialOperationPanel.Visibility = Visibility.Collapsed;
+            
+            // 根据连接类型显示对应的操作面板
             if (_selectedConfig?.Type == CommunicationType.ModbusTcpClient)
             {
                 ModbusTcpOperationPanel.Visibility = Visibility.Visible;
                 InitializeModbusTcpPanel();
             }
-            else
+            else if (_selectedConfig?.Type == CommunicationType.SerialPort)
             {
-                ModbusTcpOperationPanel.Visibility = Visibility.Collapsed;
+                SerialOperationPanel.Visibility = Visibility.Visible;
+                InitializeSerialPanel();
             }
         }
 
@@ -752,6 +887,13 @@ namespace VisionLite.Communication
                         }
                     }
                 }
+            }
+            
+            // 订阅ModbusTCP日志事件
+            if (_selectedCommunication is ModbusTcpServer server)
+            {
+                server.LogReceived -= OnModbusTcpLogReceived; // 先取消订阅防止重复
+                server.LogReceived += OnModbusTcpLogReceived;
             }
         }
 
@@ -890,6 +1032,210 @@ namespace VisionLite.Communication
             }
         }
 
+        #endregion
+
+        #region 串口专用操作面板
+
+        /// <summary>
+        /// 初始化串口操作面板的默认设置
+        /// </summary>
+        private void InitializeSerialPanel()
+        {
+            // 检查串口面板控件是否已初始化
+            if (SerialDataFormatComboBox == null || SerialReceiveFormatComboBox == null)
+                return;
+                
+            // 设置默认数据格式
+            if (SerialDataFormatComboBox.SelectedIndex == -1)
+                SerialDataFormatComboBox.SelectedIndex = 0; // 默认选择文本格式
+            
+            if (SerialReceiveFormatComboBox.SelectedIndex == -1)
+                SerialReceiveFormatComboBox.SelectedIndex = 0; // 默认选择原始数据
+            
+            // 更新控件状态
+            UpdateSerialControls();
+        }
+
+        /// <summary>
+        /// 更新串口控件的启用状态
+        /// </summary>
+        private void UpdateSerialControls()
+        {
+            // 检查串口面板控件是否已初始化
+            if (SerialSendButton == null || SerialSendTextBox == null) 
+                return;
+                
+            bool isConnected = _selectedCommunication?.Status == ConnectionStatus.Connected;
+            
+            SerialSendButton.IsEnabled = isConnected && !string.IsNullOrWhiteSpace(SerialSendTextBox.Text);
+        }
+
+        /// <summary>
+        /// 串口发送按钮点击事件
+        /// </summary>
+        private async void SerialSendButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_selectedCommunication?.Status != ConnectionStatus.Connected)
+                {
+                    LogError("串口未连接");
+                    return;
+                }
+
+                string dataToSend = SerialSendTextBox.Text;
+                if (string.IsNullOrEmpty(dataToSend))
+                {
+                    LogWarning("发送数据为空");
+                    return;
+                }
+
+                // 根据格式转换数据
+                var formatItem = SerialDataFormatComboBox.SelectedItem as ComboBoxItem;
+                string format = formatItem?.Tag?.ToString() ?? "Text";
+
+                string processedData = ConvertSendData(dataToSend, format);
+                
+                // 自动添加换行符
+                if (SerialAutoSendCheckBox.IsChecked == true)
+                {
+                    processedData += "\r\n";
+                }
+
+                var message = new Message
+                {
+                    Command = "SERIAL_SEND",
+                    Parameters = { ["Data"] = processedData }
+                };
+
+                bool success = await _selectedCommunication.SendAsync(message);
+                if (!success)
+                {
+                    LogError("数据发送失败");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"发送数据时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 串口清空按钮点击事件
+        /// </summary>
+        private void SerialClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            SerialSendTextBox.Clear();
+            UpdateSerialControls();
+        }
+
+        /// <summary>
+        /// 串口发送文本框文本变更事件
+        /// </summary>
+        private void SerialSendTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateSerialControls();
+        }
+
+        /// <summary>
+        /// 串口数据格式变更事件
+        /// </summary>
+        private void SerialDataFormatComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // 当格式改变时，可以在这里添加提示或验证逻辑
+            UpdateSerialControls();
+        }
+
+
+        /// <summary>
+        /// 转换发送数据格式
+        /// </summary>
+        private string ConvertSendData(string data, string format)
+        {
+            try
+            {
+                return format switch
+                {
+                    "Text" => data,
+                    "Hex" => ConvertHexToText(data),
+                    "Binary" => ConvertBinaryToText(data),
+                    _ => data
+                };
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"数据格式转换失败: {ex.Message}");
+                return data;
+            }
+        }
+
+        /// <summary>
+        /// 十六进制字符串转文本
+        /// </summary>
+        private string ConvertHexToText(string hexString)
+        {
+            // 移除空格和分隔符
+            hexString = hexString.Replace(" ", "").Replace("-", "").Replace(",", "");
+            
+            if (hexString.Length % 2 != 0)
+                throw new ArgumentException("十六进制字符串长度必须为偶数");
+
+            var bytes = new List<byte>();
+            for (int i = 0; i < hexString.Length; i += 2)
+            {
+                string hexByte = hexString.Substring(i, 2);
+                bytes.Add(Convert.ToByte(hexByte, 16));
+            }
+            
+            return System.Text.Encoding.UTF8.GetString(bytes.ToArray());
+        }
+
+        /// <summary>
+        /// 二进制字符串转文本（简单实现）
+        /// </summary>
+        private string ConvertBinaryToText(string binaryString)
+        {
+            // 这里简化处理，实际可根据需要实现更复杂的二进制转换
+            return binaryString;
+        }
+
+        /// <summary>
+        /// 格式化数据用于显示
+        /// </summary>
+        private string FormatDataForDisplay(string data, string format)
+        {
+            try
+            {
+                return format switch
+                {
+                    "Hex" => ConvertTextToHex(data),
+                    "Binary" => ConvertTextToBinary(data),
+                    _ => data.Replace("\r", "\\r").Replace("\n", "\\n")
+                };
+            }
+            catch
+            {
+                return data;
+            }
+        }
+
+        /// <summary>
+        /// 文本转十六进制显示
+        /// </summary>
+        private string ConvertTextToHex(string text)
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(text);
+            return BitConverter.ToString(bytes).Replace("-", " ");
+        }
+
+        /// <summary>
+        /// 文本转二进制显示
+        /// </summary>
+        private string ConvertTextToBinary(string text)
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(text);
+            return string.Join(" ", bytes.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
+        }
 
         #endregion
     }
@@ -996,6 +1342,7 @@ namespace VisionLite.Communication
                     CommunicationType.UdpServer => "UDP服务器",
                     CommunicationType.ModbusTcpServer => "ModbusTCP服务器",
                     CommunicationType.ModbusTcpClient => "ModbusTCP客户端",
+                    CommunicationType.SerialPort => "串口通讯",
                     _ => "未知"
                 };
             }

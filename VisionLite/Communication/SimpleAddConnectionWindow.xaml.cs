@@ -1,6 +1,7 @@
 // Communication/SimpleAddConnectionWindow.xaml.cs
 // 简化的添加通讯连接窗口 - 提供简单直观的连接配置界面
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -74,6 +75,75 @@ namespace VisionLite.Communication
         /// ModbusTCP客户端启用自动重连复选框
         /// </summary>
         private CheckBox _autoReconnectCheckBox;
+
+        #region 串口相关控件字段
+
+        /// <summary>
+        /// 串口名称选择框
+        /// </summary>
+        private ComboBox _serialPortComboBox;
+
+        /// <summary>
+        /// 波特率选择框
+        /// </summary>
+        private ComboBox _baudRateComboBox;
+
+        /// <summary>
+        /// 数据位选择框
+        /// </summary>
+        private ComboBox _dataBitsComboBox;
+
+        /// <summary>
+        /// 停止位选择框
+        /// </summary>
+        private ComboBox _stopBitsComboBox;
+
+        /// <summary>
+        /// 奇偶校验选择框
+        /// </summary>
+        private ComboBox _parityComboBox;
+
+        /// <summary>
+        /// 流控制选择框
+        /// </summary>
+        private ComboBox _handshakeComboBox;
+
+        /// <summary>
+        /// 串口读取超时输入框
+        /// </summary>
+        private TextBox _serialReadTimeoutTextBox;
+
+        /// <summary>
+        /// 串口写入超时输入框
+        /// </summary>
+        private TextBox _serialWriteTimeoutTextBox;
+
+        /// <summary>
+        /// 数据格式选择框
+        /// </summary>
+        private ComboBox _dataFormatComboBox;
+
+        /// <summary>
+        /// 消息结束符输入框
+        /// </summary>
+        private TextBox _messageTerminatorTextBox;
+
+        /// <summary>
+        /// 串口重连间隔输入框
+        /// </summary>
+        private TextBox _serialReconnectIntervalTextBox;
+
+        /// <summary>
+        /// 串口启用日志复选框
+        /// </summary>
+        private CheckBox _serialEnableLoggingCheckBox;
+
+        /// <summary>
+        /// 串口自动重连复选框
+        /// </summary>
+        private CheckBox _serialAutoReconnectCheckBox;
+
+        #endregion
 
         /// <summary>
         /// 是否为编辑模式
@@ -162,7 +232,7 @@ namespace VisionLite.Communication
         {
             ConnectionNameTextBox.Text = _config.Name;
             
-            // 设置协议类型（按照XAML中ComboBoxItem的顺序：TcpClient=0, TcpServer=1, UdpClient=2, UdpServer=3, ModbusTcpServer=4, ModbusTcpClient=5）
+            // 设置协议类型（按照XAML中ComboBoxItem的顺序：TcpClient=0, TcpServer=1, UdpClient=2, UdpServer=3, ModbusTcpServer=4, ModbusTcpClient=5, SerialPort=6）
             ProtocolTypeComboBox.SelectedIndex = _config.Type switch
             {
                 CommunicationType.TcpClient => 0,
@@ -171,6 +241,7 @@ namespace VisionLite.Communication
                 CommunicationType.UdpServer => 3,
                 CommunicationType.ModbusTcpServer => 4,
                 CommunicationType.ModbusTcpClient => 5,
+                CommunicationType.SerialPort => 6,
                 _ => 0
             };
             
@@ -201,6 +272,54 @@ namespace VisionLite.Communication
                     _reconnectIntervalTextBox.Text = _config.ModbusTcpClient.ReconnectInterval.ToString();
                 if (_autoReconnectCheckBox != null)
                     _autoReconnectCheckBox.IsChecked = _config.ModbusTcpClient.AutoReconnect;
+
+                // 串口配置加载
+                if (_serialPortComboBox != null && _config.Type == CommunicationType.SerialPort)
+                {
+                    // 设置串口名称
+                    for (int i = 0; i < _serialPortComboBox.Items.Count; i++)
+                    {
+                        if (((ComboBoxItem)_serialPortComboBox.Items[i]).Content.ToString() == _config.Serial.PortName)
+                        {
+                            _serialPortComboBox.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                if (_baudRateComboBox != null)
+                {
+                    // 设置波特率
+                    for (int i = 0; i < _baudRateComboBox.Items.Count; i++)
+                    {
+                        if (((ComboBoxItem)_baudRateComboBox.Items[i]).Content.ToString() == _config.Serial.BaudRate.ToString())
+                        {
+                            _baudRateComboBox.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                if (_dataBitsComboBox != null)
+                    _dataBitsComboBox.SelectedIndex = _config.Serial.DataBits - 5; // 5,6,7,8 -> 0,1,2,3
+                if (_stopBitsComboBox != null)
+                    _stopBitsComboBox.SelectedIndex = (int)_config.Serial.StopBits;
+                if (_parityComboBox != null)
+                    _parityComboBox.SelectedIndex = (int)_config.Serial.Parity;
+                if (_handshakeComboBox != null)
+                    _handshakeComboBox.SelectedIndex = (int)_config.Serial.Handshake;
+                if (_serialReadTimeoutTextBox != null)
+                    _serialReadTimeoutTextBox.Text = _config.Serial.ReadTimeout.ToString();
+                if (_serialWriteTimeoutTextBox != null)
+                    _serialWriteTimeoutTextBox.Text = _config.Serial.WriteTimeout.ToString();
+                if (_dataFormatComboBox != null)
+                    _dataFormatComboBox.SelectedIndex = (int)_config.Serial.DataFormat;
+                if (_messageTerminatorTextBox != null)
+                    _messageTerminatorTextBox.Text = _config.Serial.MessageTerminator.Replace("\r", "\\r").Replace("\n", "\\n");
+                if (_serialReconnectIntervalTextBox != null)
+                    _serialReconnectIntervalTextBox.Text = _config.Serial.ReconnectInterval.ToString();
+                if (_serialEnableLoggingCheckBox != null)
+                    _serialEnableLoggingCheckBox.IsChecked = _config.Serial.EnableLogging;
+                if (_serialAutoReconnectCheckBox != null)
+                    _serialAutoReconnectCheckBox.IsChecked = _config.Serial.AutoReconnect;
                     
                 UpdateButtonStates();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
@@ -230,6 +349,7 @@ namespace VisionLite.Communication
                 "UdpServer" => CommunicationType.UdpServer,
                 "ModbusTcpServer" => CommunicationType.ModbusTcpServer,
                 "ModbusTcpClient" => CommunicationType.ModbusTcpClient,
+                "SerialPort" => CommunicationType.SerialPort,
                 _ => CommunicationType.TcpClient
             };
 
@@ -258,6 +378,10 @@ namespace VisionLite.Communication
             else if (_config.Type == CommunicationType.ModbusTcpClient)
             {
                 CreateModbusTcpClientParameterPanel(); // ModbusTCP客户端参数面板
+            }
+            else if (_config.Type == CommunicationType.SerialPort)
+            {
+                CreateSerialPortParameterPanel(); // 串口参数面板
             }
             else
             {
@@ -594,6 +718,333 @@ namespace VisionLite.Communication
         }
 
         /// <summary>
+        /// 创建串口参数面板
+        /// </summary>
+        private void CreateSerialPortParameterPanel()
+        {
+            // 创建十二行：串口名称、波特率、数据位、停止位、奇偶校验、流控制、读取超时、写入超时、数据格式、消息结束符、重连间隔、复选框面板
+            for (int i = 0; i < 12; i++)
+            {
+                ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            }
+
+            ParameterGrid.ColumnDefinitions.Clear();
+            ParameterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // 串口名称选择
+            var portLabel = new Label { Content = "串口名称:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(portLabel, 0);
+            Grid.SetColumn(portLabel, 0);
+            ParameterGrid.Children.Add(portLabel);
+
+            var portPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            _serialPortComboBox = new ComboBox 
+            { 
+                Width = 100,
+                Height = 25, 
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 5, 5)
+            };
+            
+            // 添加系统可用的串口
+            RefreshSerialPorts();
+            _serialPortComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            portPanel.Children.Add(_serialPortComboBox);
+
+            // 刷新串口按钮
+            var refreshButton = new Button 
+            { 
+                Content = "刷新", 
+                Width = 50, 
+                Height = 25, 
+                Margin = new Thickness(0, 5, 0, 5) 
+            };
+            refreshButton.Click += (s, e) => RefreshSerialPorts();
+            portPanel.Children.Add(refreshButton);
+
+            Grid.SetRow(portPanel, 0);
+            Grid.SetColumn(portPanel, 1);
+            ParameterGrid.Children.Add(portPanel);
+
+            // 波特率选择
+            var baudRateLabel = new Label { Content = "波特率:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(baudRateLabel, 1);
+            Grid.SetColumn(baudRateLabel, 0);
+            ParameterGrid.Children.Add(baudRateLabel);
+
+            _baudRateComboBox = new ComboBox 
+            { 
+                Height = 25, 
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+            // 常用波特率
+            string[] baudRates = { "1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200", "230400", "460800", "921600" };
+            foreach (var rate in baudRates)
+            {
+                _baudRateComboBox.Items.Add(new ComboBoxItem { Content = rate });
+            }
+            _baudRateComboBox.SelectedIndex = 3; // 默认9600
+            _baudRateComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_baudRateComboBox, 1);
+            Grid.SetColumn(_baudRateComboBox, 1);
+            ParameterGrid.Children.Add(_baudRateComboBox);
+
+            // 数据位选择
+            var dataBitsLabel = new Label { Content = "数据位:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(dataBitsLabel, 2);
+            Grid.SetColumn(dataBitsLabel, 0);
+            ParameterGrid.Children.Add(dataBitsLabel);
+
+            _dataBitsComboBox = new ComboBox 
+            { 
+                Height = 25, 
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+            for (int i = 5; i <= 8; i++)
+            {
+                _dataBitsComboBox.Items.Add(new ComboBoxItem { Content = i.ToString() });
+            }
+            _dataBitsComboBox.SelectedIndex = 3; // 默认8位
+            _dataBitsComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_dataBitsComboBox, 2);
+            Grid.SetColumn(_dataBitsComboBox, 1);
+            ParameterGrid.Children.Add(_dataBitsComboBox);
+
+            // 停止位选择
+            var stopBitsLabel = new Label { Content = "停止位:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(stopBitsLabel, 3);
+            Grid.SetColumn(stopBitsLabel, 0);
+            ParameterGrid.Children.Add(stopBitsLabel);
+
+            _stopBitsComboBox = new ComboBox 
+            { 
+                Height = 25, 
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+            _stopBitsComboBox.Items.Add(new ComboBoxItem { Content = "1", Tag = System.IO.Ports.StopBits.One });
+            _stopBitsComboBox.Items.Add(new ComboBoxItem { Content = "1.5", Tag = System.IO.Ports.StopBits.OnePointFive });
+            _stopBitsComboBox.Items.Add(new ComboBoxItem { Content = "2", Tag = System.IO.Ports.StopBits.Two });
+            _stopBitsComboBox.SelectedIndex = 0; // 默认1位
+            _stopBitsComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_stopBitsComboBox, 3);
+            Grid.SetColumn(_stopBitsComboBox, 1);
+            ParameterGrid.Children.Add(_stopBitsComboBox);
+
+            // 奇偶校验选择
+            var parityLabel = new Label { Content = "奇偶校验:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(parityLabel, 4);
+            Grid.SetColumn(parityLabel, 0);
+            ParameterGrid.Children.Add(parityLabel);
+
+            _parityComboBox = new ComboBox 
+            { 
+                Height = 25, 
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+            _parityComboBox.Items.Add(new ComboBoxItem { Content = "None", Tag = System.IO.Ports.Parity.None });
+            _parityComboBox.Items.Add(new ComboBoxItem { Content = "Odd", Tag = System.IO.Ports.Parity.Odd });
+            _parityComboBox.Items.Add(new ComboBoxItem { Content = "Even", Tag = System.IO.Ports.Parity.Even });
+            _parityComboBox.Items.Add(new ComboBoxItem { Content = "Mark", Tag = System.IO.Ports.Parity.Mark });
+            _parityComboBox.Items.Add(new ComboBoxItem { Content = "Space", Tag = System.IO.Ports.Parity.Space });
+            _parityComboBox.SelectedIndex = 0; // 默认无校验
+            _parityComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_parityComboBox, 4);
+            Grid.SetColumn(_parityComboBox, 1);
+            ParameterGrid.Children.Add(_parityComboBox);
+
+            // 流控制选择
+            var handshakeLabel = new Label { Content = "流控制:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(handshakeLabel, 5);
+            Grid.SetColumn(handshakeLabel, 0);
+            ParameterGrid.Children.Add(handshakeLabel);
+
+            _handshakeComboBox = new ComboBox 
+            { 
+                Height = 25, 
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+            _handshakeComboBox.Items.Add(new ComboBoxItem { Content = "None", Tag = System.IO.Ports.Handshake.None });
+            _handshakeComboBox.Items.Add(new ComboBoxItem { Content = "XOnXOff", Tag = System.IO.Ports.Handshake.XOnXOff });
+            _handshakeComboBox.Items.Add(new ComboBoxItem { Content = "RequestToSend", Tag = System.IO.Ports.Handshake.RequestToSend });
+            _handshakeComboBox.Items.Add(new ComboBoxItem { Content = "RequestToSendXOnXOff", Tag = System.IO.Ports.Handshake.RequestToSendXOnXOff });
+            _handshakeComboBox.SelectedIndex = 0; // 默认无流控制
+            _handshakeComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_handshakeComboBox, 5);
+            Grid.SetColumn(_handshakeComboBox, 1);
+            ParameterGrid.Children.Add(_handshakeComboBox);
+
+            // 读取超时
+            var readTimeoutLabel = new Label { Content = "读取超时(ms):", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(readTimeoutLabel, 6);
+            Grid.SetColumn(readTimeoutLabel, 0);
+            ParameterGrid.Children.Add(readTimeoutLabel);
+
+            _serialReadTimeoutTextBox = new TextBox { Text = _config.Serial.ReadTimeout.ToString(), Style = (Style)Resources["InputStyle"] };
+            _serialReadTimeoutTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_serialReadTimeoutTextBox, 6);
+            Grid.SetColumn(_serialReadTimeoutTextBox, 1);
+            ParameterGrid.Children.Add(_serialReadTimeoutTextBox);
+
+            // 写入超时
+            var writeTimeoutLabel = new Label { Content = "写入超时(ms):", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(writeTimeoutLabel, 7);
+            Grid.SetColumn(writeTimeoutLabel, 0);
+            ParameterGrid.Children.Add(writeTimeoutLabel);
+
+            _serialWriteTimeoutTextBox = new TextBox { Text = _config.Serial.WriteTimeout.ToString(), Style = (Style)Resources["InputStyle"] };
+            _serialWriteTimeoutTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_serialWriteTimeoutTextBox, 7);
+            Grid.SetColumn(_serialWriteTimeoutTextBox, 1);
+            ParameterGrid.Children.Add(_serialWriteTimeoutTextBox);
+
+            // 数据格式选择
+            var dataFormatLabel = new Label { Content = "数据格式:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(dataFormatLabel, 8);
+            Grid.SetColumn(dataFormatLabel, 0);
+            ParameterGrid.Children.Add(dataFormatLabel);
+
+            _dataFormatComboBox = new ComboBox 
+            { 
+                Height = 25, 
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 5, 0, 5)
+            };
+            _dataFormatComboBox.Items.Add(new ComboBoxItem { Content = "文本格式", Tag = SerialDataFormat.Text });
+            _dataFormatComboBox.Items.Add(new ComboBoxItem { Content = "十六进制", Tag = SerialDataFormat.Hex });
+            _dataFormatComboBox.Items.Add(new ComboBoxItem { Content = "二进制", Tag = SerialDataFormat.Binary });
+            _dataFormatComboBox.SelectedIndex = 0; // 默认文本格式
+            _dataFormatComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_dataFormatComboBox, 8);
+            Grid.SetColumn(_dataFormatComboBox, 1);
+            ParameterGrid.Children.Add(_dataFormatComboBox);
+
+            // 消息结束符
+            var terminatorLabel = new Label { Content = "消息结束符:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(terminatorLabel, 9);
+            Grid.SetColumn(terminatorLabel, 0);
+            ParameterGrid.Children.Add(terminatorLabel);
+
+            _messageTerminatorTextBox = new TextBox { Text = "\\r\\n", Style = (Style)Resources["InputStyle"] };
+            _messageTerminatorTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_messageTerminatorTextBox, 9);
+            Grid.SetColumn(_messageTerminatorTextBox, 1);
+            ParameterGrid.Children.Add(_messageTerminatorTextBox);
+
+            // 重连间隔
+            var reconnectLabel = new Label { Content = "重连间隔(ms):", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(reconnectLabel, 10);
+            Grid.SetColumn(reconnectLabel, 0);
+            ParameterGrid.Children.Add(reconnectLabel);
+
+            _serialReconnectIntervalTextBox = new TextBox { Text = _config.Serial.ReconnectInterval.ToString(), Style = (Style)Resources["InputStyle"] };
+            _serialReconnectIntervalTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_serialReconnectIntervalTextBox, 10);
+            Grid.SetColumn(_serialReconnectIntervalTextBox, 1);
+            ParameterGrid.Children.Add(_serialReconnectIntervalTextBox);
+
+            // 复选框面板
+            var serialCheckBoxPanel = new StackPanel 
+            { 
+                Orientation = Orientation.Vertical,
+                Margin = new Thickness(0, 5, 0, 0)
+            };
+
+            // 启用日志复选框
+            _serialEnableLoggingCheckBox = new CheckBox 
+            { 
+                Content = "启用日志记录", 
+                IsChecked = _config.Serial.EnableLogging,
+                Margin = new Thickness(0, 2, 0, 2)
+            };
+            _serialEnableLoggingCheckBox.Checked += (s, e) => UpdateButtonStates();
+            _serialEnableLoggingCheckBox.Unchecked += (s, e) => UpdateButtonStates();
+            serialCheckBoxPanel.Children.Add(_serialEnableLoggingCheckBox);
+
+            // 自动重连复选框
+            _serialAutoReconnectCheckBox = new CheckBox 
+            { 
+                Content = "启用自动重连", 
+                IsChecked = _config.Serial.AutoReconnect,
+                Margin = new Thickness(0, 2, 0, 2)
+            };
+            _serialAutoReconnectCheckBox.Checked += (s, e) => UpdateButtonStates();
+            _serialAutoReconnectCheckBox.Unchecked += (s, e) => UpdateButtonStates();
+            serialCheckBoxPanel.Children.Add(_serialAutoReconnectCheckBox);
+
+            Grid.SetRow(serialCheckBoxPanel, 11);
+            Grid.SetColumn(serialCheckBoxPanel, 0);
+            Grid.SetColumnSpan(serialCheckBoxPanel, 2);
+            ParameterGrid.Children.Add(serialCheckBoxPanel);
+        }
+
+        /// <summary>
+        /// 刷新串口列表
+        /// </summary>
+        private void RefreshSerialPorts()
+        {
+            if (_serialPortComboBox == null) return;
+
+            string selectedPort = null;
+            if (_serialPortComboBox.SelectedItem != null)
+            {
+                selectedPort = ((ComboBoxItem)_serialPortComboBox.SelectedItem).Content.ToString();
+            }
+
+            _serialPortComboBox.Items.Clear();
+
+            try
+            {
+                string[] ports = System.IO.Ports.SerialPort.GetPortNames();
+                if (ports.Length == 0)
+                {
+                    _serialPortComboBox.Items.Add(new ComboBoxItem { Content = "无可用串口" });
+                    _serialPortComboBox.SelectedIndex = 0;
+                    _serialPortComboBox.IsEnabled = false;
+                }
+                else
+                {
+                    _serialPortComboBox.IsEnabled = true;
+                    foreach (string port in ports.OrderBy(p => p))
+                    {
+                        _serialPortComboBox.Items.Add(new ComboBoxItem { Content = port });
+                    }
+
+                    // 尝试恢复之前的选择
+                    bool found = false;
+                    if (!string.IsNullOrEmpty(selectedPort))
+                    {
+                        for (int i = 0; i < _serialPortComboBox.Items.Count; i++)
+                        {
+                            if (((ComboBoxItem)_serialPortComboBox.Items[i]).Content.ToString() == selectedPort)
+                            {
+                                _serialPortComboBox.SelectedIndex = i;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        _serialPortComboBox.SelectedIndex = 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _serialPortComboBox.Items.Add(new ComboBoxItem { Content = $"获取串口失败: {ex.Message}" });
+                _serialPortComboBox.SelectedIndex = 0;
+                _serialPortComboBox.IsEnabled = false;
+            }
+        }
+
+        /// <summary>
         /// 更新按钮状态
         /// </summary>
         private void UpdateButtonStates()
@@ -666,6 +1117,54 @@ namespace VisionLite.Communication
                 // 字节序配置
                 if (_byteOrderComboBox != null && _byteOrderComboBox.SelectedItem is ComboBoxItem selectedItem)
                     _config.ModbusTcpClient.DataByteOrder = (ByteOrder)selectedItem.Tag;
+            }
+
+            // 串口特有参数
+            if (_config.Type == CommunicationType.SerialPort)
+            {
+                if (_serialPortComboBox?.SelectedItem is ComboBoxItem portItem && !portItem.Content.ToString().Contains("无可用串口"))
+                    _config.Serial.PortName = portItem.Content.ToString();
+
+                if (_baudRateComboBox?.SelectedItem is ComboBoxItem baudItem)
+                    if (int.TryParse(baudItem.Content.ToString(), out int baudRate))
+                        _config.Serial.BaudRate = baudRate;
+
+                if (_dataBitsComboBox?.SelectedItem is ComboBoxItem dataBitsItem)
+                    if (int.TryParse(dataBitsItem.Content.ToString(), out int dataBits))
+                        _config.Serial.DataBits = dataBits;
+
+                if (_stopBitsComboBox?.SelectedItem is ComboBoxItem stopBitsItem)
+                    _config.Serial.StopBits = (System.IO.Ports.StopBits)stopBitsItem.Tag;
+
+                if (_parityComboBox?.SelectedItem is ComboBoxItem parityItem)
+                    _config.Serial.Parity = (System.IO.Ports.Parity)parityItem.Tag;
+
+                if (_handshakeComboBox?.SelectedItem is ComboBoxItem handshakeItem)
+                    _config.Serial.Handshake = (System.IO.Ports.Handshake)handshakeItem.Tag;
+
+                if (_serialReadTimeoutTextBox != null && int.TryParse(_serialReadTimeoutTextBox.Text, out int serialReadTimeout))
+                    _config.Serial.ReadTimeout = serialReadTimeout;
+
+                if (_serialWriteTimeoutTextBox != null && int.TryParse(_serialWriteTimeoutTextBox.Text, out int serialWriteTimeout))
+                    _config.Serial.WriteTimeout = serialWriteTimeout;
+
+                if (_dataFormatComboBox?.SelectedItem is ComboBoxItem dataFormatItem)
+                    _config.Serial.DataFormat = (SerialDataFormat)dataFormatItem.Tag;
+
+                if (_messageTerminatorTextBox != null)
+                {
+                    string terminator = _messageTerminatorTextBox.Text.Replace("\\r", "\r").Replace("\\n", "\n");
+                    _config.Serial.MessageTerminator = terminator;
+                }
+
+                if (_serialReconnectIntervalTextBox != null && int.TryParse(_serialReconnectIntervalTextBox.Text, out int serialReconnectInterval))
+                    _config.Serial.ReconnectInterval = serialReconnectInterval;
+
+                if (_serialEnableLoggingCheckBox != null)
+                    _config.Serial.EnableLogging = _serialEnableLoggingCheckBox.IsChecked ?? true;
+
+                if (_serialAutoReconnectCheckBox != null)
+                    _config.Serial.AutoReconnect = _serialAutoReconnectCheckBox.IsChecked ?? true;
             }
         }
 
@@ -823,6 +1322,7 @@ namespace VisionLite.Communication
                 "UdpServer" => "UDP服务器",
                 "ModbusTcpServer" => "ModbusTCP服务器",
                 "ModbusTcpClient" => "ModbusTCP客户端",
+                "SerialPort" => "串口通讯",
                 _ => string.Empty
             };
         }

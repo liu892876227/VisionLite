@@ -124,6 +124,7 @@
                 <RowDefinition Height="Auto"/>   <!-- 连接参数区域 -->
                 <RowDefinition Height="Auto"/>   <!-- 连接控制区域 -->
                 <RowDefinition Height="Auto"/>   <!-- ModbusTCP专用操作面板区域 -->
+                <RowDefinition Height="Auto"/>   <!-- 串口专用操作面板区域 -->
                 <RowDefinition Height="*"/>      <!-- 通讯日志区域 -->
             </Grid.RowDefinitions>
 
@@ -268,8 +269,93 @@
                 </Grid>
             </GroupBox>
 
+            <!-- 串口专用操作面板 -->
+            <GroupBox x:Name="SerialOperationPanel" Grid.Row="3" Header="串口通讯测试" 
+                      Padding="10" Margin="0,0,0,10" Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>   <!-- 发送区域 -->
+                        <RowDefinition Height="Auto"/>   <!-- 快捷操作区域 -->
+                        <RowDefinition Height="Auto"/>   <!-- 接收显示设置区域 -->
+                    </Grid.RowDefinitions>
+
+                    <!-- 发送区域 -->
+                    <GroupBox Grid.Row="0" Header="数据发送" Margin="0,0,0,8" Padding="8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <!-- 发送数据输入 -->
+                            <TextBox x:Name="SerialSendTextBox" Grid.Row="0" 
+                                     Height="60" Margin="0,0,0,8"
+                                     AcceptsReturn="True" TextWrapping="Wrap"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                     FontFamily="Consolas" FontSize="12"
+                                     VerticalContentAlignment="Top"
+                                     TextChanged="SerialSendTextBox_TextChanged"/>
+                            
+                            <!-- 发送控制 -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Button Grid.Column="0" x:Name="SerialSendButton" Content="发送" 
+                                        Width="60" Height="26" Margin="0,0,8,0"
+                                        Click="SerialSendButton_Click"/>
+                                        
+                                <Button Grid.Column="1" x:Name="SerialClearButton" Content="清空" 
+                                        Width="60" Height="26" Margin="0,0,8,0"
+                                        Click="SerialClearButton_Click"/>
+                                
+                                <Label Grid.Column="2" Content="格式:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <ComboBox Grid.Column="3" x:Name="SerialDataFormatComboBox" 
+                                          Width="100" Height="26"
+                                          SelectionChanged="SerialDataFormatComboBox_SelectionChanged">
+                                    <ComboBoxItem Content="文本格式" Tag="Text" IsSelected="True"/>
+                                    <ComboBoxItem Content="十六进制" Tag="Hex"/>
+                                    <ComboBoxItem Content="二进制" Tag="Binary"/>
+                                </ComboBox>
+                                
+                                <!-- 空白占位列 -->
+                                <Grid Grid.Column="4"/>
+                                
+                                <CheckBox Grid.Column="5" x:Name="SerialAutoSendCheckBox" 
+                                          Content="自动换行" Margin="8,0,0,0"
+                                          VerticalAlignment="Center"/>
+                            </Grid>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- 接收显示设置 -->
+                    <GroupBox Grid.Row="1" Header="接收设置" Padding="8">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox x:Name="SerialShowTimestampCheckBox" Content="显示时间戳" 
+                                      Margin="0,0,16,0" VerticalAlignment="Center" IsChecked="True"/>
+                            <CheckBox x:Name="SerialShowHexCheckBox" Content="显示十六进制" 
+                                      Margin="0,0,16,0" VerticalAlignment="Center"/>
+                            <CheckBox x:Name="SerialAutoScrollCheckBox" Content="自动滚动" 
+                                      Margin="0,0,16,0" VerticalAlignment="Center" IsChecked="True"/>
+                            <Label Content="显示格式:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox x:Name="SerialReceiveFormatComboBox" Width="100" Height="24">
+                                <ComboBoxItem Content="原始数据" Tag="Raw" IsSelected="True"/>
+                                <ComboBoxItem Content="十六进制" Tag="Hex"/>
+                                <ComboBoxItem Content="ASCII显示" Tag="ASCII"/>
+                            </ComboBox>
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
+
             <!-- 通讯日志和发送区域 -->
-            <GroupBox Grid.Row="3" Header="通讯日志" Padding="5">
+            <GroupBox Grid.Row="4" Header="通讯日志" Padding="5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>      <!-- 日志显示区域 -->
