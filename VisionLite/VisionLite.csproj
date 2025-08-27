@@ -128,6 +128,7 @@
     <Compile Include="Communication\ModbusAddressMap.cs" />
     <Compile Include="Communication\ModbusAddressManager.cs" />
     <Compile Include="Communication\ModbusTcpServer.cs" />
+    <Compile Include="Communication\ModbusTcpClient.cs" />
     <Compile Include="Communication\VisionLiteProtocol.cs" />
     <Compile Include="WindowRoiState.cs" />
     <Compile Include="WindowToolbarAdorner.cs" />

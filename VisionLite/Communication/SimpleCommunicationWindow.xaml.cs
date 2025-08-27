@@ -128,6 +128,9 @@ namespace VisionLite.Communication
                 
                 // 更新发送控制
                 SendButton.IsEnabled = _selectedCommunication?.Status == ConnectionStatus.Connected;
+                
+                // 更新ModbusTCP专用界面显示
+                UpdateModbusTcpPanel();
             }
             else
             {
@@ -136,6 +139,9 @@ namespace VisionLite.Communication
                 ClearParameterDisplay();
                 UpdateConnectionStatus("未选择", Colors.Gray);
                 SendButton.IsEnabled = false;
+                
+                // 隐藏ModbusTCP专用界面
+                ModbusTcpOperationPanel.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -309,7 +315,21 @@ namespace VisionLite.Communication
             {
                 Dispatcher.Invoke(() =>
                 {
-                    LogMessage($"接收: [{message.Id}] {message.Command}");
+                    // 如果是日志消息，直接输出内容；否则按原格式输出
+                    if (message.Command == "LOG" && message.Parameters.ContainsKey("content"))
+                    {
+                        var logContent = message.Parameters["content"]?.ToString();
+                        if (!string.IsNullOrEmpty(logContent))
+                        {
+                            // 直接输出日志内容，因为它已经包含时间戳格式
+                            LogTextBox.AppendText($"{logContent}\r\n");
+                            LogTextBox.ScrollToEnd();
+                        }
+                    }
+                    else
+                    {
+                        LogMessage($"接收: [{message.Id}] {message.Command}");
+                    }
                 });
             };
 
@@ -645,6 +665,314 @@ namespace VisionLite.Communication
         }
 
         #endregion
+
+        #region ModbusTCP专用操作面板
+
+        /// <summary>
+        /// 更新ModbusTCP专用操作面板的显示状态
+        /// </summary>
+        private void UpdateModbusTcpPanel()
+        {
+            if (_selectedConfig?.Type == CommunicationType.ModbusTcpClient)
+            {
+                ModbusTcpOperationPanel.Visibility = Visibility.Visible;
+                InitializeModbusTcpPanel();
+            }
+            else
+            {
+                ModbusTcpOperationPanel.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// 初始化ModbusTCP操作面板的默认设置
+        /// </summary>
+        private void InitializeModbusTcpPanel()
+        {
+            // 设置默认值
+            if (OperationTypeComboBox.SelectedIndex == -1)
+                OperationTypeComboBox.SelectedIndex = 0; // 默认选择读取
+            
+            if (DataTypeComboBox.SelectedIndex == -1)
+                DataTypeComboBox.SelectedIndex = 0; // 默认选择线圈
+            
+            if (DisplayFormatComboBox.SelectedIndex == -1)
+                DisplayFormatComboBox.SelectedIndex = 0; // 默认选择十进制
+
+            // 更新控件状态
+            UpdateModbusTcpControls();
+        }
+
+        /// <summary>
+        /// 更新ModbusTCP控件的启用状态
+        /// </summary>
+        private void UpdateModbusTcpControls()
+        {
+            bool isConnected = _selectedCommunication?.Status == ConnectionStatus.Connected;
+            
+            ExecuteOperationButton.IsEnabled = isConnected;
+            
+            // 根据操作类型更新数量/数值输入框的提示
+            if (OperationTypeComboBox.SelectedItem is ComboBoxItem operationItem)
+            {
+                string operationType = operationItem.Tag?.ToString() ?? "";
+                if (operationType.ToUpper() == "WRITE")
+                {
+                    // 写入操作，显示为"数值"
+                    if (DataTypeComboBox.SelectedItem is ComboBoxItem dataItem)
+                    {
+                        string dataType = dataItem.Tag?.ToString() ?? "";
+                        if (dataType == "COIL")
+                        {
+                            QuantityValueTextBox.Text = "1"; // 线圈默认值
+                        }
+                        else if (dataType == "FLOAT")
+                        {
+                            QuantityValueTextBox.Text = "3.14159"; // 浮点数示例值
+                        }
+                        else
+                        {
+                            QuantityValueTextBox.Text = "1234"; // 寄存器默认值
+                        }
+                    }
+                }
+                else
+                {
+                    // 读取操作，显示为"数量"
+                    if (DataTypeComboBox.SelectedItem is ComboBoxItem dataItem)
+                    {
+                        string dataType = dataItem.Tag?.ToString() ?? "";
+                        if (dataType == "FLOAT")
+                        {
+                            QuantityValueTextBox.Text = "2"; // 浮点数占用2个寄存器
+                        }
+                        else
+                        {
+                            QuantityValueTextBox.Text = "10"; // 默认读取10个
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 操作类型选择变化事件
+        /// </summary>
+        private void OperationTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateModbusTcpControls();
+        }
+
+        /// <summary>
+        /// 数据类型选择变化事件
+        /// </summary>
+        private void DataTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateModbusTcpControls();
+        }
+
+        /// <summary>
+        /// 执行操作按钮点击事件
+        /// </summary>
+        private async void ExecuteOperationButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedCommunication?.Status != ConnectionStatus.Connected)
+            {
+                MessageBox.Show("请先连接到ModbusTCP服务器", "连接错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var startTime = DateTime.Now;
+                LastOperationTime.Text = startTime.ToString("HH:mm:ss");
+                OperationResult.Text = "执行中...";
+                OperationResult.Foreground = new SolidColorBrush(Colors.Orange);
+                
+                ExecuteOperationButton.IsEnabled = false;
+
+                // 构建命令
+                string command = BuildModbusCommand();
+                if (string.IsNullOrEmpty(command))
+                {
+                    OperationResult.Text = "参数错误";
+                    OperationResult.Foreground = new SolidColorBrush(Colors.Red);
+                    return;
+                }
+
+                LastOperationText.Text = command;
+
+                // 执行命令
+                var message = new Message { Command = command };
+                bool success = await _selectedCommunication.SendAsync(message);
+
+                var duration = DateTime.Now - startTime;
+                OperationDuration.Text = $"{duration.TotalMilliseconds:F0}ms";
+
+                if (success)
+                {
+                    OperationResult.Text = "成功";
+                    OperationResult.Foreground = new SolidColorBrush(Colors.Green);
+                    ReturnedData.Text = "操作完成"; // 这里可以根据实际返回数据更新
+                }
+                else
+                {
+                    OperationResult.Text = "失败";
+                    OperationResult.Foreground = new SolidColorBrush(Colors.Red);
+                    ReturnedData.Text = "操作失败，请查看日志";
+                }
+            }
+            catch (Exception ex)
+            {
+                OperationResult.Text = "异常";
+                OperationResult.Foreground = new SolidColorBrush(Colors.Red);
+                ReturnedData.Text = ex.Message;
+                
+                LogMessage($"ModbusTCP操作异常: {ex.Message}");
+            }
+            finally
+            {
+                ExecuteOperationButton.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 根据界面选择构建Modbus命令
+        /// </summary>
+        private string BuildModbusCommand()
+        {
+            try
+            {
+                if (OperationTypeComboBox.SelectedItem is not ComboBoxItem operationItem ||
+                    DataTypeComboBox.SelectedItem is not ComboBoxItem dataItem)
+                    return null;
+
+                string operationType = operationItem.Tag?.ToString() ?? "";
+                string dataType = dataItem.Tag?.ToString() ?? "";
+                string address = StartAddressTextBox.Text?.Trim() ?? "0";
+                string quantityValue = QuantityValueTextBox.Text?.Trim() ?? "1";
+
+                if (!int.TryParse(address, out _))
+                {
+                    MessageBox.Show("地址格式错误", "参数错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return null;
+                }
+
+                if (operationType.ToUpper() == "READ")
+                {
+                    // 读取操作
+                    return dataType switch
+                    {
+                        "COIL" => $"READ_COIL {address} {quantityValue}",
+                        "HOLDING" => $"READ_HOLDING {address} {quantityValue}",
+                        "INPUT" => $"READ_INPUT {address} {quantityValue}",
+                        "DISCRETE" => $"READ_DISCRETE {address} {quantityValue}",
+                        "FLOAT" => $"READ_HOLDING {address} 2", // 浮点数占用2个寄存器
+                        _ => null
+                    };
+                }
+                else
+                {
+                    // 写入操作
+                    return dataType switch
+                    {
+                        "COIL" => $"WRITE_COIL {address} {quantityValue}",
+                        "HOLDING" => $"WRITE_REGISTER {address} {quantityValue}",
+                        "FLOAT" => $"WRITE_FLOAT {address} {quantityValue}",
+                        _ => null
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"构建命令失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 清空ModbusTCP日志按钮点击事件
+        /// </summary>
+        private void ClearModbusLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            LogTextBox.Clear();
+            
+            // 清空状态显示
+            LastOperationText.Text = "无";
+            LastOperationTime.Text = "--:--:--";
+            OperationResult.Text = "待执行";
+            OperationResult.Foreground = new SolidColorBrush(Colors.Gray);
+            OperationDuration.Text = "0ms";
+            ReturnedData.Text = "无";
+        }
+
+        /// <summary>
+        /// 快速操作按钮点击事件
+        /// </summary>
+        private void QuickOperation_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button button || _selectedCommunication?.Status != ConnectionStatus.Connected)
+                return;
+
+            string tag = button.Tag?.ToString() ?? "";
+            
+            try
+            {
+                switch (tag)
+                {
+                    case "READ_COIL,0,100":
+                        StartAddressTextBox.Text = "0";
+                        QuantityValueTextBox.Text = "100";
+                        OperationTypeComboBox.SelectedIndex = 0; // 读取
+                        DataTypeComboBox.SelectedIndex = 0; // 线圈
+                        break;
+                        
+                    case "READ_HOLDING,0,100":
+                        StartAddressTextBox.Text = "0";
+                        QuantityValueTextBox.Text = "100";
+                        OperationTypeComboBox.SelectedIndex = 0; // 读取
+                        DataTypeComboBox.SelectedIndex = 1; // 保持寄存器
+                        break;
+                        
+                    case "READ_INPUT,0,100":
+                        StartAddressTextBox.Text = "0";
+                        QuantityValueTextBox.Text = "100";
+                        OperationTypeComboBox.SelectedIndex = 0; // 读取
+                        DataTypeComboBox.SelectedIndex = 2; // 输入寄存器
+                        break;
+                        
+                    case "WRITE_TEST":
+                        StartAddressTextBox.Text = "100";
+                        QuantityValueTextBox.Text = "1234";
+                        OperationTypeComboBox.SelectedIndex = 1; // 写入
+                        DataTypeComboBox.SelectedIndex = 1; // 保持寄存器
+                        break;
+                        
+                    case "FLOAT_TEST":
+                        StartAddressTextBox.Text = "200";
+                        QuantityValueTextBox.Text = "3.14159";
+                        OperationTypeComboBox.SelectedIndex = 1; // 写入
+                        DataTypeComboBox.SelectedIndex = 4; // 浮点数
+                        break;
+                        
+                    case "BATCH_WRITE":
+                        StartAddressTextBox.Text = "300";
+                        QuantityValueTextBox.Text = "10";
+                        OperationTypeComboBox.SelectedIndex = 0; // 读取
+                        DataTypeComboBox.SelectedIndex = 1; // 保持寄存器
+                        break;
+                }
+
+                // 自动执行操作
+                ExecuteOperationButton_Click(sender, e);
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"快速操作失败: {ex.Message}");
+            }
+        }
+
+        #endregion
     }
 
     #region 辅助类
@@ -748,6 +1076,7 @@ namespace VisionLite.Communication
                     CommunicationType.UdpClient => "UDP客户端",
                     CommunicationType.UdpServer => "UDP服务器",
                     CommunicationType.ModbusTcpServer => "ModbusTCP服务器",
+                    CommunicationType.ModbusTcpClient => "ModbusTCP客户端",
                     _ => "未知"
                 };
             }

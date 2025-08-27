@@ -83,3 +83,5 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - 主要使用 x64 平台配置进行开发和部署
 - Debug 配置输出到 `bin\x64\Debug\`
 - Release 配置输出到 `bin\x64\Release\`
+- 可以尝试使用Bash(cd "E:\mySoftware\VisionLite\VisionLite" && "C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\amd64\MSBuild.exe" VisionLite.csproj)来编译
+- 可以尝试用Bash(cd "E:\mySoftware\VisionLite\VisionLite" && "C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\amd64\MSBuild.exe" VisionLite.csproj)来编译这个项目

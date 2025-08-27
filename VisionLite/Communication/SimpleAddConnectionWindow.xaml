@@ -67,14 +67,14 @@
                 <ComboBoxItem Content="UDP客户端" Tag="UdpClient"/>
                 <ComboBoxItem Content="UDP服务器" Tag="UdpServer"/>
                 <ComboBoxItem Content="ModbusTCP服务器" Tag="ModbusTcpServer"/>
+                <ComboBoxItem Content="ModbusTCP客户端" Tag="ModbusTcpClient"/>
             </ComboBox>
         </Grid>
 
         <!-- 参数配置区域 -->
         <GroupBox Grid.Row="2" Header="连接参数" Margin="0,0,0,10" Padding="10">
             <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                          HorizontalScrollBarVisibility="Disabled"
-                          MaxHeight="200">
+                          HorizontalScrollBarVisibility="Disabled">
                 <Grid x:Name="ParameterGrid">
                     <!-- 动态内容将在这里显示 -->
                 </Grid>

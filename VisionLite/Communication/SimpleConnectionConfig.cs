@@ -32,7 +32,12 @@ namespace VisionLite.Communication
         /// <summary>
         /// ModbusTCP服务器
         /// </summary>
-        ModbusTcpServer
+        ModbusTcpServer,
+        
+        /// <summary>
+        /// ModbusTCP客户端
+        /// </summary>
+        ModbusTcpClient
     }
 
     /// <summary>
@@ -48,7 +53,7 @@ namespace VisionLite.Communication
     }
 
     /// <summary>
-    /// ModbusTCP配置类
+    /// ModbusTCP服务器配置类
     /// </summary>
     public class ModbusTcpConfig
     {
@@ -71,6 +76,62 @@ namespace VisionLite.Communication
         /// 数据字节序
         /// </summary>
         public ByteOrder DataByteOrder { get; set; } = ByteOrder.ABCD;
+    }
+
+    /// <summary>
+    /// ModbusTCP客户端配置类
+    /// </summary>
+    public class ModbusTcpClientConfig
+    {
+        /// <summary>
+        /// 服务器单元ID
+        /// </summary>
+        public byte UnitId { get; set; } = 1;
+
+        /// <summary>
+        /// 是否启用请求日志
+        /// </summary>
+        public bool EnableLogging { get; set; } = true;
+
+        /// <summary>
+        /// 数据字节序
+        /// </summary>
+        public ByteOrder DataByteOrder { get; set; } = ByteOrder.ABCD;
+
+        /// <summary>
+        /// 连接超时时间(毫秒)
+        /// </summary>
+        public int ConnectionTimeout { get; set; } = 5000;
+
+        /// <summary>
+        /// 读取超时时间(毫秒)
+        /// </summary>
+        public int ReadTimeout { get; set; } = 3000;
+
+        /// <summary>
+        /// 写入超时时间(毫秒)
+        /// </summary>
+        public int WriteTimeout { get; set; } = 3000;
+
+        /// <summary>
+        /// 轮询间隔(毫秒)
+        /// </summary>
+        public int PollingInterval { get; set; } = 1000;
+
+        /// <summary>
+        /// 是否启用自动重连
+        /// </summary>
+        public bool AutoReconnect { get; set; } = true;
+
+        /// <summary>
+        /// 重连间隔(毫秒)
+        /// </summary>
+        public int ReconnectInterval { get; set; } = 5000;
+
+        /// <summary>
+        /// 是否启用数据轮询
+        /// </summary>
+        public bool EnablePolling { get; set; } = true;
     }
 
     /// <summary>
@@ -102,9 +163,14 @@ namespace VisionLite.Communication
         public int Port { get; set; } = 8080;
 
         /// <summary>
-        /// ModbusTCP特有配置
+        /// ModbusTCP服务器配置
         /// </summary>
         public ModbusTcpConfig ModbusTcp { get; set; } = new ModbusTcpConfig();
+
+        /// <summary>
+        /// ModbusTCP客户端配置
+        /// </summary>
+        public ModbusTcpClientConfig ModbusTcpClient { get; set; } = new ModbusTcpClientConfig();
 
         /// <summary>
         /// 获取协议类型的显示名称
@@ -120,6 +186,7 @@ namespace VisionLite.Communication
                     CommunicationType.UdpClient => "UDP客户端",
                     CommunicationType.UdpServer => "UDP服务器",
                     CommunicationType.ModbusTcpServer => "ModbusTCP服务器",
+                    CommunicationType.ModbusTcpClient => "ModbusTCP客户端",
                     _ => "未知"
                 };
             }
@@ -139,6 +206,7 @@ namespace VisionLite.Communication
                     CommunicationType.UdpClient => $"{IpAddress}:{Port}",
                     CommunicationType.UdpServer => $"监听端口:{Port}",
                     CommunicationType.ModbusTcpServer => $"监听端口:{Port}, 单元ID:{ModbusTcp.UnitId}",
+                    CommunicationType.ModbusTcpClient => $"服务器:{IpAddress}:{Port}, 单元ID:{ModbusTcpClient.UnitId}",
                     _ => ""
                 };
             }
@@ -158,8 +226,8 @@ namespace VisionLite.Communication
             if (Port < 1 || Port > 65535)
                 return (false, "端口号必须在1-65535范围内");
 
-            // TCP客户端和UDP客户端需要验证IP地址
-            if (Type == CommunicationType.TcpClient || Type == CommunicationType.UdpClient)
+            // TCP客户端、UDP客户端和ModbusTCP客户端需要验证IP地址
+            if (Type == CommunicationType.TcpClient || Type == CommunicationType.UdpClient || Type == CommunicationType.ModbusTcpClient)
             {
                 if (string.IsNullOrWhiteSpace(IpAddress))
                     return (false, "IP地址不能为空");
@@ -168,7 +236,7 @@ namespace VisionLite.Communication
                     return (false, "IP地址格式不正确");
             }
 
-            // ModbusTCP特殊验证
+            // ModbusTCP服务器验证
             if (Type == CommunicationType.ModbusTcpServer)
             {
                 if (ModbusTcp.UnitId == 0)
@@ -176,6 +244,28 @@ namespace VisionLite.Communication
                 
                 if (ModbusTcp.MaxClients <= 0)
                     return (false, "最大客户端数必须大于0");
+            }
+
+            // ModbusTCP客户端验证
+            if (Type == CommunicationType.ModbusTcpClient)
+            {
+                if (ModbusTcpClient.UnitId == 0)
+                    return (false, "ModbusTCP单元ID不能为0");
+                
+                if (ModbusTcpClient.ConnectionTimeout <= 0)
+                    return (false, "连接超时必须大于0毫秒");
+                    
+                if (ModbusTcpClient.ReadTimeout <= 0)
+                    return (false, "读取超时必须大于0毫秒");
+                    
+                if (ModbusTcpClient.WriteTimeout <= 0)
+                    return (false, "写入超时必须大于0毫秒");
+                    
+                if (ModbusTcpClient.PollingInterval <= 0)
+                    return (false, "轮询间隔必须大于0毫秒");
+                    
+                if (ModbusTcpClient.ReconnectInterval <= 0)
+                    return (false, "重连间隔必须大于0毫秒");
             }
 
             return (true, null);
@@ -199,6 +289,19 @@ namespace VisionLite.Communication
                     EnableLogging = this.ModbusTcp.EnableLogging,
                     MaxClients = this.ModbusTcp.MaxClients,
                     DataByteOrder = this.ModbusTcp.DataByteOrder
+                },
+                ModbusTcpClient = new ModbusTcpClientConfig
+                {
+                    UnitId = this.ModbusTcpClient.UnitId,
+                    EnableLogging = this.ModbusTcpClient.EnableLogging,
+                    DataByteOrder = this.ModbusTcpClient.DataByteOrder,
+                    ConnectionTimeout = this.ModbusTcpClient.ConnectionTimeout,
+                    ReadTimeout = this.ModbusTcpClient.ReadTimeout,
+                    WriteTimeout = this.ModbusTcpClient.WriteTimeout,
+                    PollingInterval = this.ModbusTcpClient.PollingInterval,
+                    AutoReconnect = this.ModbusTcpClient.AutoReconnect,
+                    ReconnectInterval = this.ModbusTcpClient.ReconnectInterval,
+                    EnablePolling = this.ModbusTcpClient.EnablePolling
                 }
             };
         }
@@ -220,6 +323,7 @@ namespace VisionLite.Communication
                 CommunicationType.UdpClient => new UdpCommunication(Name, IpAddress, Port),
                 CommunicationType.UdpServer => new UdpServer(Name, Port),
                 CommunicationType.ModbusTcpServer => new ModbusTcpServer(IpAddress, Port, ModbusTcp),
+                CommunicationType.ModbusTcpClient => new ModbusTcpClient(Name, IpAddress, Port, ModbusTcpClient),
                 _ => throw new NotSupportedException($"不支持的协议类型: {Type}")
             };
         }
@@ -300,6 +404,34 @@ namespace VisionLite.Communication
                     EnableLogging = true,
                     MaxClients = 10,
                     DataByteOrder = ByteOrder.ABCD
+                }
+            };
+        }
+
+        /// <summary>
+        /// 获取默认的ModbusTCP客户端配置
+        /// </summary>
+        /// <returns>默认ModbusTCP客户端配置</returns>
+        public static SimpleConnectionConfig GetDefaultModbusTcpClient()
+        {
+            return new SimpleConnectionConfig
+            {
+                Name = "ModbusTCP客户端",
+                Type = CommunicationType.ModbusTcpClient,
+                IpAddress = "192.168.1.10",
+                Port = 502,
+                ModbusTcpClient = new ModbusTcpClientConfig
+                {
+                    UnitId = 1,
+                    EnableLogging = true,
+                    DataByteOrder = ByteOrder.ABCD,
+                    ConnectionTimeout = 5000,
+                    ReadTimeout = 3000,
+                    WriteTimeout = 3000,
+                    PollingInterval = 1000,
+                    AutoReconnect = true,
+                    ReconnectInterval = 5000,
+                    EnablePolling = true
                 }
             };
         }

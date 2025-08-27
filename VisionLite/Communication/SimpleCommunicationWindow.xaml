@@ -46,13 +46,18 @@
         <Grid.ColumnDefinitions>
             <!-- 左侧连接列表区域 -->
             <ColumnDefinition Width="350" MinWidth="250"/>
+            <!-- 分隔线区域 -->
+            <ColumnDefinition Width="5"/>
             <!-- 右侧参数和日志区域 -->
             <ColumnDefinition Width="*" MinWidth="350"/>
         </Grid.ColumnDefinitions>
 
         <!-- 分隔线 -->
-        <GridSplitter Grid.Column="0" HorizontalAlignment="Right" Width="3" 
-                      Background="LightGray" ResizeBehavior="PreviousAndNext"/>
+        <GridSplitter Grid.Column="1" 
+                      Background="LightGray" ResizeBehavior="PreviousAndNext"
+                      ShowsPreview="False" VerticalAlignment="Stretch"
+                      HorizontalAlignment="Stretch"
+                      Cursor="SizeWE"/>
 
         <!-- 左侧：连接列表 -->
         <Grid Grid.Column="0" Margin="10">
@@ -114,10 +119,11 @@
         </Grid>
 
         <!-- 右侧：参数配置和通讯日志 -->
-        <Grid Grid.Column="1" Margin="10">
+        <Grid Grid.Column="2" Margin="10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>   <!-- 连接参数区域 -->
                 <RowDefinition Height="Auto"/>   <!-- 连接控制区域 -->
+                <RowDefinition Height="Auto"/>   <!-- ModbusTCP专用操作面板区域 -->
                 <RowDefinition Height="*"/>      <!-- 通讯日志区域 -->
             </Grid.RowDefinitions>
 
@@ -153,8 +159,140 @@
                 </StackPanel>
             </StackPanel>
 
+            <!-- ModbusTCP专用操作面板 -->
+            <GroupBox x:Name="ModbusTcpOperationPanel" Grid.Row="2" Header="ModbusTCP 操作面板" 
+                      Padding="10" Margin="0,0,0,10" Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>   <!-- 操作设置区域 -->
+                        <RowDefinition Height="Auto"/>   <!-- 地址设置区域 -->
+                        <RowDefinition Height="Auto"/>   <!-- 执行控制区域 -->
+                        <RowDefinition Height="Auto"/>   <!-- 快速操作模板区域 -->
+                        <RowDefinition Height="Auto"/>   <!-- 实时状态区域 -->
+                    </Grid.RowDefinitions>
+
+                    <!-- 操作设置区域 -->
+                    <GroupBox Grid.Row="0" Header="操作设置" Margin="0,0,0,8" Padding="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Label Grid.Column="0" Content="操作类型:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox x:Name="OperationTypeComboBox" Grid.Column="1" Height="25" Margin="0,0,10,0"
+                                      SelectionChanged="OperationTypeComboBox_SelectionChanged">
+                                <ComboBoxItem Content="读取" Tag="READ"/>
+                                <ComboBoxItem Content="写入" Tag="WRITE"/>
+                            </ComboBox>
+                            
+                            <Label Grid.Column="2" Content="数据类型:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox x:Name="DataTypeComboBox" Grid.Column="3" Height="25"
+                                      SelectionChanged="DataTypeComboBox_SelectionChanged">
+                                <ComboBoxItem Content="线圈" Tag="COIL"/>
+                                <ComboBoxItem Content="保持寄存器" Tag="HOLDING"/>
+                                <ComboBoxItem Content="输入寄存器" Tag="INPUT"/>
+                                <ComboBoxItem Content="离散输入" Tag="DISCRETE"/>
+                                <ComboBoxItem Content="浮点数(32位)" Tag="FLOAT"/>
+                            </ComboBox>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- 地址设置区域 -->
+                    <GroupBox Grid.Row="1" Header="地址设置" Margin="0,0,0,8" Padding="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Label Grid.Column="0" Content="起始地址:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBox x:Name="StartAddressTextBox" Grid.Column="1" Height="25" Margin="0,0,10,0" 
+                                     Text="0" VerticalContentAlignment="Center"/>
+                            
+                            <Label Grid.Column="2" Content="数量/数值:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBox x:Name="QuantityValueTextBox" Grid.Column="3" Height="25" Margin="0,0,10,0" 
+                                     Text="1" VerticalContentAlignment="Center"/>
+                            
+                            <Label Grid.Column="4" Content="显示格式:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox x:Name="DisplayFormatComboBox" Grid.Column="5" Height="25">
+                                <ComboBoxItem Content="十进制" Tag="DEC" IsSelected="True"/>
+                                <ComboBoxItem Content="十六进制" Tag="HEX"/>
+                                <ComboBoxItem Content="二进制" Tag="BIN"/>
+                            </ComboBox>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- 执行控制区域 -->
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,8">
+                        <Button x:Name="ExecuteOperationButton" Content="执行操作" Width="80" Height="28" 
+                                Margin="0,0,8,0" Click="ExecuteOperationButton_Click"/>
+                        <Button x:Name="StopOperationButton" Content="停止" Width="60" Height="28" 
+                                Margin="0,0,8,0" IsEnabled="False"/>
+                        <Button x:Name="ClearModbusLogButton" Content="清空日志" Width="80" Height="28" 
+                                Margin="0,0,8,0" Click="ClearModbusLogButton_Click"/>
+                        <Button x:Name="ExportResultButton" Content="导出结果" Width="80" Height="28"/>
+                    </StackPanel>
+
+                    <!-- 快速操作模板区域 -->
+                    <GroupBox Grid.Row="3" Header="快速操作模板" Margin="0,0,0,8" Padding="8">
+                        <WrapPanel Orientation="Horizontal">
+                            <Button Content="读取线圈0-99" Width="100" Height="26" Margin="2" 
+                                    Click="QuickOperation_Click" Tag="READ_COIL,0,100"/>
+                            <Button Content="读取寄存器0-99" Width="100" Height="26" Margin="2" 
+                                    Click="QuickOperation_Click" Tag="READ_HOLDING,0,100"/>
+                            <Button Content="读取输入0-99" Width="100" Height="26" Margin="2" 
+                                    Click="QuickOperation_Click" Tag="READ_INPUT,0,100"/>
+                            <Button Content="写入测试数据" Width="100" Height="26" Margin="2" 
+                                    Click="QuickOperation_Click" Tag="WRITE_TEST"/>
+                            <Button Content="浮点数测试" Width="100" Height="26" Margin="2" 
+                                    Click="QuickOperation_Click" Tag="FLOAT_TEST"/>
+                            <Button Content="批量写入测试" Width="100" Height="26" Margin="2" 
+                                    Click="QuickOperation_Click" Tag="BATCH_WRITE"/>
+                        </WrapPanel>
+                    </GroupBox>
+
+                    <!-- 实时状态区域 -->
+                    <GroupBox Grid.Row="4" Header="实时状态" Padding="8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="最后操作:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="LastOperationText" Text="无" FontWeight="Bold" Margin="0,0,16,0"/>
+                                <TextBlock Text="时间:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="LastOperationTime" Text="--:--:--"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="操作结果:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="OperationResult" Text="待执行" FontWeight="Bold" Margin="0,0,16,0"/>
+                                <TextBlock Text="用时:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="OperationDuration" Text="0ms"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                <TextBlock Text="返回数据:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="ReturnedData" Text="无" FontFamily="Consolas" 
+                                          TextWrapping="Wrap" MaxWidth="400"/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
+
             <!-- 通讯日志和发送区域 -->
-            <GroupBox Grid.Row="2" Header="通讯日志" Padding="5">
+            <GroupBox Grid.Row="3" Header="通讯日志" Padding="5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>      <!-- 日志显示区域 -->
