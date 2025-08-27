@@ -64,10 +64,6 @@ namespace VisionLite.Communication
         /// </summary>
         private Timer _reconnectTimer;
 
-        /// <summary>
-        /// 轮询定时器
-        /// </summary>
-        private Timer _pollingTimer;
 
         /// <summary>
         /// 连接锁
@@ -281,12 +277,6 @@ namespace VisionLite.Communication
                 // 启动连接任务
                 Task.Run(ConnectAsync);
 
-                // 如果启用轮询，启动轮询定时器
-                if (_config.EnablePolling)
-                {
-                    StartPolling();
-                }
-
                 LogMessage("ModbusTCP客户端启动成功");
                 return true;
             }
@@ -308,9 +298,6 @@ namespace VisionLite.Communication
             {
                 _isRunning = false;
                 LogMessage("停止ModbusTCP客户端");
-
-                // 停止轮询
-                StopPolling();
 
                 // 停止重连定时器
                 StopReconnectTimer();
@@ -406,8 +393,18 @@ namespace VisionLite.Communication
                 _tcpClient.ReceiveTimeout = _config.ReadTimeout;
                 _tcpClient.SendTimeout = _config.WriteTimeout;
 
-                // 连接服务器
-                await _tcpClient.ConnectAsync(_serverIp, _serverPort).ConfigureAwait(false);
+                // 连接服务器（使用配置的连接超时）
+                var connectTask = _tcpClient.ConnectAsync(_serverIp, _serverPort);
+                var timeoutTask = Task.Delay(_config.ConnectionTimeout);
+                
+                if (await Task.WhenAny(connectTask, timeoutTask) == timeoutTask)
+                {
+                    // 连接超时
+                    throw new TimeoutException($"连接超时，超过{_config.ConnectionTimeout}ms未能连接到服务器");
+                }
+                
+                // 等待连接任务完成，如果有异常会在这里抛出
+                await connectTask;
                 
                 if (_tcpClient.Connected)
                 {
@@ -539,53 +536,6 @@ namespace VisionLite.Communication
 
         #endregion
 
-        #region 轮询功能
-
-        /// <summary>
-        /// 启动轮询
-        /// </summary>
-        private void StartPolling()
-        {
-            if (!_config.EnablePolling)
-                return;
-
-            StopPolling();
-
-            LogMessage($"启动数据轮询，间隔: {_config.PollingInterval}ms");
-            _pollingTimer = new Timer(PollingCallback, null, _config.PollingInterval, _config.PollingInterval);
-        }
-
-        /// <summary>
-        /// 停止轮询
-        /// </summary>
-        private void StopPolling()
-        {
-            _pollingTimer?.Dispose();
-            _pollingTimer = null;
-        }
-
-        /// <summary>
-        /// 轮询回调
-        /// </summary>
-        private void PollingCallback(object state)
-        {
-            if (!_config.EnablePolling || !_isRunning || !_isConnected)
-                return;
-
-            try
-            {
-                // 这里可以实现定期读取特定地址的逻辑
-                // 目前作为示例，读取一个测试地址
-                // var result = ReadHoldingRegisters(0, 1);
-                // LogMessage($"轮询读取结果: {result?[0]}");
-            }
-            catch (Exception ex)
-            {
-                LogMessage($"轮询时出错: {ex.Message}");
-            }
-        }
-
-        #endregion
 
         #region 日志和事件
 

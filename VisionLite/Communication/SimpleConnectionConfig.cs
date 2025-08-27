@@ -114,11 +114,6 @@ namespace VisionLite.Communication
         public int WriteTimeout { get; set; } = 3000;
 
         /// <summary>
-        /// 轮询间隔(毫秒)
-        /// </summary>
-        public int PollingInterval { get; set; } = 1000;
-
-        /// <summary>
         /// 是否启用自动重连
         /// </summary>
         public bool AutoReconnect { get; set; } = true;
@@ -127,11 +122,6 @@ namespace VisionLite.Communication
         /// 重连间隔(毫秒)
         /// </summary>
         public int ReconnectInterval { get; set; } = 5000;
-
-        /// <summary>
-        /// 是否启用数据轮询
-        /// </summary>
-        public bool EnablePolling { get; set; } = true;
     }
 
     /// <summary>
@@ -261,9 +251,6 @@ namespace VisionLite.Communication
                 if (ModbusTcpClient.WriteTimeout <= 0)
                     return (false, "写入超时必须大于0毫秒");
                     
-                if (ModbusTcpClient.PollingInterval <= 0)
-                    return (false, "轮询间隔必须大于0毫秒");
-                    
                 if (ModbusTcpClient.ReconnectInterval <= 0)
                     return (false, "重连间隔必须大于0毫秒");
             }
@@ -298,10 +285,8 @@ namespace VisionLite.Communication
                     ConnectionTimeout = this.ModbusTcpClient.ConnectionTimeout,
                     ReadTimeout = this.ModbusTcpClient.ReadTimeout,
                     WriteTimeout = this.ModbusTcpClient.WriteTimeout,
-                    PollingInterval = this.ModbusTcpClient.PollingInterval,
                     AutoReconnect = this.ModbusTcpClient.AutoReconnect,
-                    ReconnectInterval = this.ModbusTcpClient.ReconnectInterval,
-                    EnablePolling = this.ModbusTcpClient.EnablePolling
+                    ReconnectInterval = this.ModbusTcpClient.ReconnectInterval
                 }
             };
         }
@@ -428,10 +413,8 @@ namespace VisionLite.Communication
                     ConnectionTimeout = 5000,
                     ReadTimeout = 3000,
                     WriteTimeout = 3000,
-                    PollingInterval = 1000,
                     AutoReconnect = true,
-                    ReconnectInterval = 5000,
-                    EnablePolling = true
+                    ReconnectInterval = 5000
                 }
             };
         }

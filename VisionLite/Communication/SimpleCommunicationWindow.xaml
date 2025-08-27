@@ -167,7 +167,6 @@
                         <RowDefinition Height="Auto"/>   <!-- 操作设置区域 -->
                         <RowDefinition Height="Auto"/>   <!-- 地址设置区域 -->
                         <RowDefinition Height="Auto"/>   <!-- 执行控制区域 -->
-                        <RowDefinition Height="Auto"/>   <!-- 快速操作模板区域 -->
                         <RowDefinition Height="Auto"/>   <!-- 实时状态区域 -->
                     </Grid.RowDefinitions>
 
@@ -233,33 +232,11 @@
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,8">
                         <Button x:Name="ExecuteOperationButton" Content="执行操作" Width="80" Height="28" 
                                 Margin="0,0,8,0" Click="ExecuteOperationButton_Click"/>
-                        <Button x:Name="StopOperationButton" Content="停止" Width="60" Height="28" 
-                                Margin="0,0,8,0" IsEnabled="False"/>
-                        <Button x:Name="ClearModbusLogButton" Content="清空日志" Width="80" Height="28" 
-                                Margin="0,0,8,0" Click="ClearModbusLogButton_Click"/>
-                        <Button x:Name="ExportResultButton" Content="导出结果" Width="80" Height="28"/>
                     </StackPanel>
 
-                    <!-- 快速操作模板区域 -->
-                    <GroupBox Grid.Row="3" Header="快速操作模板" Margin="0,0,0,8" Padding="8">
-                        <WrapPanel Orientation="Horizontal">
-                            <Button Content="读取线圈0-99" Width="100" Height="26" Margin="2" 
-                                    Click="QuickOperation_Click" Tag="READ_COIL,0,100"/>
-                            <Button Content="读取寄存器0-99" Width="100" Height="26" Margin="2" 
-                                    Click="QuickOperation_Click" Tag="READ_HOLDING,0,100"/>
-                            <Button Content="读取输入0-99" Width="100" Height="26" Margin="2" 
-                                    Click="QuickOperation_Click" Tag="READ_INPUT,0,100"/>
-                            <Button Content="写入测试数据" Width="100" Height="26" Margin="2" 
-                                    Click="QuickOperation_Click" Tag="WRITE_TEST"/>
-                            <Button Content="浮点数测试" Width="100" Height="26" Margin="2" 
-                                    Click="QuickOperation_Click" Tag="FLOAT_TEST"/>
-                            <Button Content="批量写入测试" Width="100" Height="26" Margin="2" 
-                                    Click="QuickOperation_Click" Tag="BATCH_WRITE"/>
-                        </WrapPanel>
-                    </GroupBox>
 
                     <!-- 实时状态区域 -->
-                    <GroupBox Grid.Row="4" Header="实时状态" Padding="8">
+                    <GroupBox Grid.Row="3" Header="实时状态" Padding="8">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>

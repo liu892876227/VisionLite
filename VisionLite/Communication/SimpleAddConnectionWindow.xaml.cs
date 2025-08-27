@@ -66,11 +66,6 @@ namespace VisionLite.Communication
         private TextBox _writeTimeoutTextBox;
 
         /// <summary>
-        /// ModbusTCP客户端轮询间隔输入框
-        /// </summary>
-        private TextBox _pollingIntervalTextBox;
-
-        /// <summary>
         /// ModbusTCP客户端重连间隔输入框
         /// </summary>
         private TextBox _reconnectIntervalTextBox;
@@ -79,11 +74,6 @@ namespace VisionLite.Communication
         /// ModbusTCP客户端启用自动重连复选框
         /// </summary>
         private CheckBox _autoReconnectCheckBox;
-
-        /// <summary>
-        /// ModbusTCP客户端启用轮询复选框
-        /// </summary>
-        private CheckBox _enablePollingCheckBox;
 
         /// <summary>
         /// 是否为编辑模式
@@ -207,14 +197,10 @@ namespace VisionLite.Communication
                     _readTimeoutTextBox.Text = _config.ModbusTcpClient.ReadTimeout.ToString();
                 if (_writeTimeoutTextBox != null)
                     _writeTimeoutTextBox.Text = _config.ModbusTcpClient.WriteTimeout.ToString();
-                if (_pollingIntervalTextBox != null)
-                    _pollingIntervalTextBox.Text = _config.ModbusTcpClient.PollingInterval.ToString();
                 if (_reconnectIntervalTextBox != null)
                     _reconnectIntervalTextBox.Text = _config.ModbusTcpClient.ReconnectInterval.ToString();
                 if (_autoReconnectCheckBox != null)
                     _autoReconnectCheckBox.IsChecked = _config.ModbusTcpClient.AutoReconnect;
-                if (_enablePollingCheckBox != null)
-                    _enablePollingCheckBox.IsChecked = _config.ModbusTcpClient.EnablePolling;
                     
                 UpdateButtonStates();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
@@ -454,10 +440,8 @@ namespace VisionLite.Communication
         /// </summary>
         private void CreateModbusTcpClientParameterPanel()
         {
-            // 创建八行：服务器IP、端口、单元ID、连接超时、读取超时、写入超时、轮询间隔、重连间隔
-            // 加上三行复选框：启用日志、自动重连、启用轮询
-            // 十行：IP、端口、单元ID、连接超时、读取超时、写入超时、轮询间隔、重连间隔、字节序、复选框面板
-            for (int i = 0; i < 10; i++)
+            // 创建九行：服务器IP、端口、单元ID、连接超时、读取超时、写入超时、重连间隔、字节序、复选框面板
+            for (int i = 0; i < 9; i++)
             {
                 ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
             }
@@ -538,33 +522,21 @@ namespace VisionLite.Communication
             Grid.SetColumn(_writeTimeoutTextBox, 1);
             ParameterGrid.Children.Add(_writeTimeoutTextBox);
 
-            // 轮询间隔输入
-            var pollingIntervalLabel = new Label { Content = "轮询间隔(ms):", Style = (Style)Resources["LabelStyle"] };
-            Grid.SetRow(pollingIntervalLabel, 6);
-            Grid.SetColumn(pollingIntervalLabel, 0);
-            ParameterGrid.Children.Add(pollingIntervalLabel);
-
-            _pollingIntervalTextBox = new TextBox { Text = _config.ModbusTcpClient.PollingInterval.ToString(), Style = (Style)Resources["InputStyle"] };
-            _pollingIntervalTextBox.TextChanged += ParameterTextBox_TextChanged;
-            Grid.SetRow(_pollingIntervalTextBox, 6);
-            Grid.SetColumn(_pollingIntervalTextBox, 1);
-            ParameterGrid.Children.Add(_pollingIntervalTextBox);
-
             // 重连间隔输入
             var reconnectIntervalLabel = new Label { Content = "重连间隔(ms):", Style = (Style)Resources["LabelStyle"] };
-            Grid.SetRow(reconnectIntervalLabel, 7);
+            Grid.SetRow(reconnectIntervalLabel, 6);
             Grid.SetColumn(reconnectIntervalLabel, 0);
             ParameterGrid.Children.Add(reconnectIntervalLabel);
 
             _reconnectIntervalTextBox = new TextBox { Text = _config.ModbusTcpClient.ReconnectInterval.ToString(), Style = (Style)Resources["InputStyle"] };
             _reconnectIntervalTextBox.TextChanged += ParameterTextBox_TextChanged;
-            Grid.SetRow(_reconnectIntervalTextBox, 7);
+            Grid.SetRow(_reconnectIntervalTextBox, 6);
             Grid.SetColumn(_reconnectIntervalTextBox, 1);
             ParameterGrid.Children.Add(_reconnectIntervalTextBox);
 
             // 字节序选择
             var byteOrderLabel = new Label { Content = "字节序:", Style = (Style)Resources["LabelStyle"] };
-            Grid.SetRow(byteOrderLabel, 8);
+            Grid.SetRow(byteOrderLabel, 7);
             Grid.SetColumn(byteOrderLabel, 0);
             ParameterGrid.Children.Add(byteOrderLabel);
 
@@ -580,7 +552,7 @@ namespace VisionLite.Communication
             _byteOrderComboBox.Items.Add(new ComboBoxItem { Content = "DCBA（完全反序）", Tag = ByteOrder.DCBA });
             _byteOrderComboBox.SelectedIndex = (int)_config.ModbusTcpClient.DataByteOrder;
             _byteOrderComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
-            Grid.SetRow(_byteOrderComboBox, 8);
+            Grid.SetRow(_byteOrderComboBox, 7);
             Grid.SetColumn(_byteOrderComboBox, 1);
             ParameterGrid.Children.Add(_byteOrderComboBox);
 
@@ -613,19 +585,9 @@ namespace VisionLite.Communication
             _autoReconnectCheckBox.Unchecked += (s, e) => UpdateButtonStates();
             checkBoxPanel.Children.Add(_autoReconnectCheckBox);
 
-            // 启用轮询复选框
-            _enablePollingCheckBox = new CheckBox 
-            { 
-                Content = "启用数据轮询", 
-                IsChecked = _config.ModbusTcpClient.EnablePolling,
-                Margin = new Thickness(0, 2, 0, 2)
-            };
-            _enablePollingCheckBox.Checked += (s, e) => UpdateButtonStates();
-            _enablePollingCheckBox.Unchecked += (s, e) => UpdateButtonStates();
-            checkBoxPanel.Children.Add(_enablePollingCheckBox);
 
             // 将复选框面板添加到参数网格
-            Grid.SetRow(checkBoxPanel, 9);
+            Grid.SetRow(checkBoxPanel, 8);
             Grid.SetColumn(checkBoxPanel, 0);
             Grid.SetColumnSpan(checkBoxPanel, 2);
             ParameterGrid.Children.Add(checkBoxPanel);
@@ -695,17 +657,11 @@ namespace VisionLite.Communication
                 if (_writeTimeoutTextBox != null && int.TryParse(_writeTimeoutTextBox.Text, out int writeTimeout))
                     _config.ModbusTcpClient.WriteTimeout = writeTimeout;
 
-                if (_pollingIntervalTextBox != null && int.TryParse(_pollingIntervalTextBox.Text, out int pollingInterval))
-                    _config.ModbusTcpClient.PollingInterval = pollingInterval;
-
                 if (_reconnectIntervalTextBox != null && int.TryParse(_reconnectIntervalTextBox.Text, out int reconnectInterval))
                     _config.ModbusTcpClient.ReconnectInterval = reconnectInterval;
 
                 if (_autoReconnectCheckBox != null)
                     _config.ModbusTcpClient.AutoReconnect = _autoReconnectCheckBox.IsChecked ?? true;
-
-                if (_enablePollingCheckBox != null)
-                    _config.ModbusTcpClient.EnablePolling = _enablePollingCheckBox.IsChecked ?? true;
 
                 // 字节序配置
                 if (_byteOrderComboBox != null && _byteOrderComboBox.SelectedItem is ComboBoxItem selectedItem)
