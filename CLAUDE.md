@@ -44,12 +44,15 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - **ModbusTcpClient**: ModbusTCP 客户端，基于 NModbus4 库
 - **ModbusTcpServer**: ModbusTCP 服务器端实现
 - **SerialCommunication**: 串口通讯实现
+- **AdsCommunication**: 倍福 ADS 通讯实现，支持 TwinCAT PLC 变量读写
 
 #### 辅助组件
 - **ModbusAddressManager**: Modbus 地址管理器
 - **ModbusAddressMap**: 地址映射配置
 - **SimpleConnectionConfig**: 简化的连接配置
 - **SimpleCommunicationWindow**: 通讯配置界面
+- **AdsConnectionConfig**: ADS 连接参数配置
+- **AdsConnectionTest**: ADS 连接测试工具
 
 ### 主要依赖库
 - **HalconDotNet**: 机器视觉算法库，用于图像处理和显示
@@ -59,11 +62,13 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - **Newtonsoft.Json**: JSON 序列化库（v13.0.3）
 - **NModbus4**: ModbusTCP 通讯库（v2.1.0）
 - **System.Drawing.Common**: 图形处理支持（v9.0.7）
+- **TwinCAT.Ads**: 倍福 ADS 通讯库，用于与 TwinCAT PLC 通讯
 
 ### UI 架构
 - **MainWindow**: 主窗口，管理所有相机显示和工具栏交互
 - **CameraManagementWindow**: 相机管理窗口，处理设备枚举和连接
-- **CommunicationWindow**: 通讯配置窗口
+- **SimpleCommunicationWindow**: 简化的通讯配置窗口
+- **SimpleAddConnectionWindow**: 添加通讯连接的配置对话框
 - **Adorner 系统**: 用于 ROI 绘制和工具栏显示
   - `RoiAdorner`: ROI 区域绘制和编辑
   - `WindowToolbarAdorner`: 窗口内嵌工具栏
@@ -112,6 +117,12 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
   cd "VisionLite" && "C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\amd64\MSBuild.exe" VisionLite.csproj /p:Configuration=Debug /p:Platform=x64
   ```
 
+### 测试和验证
+- 目前项目暂无自动化测试框架
+- 通讯模块测试主要通过 `SimpleCommunicationWindow` 进行手动验证
+- ADS 通讯可通过 `AdsConnectionTest` 工具验证连接和变量读写
+- 相机功能通过 `CameraManagementWindow` 进行设备枚举和连接测试
+
 ## 通讯协议支持
 
 ### ModbusTCP
@@ -128,3 +139,10 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 ### 串口通讯
 - 支持标准串口参数配置
 - 异步读写操作，避免阻塞
+
+### ADS 通讯（倍福 PLC）
+- 基于 TwinCAT.Ads 库实现，支持倍福 TwinCAT PLC 通讯
+- 支持变量句柄缓存机制，提高读写性能
+- 实现变量存在性检查和类型安全的读写操作
+- 支持多种 PLC 数据类型（BOOL、BYTE、INT、DINT、REAL、LREAL、STRING）
+- 提供连接状态监控和异常处理机制

@@ -1,19 +1,19 @@
 ﻿VisionLite
 
 
-exe
+winexe
 C#
 .cs
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\
 VisionLite
 none
 false
 
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\App.xaml
+E:\mySoftware\VisionLite\VisionLite\App.xaml
 6377285993
 
 381888718431
-31-394172328
+37-838753569
 CameraIcon.xaml;CameraManagementWindow.xaml;Communication\SimpleCommunicationWindow.xaml;Communication\SimpleAddConnectionWindow.xaml;MainWindow.xaml;ToolbarIcons.xaml;
 
 True
