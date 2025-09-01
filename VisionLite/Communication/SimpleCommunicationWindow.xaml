@@ -124,6 +124,7 @@
                 <RowDefinition Height="Auto"/>   <!-- 连接参数区域 -->
                 <RowDefinition Height="Auto"/>   <!-- 连接控制区域 -->
                 <RowDefinition Height="Auto"/>   <!-- ModbusTCP专用操作面板区域 -->
+                <RowDefinition Height="Auto"/>   <!-- ADS专用操作面板区域 -->
                 <RowDefinition Height="Auto"/>   <!-- 串口专用操作面板区域 -->
                 <RowDefinition Height="*"/>      <!-- 通讯日志区域 -->
             </Grid.RowDefinitions>
@@ -269,8 +270,105 @@
                 </Grid>
             </GroupBox>
 
+            <!-- ADS专用操作面板 -->
+            <GroupBox x:Name="AdsOperationPanel" Grid.Row="3" Header="倍福ADS操作面板" 
+                      Padding="10" Margin="0,0,0,10" Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>   <!-- 变量操作区域 -->
+                        <RowDefinition Height="Auto"/>   <!-- 操作控制区域 -->
+                        <RowDefinition Height="Auto"/>   <!-- 实时状态区域 -->
+                    </Grid.RowDefinitions>
+
+                    <!-- 变量操作区域 -->
+                    <GroupBox Grid.Row="0" Header="变量读写操作" Margin="0,0,0,8" Padding="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <Label Grid.Column="0" Grid.Row="0" Content="操作类型:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox x:Name="AdsOperationTypeComboBox" Grid.Column="1" Grid.Row="0" Height="25" Margin="0,0,10,0">
+                                <ComboBoxItem Content="读取变量" Tag="READ"/>
+                                <ComboBoxItem Content="写入变量" Tag="write"/>
+                            </ComboBox>
+                            
+                            <Label Grid.Column="2" Grid.Row="0" Content="数据类型:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <ComboBox x:Name="AdsDataTypeComboBox" Grid.Column="3" Grid.Row="0" Height="25">
+                                <ComboBoxItem Content="布尔型(BOOL)" Tag="BOOL"/>
+                                <ComboBoxItem Content="字节型(BYTE)" Tag="BYTE"/>
+                                <ComboBoxItem Content="整数型(INT)" Tag="INT"/>
+                                <ComboBoxItem Content="双整数(DINT)" Tag="DINT"/>
+                                <ComboBoxItem Content="实数型(REAL)" Tag="REAL"/>
+                                <ComboBoxItem Content="长实数(LREAL)" Tag="LREAL"/>
+                                <ComboBoxItem Content="字符串(STRING)" Tag="STRING"/>
+                            </ComboBox>
+                            
+                            <Label Grid.Column="0" Grid.Row="1" Content="变量名:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBox x:Name="AdsVariableNameTextBox" Grid.Column="1" Grid.Row="1" Height="25" Margin="0,5,10,5" 
+                                     VerticalContentAlignment="Center" 
+                                     Text="MAIN.bTest" 
+                                     ToolTip="PLC变量名，如：MAIN.bEnable, GVL.nSpeed"/>
+                            
+                            <Label Grid.Column="2" Grid.Row="1" Content="写入值:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBox x:Name="AdsValueTextBox" Grid.Column="3" Grid.Row="1" Height="25" Margin="0,5,0,5" 
+                                     VerticalContentAlignment="Center"
+                                     Text="true"
+                                     ToolTip="要写入的值，格式根据数据类型而定"/>
+                        </Grid>
+                    </GroupBox>
+
+                    <!-- 操作控制区域 -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,8">
+                        <Button x:Name="ExecuteAdsOperationButton" Content="执行操作" Width="80" Height="28" 
+                                Margin="0,0,8,0" Click="ExecuteAdsOperationButton_Click"/>
+                        <Button x:Name="AdsConnectionTestButton" Content="连接测试" Width="80" Height="28" 
+                                Margin="0,0,8,0" Click="AdsConnectionTestButton_Click"/>
+                    </StackPanel>
+
+                    <!-- 实时状态区域 -->
+                    <GroupBox Grid.Row="2" Header="操作状态" Padding="8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="最后操作:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="AdsLastOperationText" Text="无" FontWeight="Bold" Margin="0,0,16,0"/>
+                                <TextBlock Text="时间:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="AdsLastOperationTime" Text="--:--:--"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="操作结果:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="AdsOperationResult" Text="待执行" FontWeight="Bold" Margin="0,0,16,0"/>
+                                <TextBlock Text="用时:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="AdsOperationDuration" Text="0ms"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Row="2" Orientation="Horizontal">
+                                <TextBlock Text="返回数据:" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="AdsReturnedData" Text="无" FontFamily="Consolas" 
+                                          TextWrapping="Wrap" MaxWidth="400"/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </GroupBox>
+
             <!-- 串口专用操作面板 -->
-            <GroupBox x:Name="SerialOperationPanel" Grid.Row="3" Header="串口通讯测试" 
+            <GroupBox x:Name="SerialOperationPanel" Grid.Row="4" Header="串口通讯测试" 
                       Padding="10" Margin="0,0,0,10" Visibility="Collapsed">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -355,7 +453,7 @@
             </GroupBox>
 
             <!-- 通讯日志和发送区域 -->
-            <GroupBox Grid.Row="4" Header="通讯日志" Padding="5">
+            <GroupBox Grid.Row="5" Header="通讯日志" Padding="5">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>      <!-- 日志显示区域 -->

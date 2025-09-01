@@ -140,8 +140,9 @@ namespace VisionLite.Communication
                 UpdateConnectionStatus("未选择", Colors.Gray);
                 SendButton.IsEnabled = false;
                 
-                // 隐藏ModbusTCP专用界面
+                // 隐藏专用操作界面
                 ModbusTcpOperationPanel.Visibility = Visibility.Collapsed;
+                AdsOperationPanel.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -245,6 +246,12 @@ namespace VisionLite.Communication
                 string status = isConnected ? "已连接" : "未连接";
                 Color color = isConnected ? Colors.Green : Colors.Red;
                 UpdateConnectionStatus(status, color);
+                
+                // 更新专用操作面板的控件状态
+                if (_selectedConfig?.Type == CommunicationType.AdsClient)
+                {
+                    UpdateAdsControls();
+                }
             }
             else
             {
@@ -814,12 +821,13 @@ namespace VisionLite.Communication
         private void UpdateOperationPanels()
         {
             // 检查控件是否已初始化
-            if (ModbusTcpOperationPanel == null || SerialOperationPanel == null)
+            if (ModbusTcpOperationPanel == null || SerialOperationPanel == null || AdsOperationPanel == null)
                 return;
                 
             // 隐藏所有专用操作面板
             ModbusTcpOperationPanel.Visibility = Visibility.Collapsed;
             SerialOperationPanel.Visibility = Visibility.Collapsed;
+            AdsOperationPanel.Visibility = Visibility.Collapsed;
             
             // 根据连接类型显示对应的操作面板
             if (_selectedConfig?.Type == CommunicationType.ModbusTcpClient)
@@ -831,6 +839,11 @@ namespace VisionLite.Communication
             {
                 SerialOperationPanel.Visibility = Visibility.Visible;
                 InitializeSerialPanel();
+            }
+            else if (_selectedConfig?.Type == CommunicationType.AdsClient)
+            {
+                AdsOperationPanel.Visibility = Visibility.Visible;
+                InitializeAdsPanel();
             }
         }
 
@@ -1243,6 +1256,219 @@ namespace VisionLite.Communication
         {
             var bytes = System.Text.Encoding.UTF8.GetBytes(text);
             return string.Join(" ", bytes.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
+        }
+
+        #endregion
+
+        #region ADS专用操作面板
+
+        /// <summary>
+        /// 初始化ADS操作面板的默认设置
+        /// </summary>
+        private void InitializeAdsPanel()
+        {
+            // 检查ADS面板控件是否已初始化
+            if (AdsOperationTypeComboBox == null || AdsDataTypeComboBox == null)
+                return;
+                
+            // 设置默认操作类型
+            if (AdsOperationTypeComboBox.SelectedIndex == -1)
+                AdsOperationTypeComboBox.SelectedIndex = 0; // 默认选择读取
+            
+            // 设置默认数据类型
+            if (AdsDataTypeComboBox.SelectedIndex == -1)
+                AdsDataTypeComboBox.SelectedIndex = 0; // 默认选择BOOL
+
+            // 更新控件状态
+            UpdateAdsControls();
+        }
+
+        /// <summary>
+        /// 更新ADS控件的启用状态
+        /// </summary>
+        private void UpdateAdsControls()
+        {
+            bool isConnected = _selectedCommunication?.Status == ConnectionStatus.Connected;
+            
+            if (ExecuteAdsOperationButton != null)
+                ExecuteAdsOperationButton.IsEnabled = isConnected;
+        }
+
+        /// <summary>
+        /// 执行ADS操作按钮点击事件
+        /// </summary>
+        private async void ExecuteAdsOperationButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedCommunication is not AdsCommunication adsComm)
+            {
+                LogMessage("错误：未找到ADS通讯连接");
+                return;
+            }
+
+            if (adsComm.Status != ConnectionStatus.Connected)
+            {
+                LogMessage("错误：ADS连接未建立");
+                return;
+            }
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            string operation = "未知";
+            string result = "失败";
+            string returnData = "无";
+
+            try
+            {
+                string variableName = AdsVariableNameTextBox?.Text?.Trim() ?? "";
+                string value = AdsValueTextBox?.Text?.Trim() ?? "";
+                
+                if (string.IsNullOrEmpty(variableName))
+                {
+                    LogMessage("错误：变量名不能为空");
+                    return;
+                }
+
+                var selectedOperation = (AdsOperationTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+                var selectedDataType = (AdsDataTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+
+                if (selectedOperation == "READ")
+                {
+                    operation = $"读取 {variableName}";
+                    LogMessage($"执行ADS读取操作: {variableName} (类型: {selectedDataType})");
+                    
+                    // 执行读取操作
+                    bool readSuccess = false;
+                    switch (selectedDataType)
+                    {
+                        case "BOOL":
+                            bool boolValue = false;
+                            readSuccess = adsComm.ReadVariable(variableName, ref boolValue);
+                            if (readSuccess) returnData = boolValue.ToString();
+                            break;
+                        case "BYTE":
+                            byte byteValue = 0;
+                            readSuccess = adsComm.ReadVariable(variableName, ref byteValue);
+                            if (readSuccess) returnData = byteValue.ToString();
+                            break;
+                        case "INT":
+                            short intValue = 0;
+                            readSuccess = adsComm.ReadVariable(variableName, ref intValue);
+                            if (readSuccess) returnData = intValue.ToString();
+                            break;
+                        case "DINT":
+                            int dintValue = 0;
+                            readSuccess = adsComm.ReadVariable(variableName, ref dintValue);
+                            if (readSuccess) returnData = dintValue.ToString();
+                            break;
+                        case "REAL":
+                            float realValue = 0;
+                            readSuccess = adsComm.ReadVariable(variableName, ref realValue);
+                            if (readSuccess) returnData = realValue.ToString("F3");
+                            break;
+                        case "LREAL":
+                            double lrealValue = 0;
+                            readSuccess = adsComm.ReadVariable(variableName, ref lrealValue);
+                            if (readSuccess) returnData = lrealValue.ToString("F3");
+                            break;
+                        case "STRING":
+                            string stringValue = "";
+                            readSuccess = adsComm.ReadVariable(variableName, ref stringValue);
+                            if (readSuccess) returnData = $"\"{stringValue}\"";
+                            break;
+                    }
+                    
+                    result = readSuccess ? "成功" : "失败";
+                    LogMessage($"ADS读取{result}: {variableName} = {returnData}");
+                }
+                else if (selectedOperation == "write")
+                {
+                    operation = $"写入 {variableName} = {value}";
+                    LogMessage($"执行ADS写入操作: {variableName} = {value} (类型: {selectedDataType})");
+                    
+                    // 执行写入操作
+                    bool writeSuccess = adsComm.WriteVariableFromString(variableName, value, selectedDataType);
+                    result = writeSuccess ? "成功" : "失败";
+                    returnData = writeSuccess ? "写入完成" : "写入失败";
+                    
+                    LogMessage($"ADS写入{result}: {variableName} = {value}");
+                }
+            }
+            catch (Exception ex)
+            {
+                result = "异常";
+                returnData = ex.Message;
+                LogMessage($"ADS操作异常: {ex.Message}");
+            }
+            finally
+            {
+                stopwatch.Stop();
+                
+                // 更新状态显示
+                UpdateAdsOperationStatus(operation, result, returnData, stopwatch.ElapsedMilliseconds);
+            }
+        }
+
+        /// <summary>
+        /// ADS连接测试按钮点击事件
+        /// </summary>
+        private async void AdsConnectionTestButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedConfig?.Type != CommunicationType.AdsClient)
+            {
+                LogMessage("错误：请先选择ADS连接");
+                return;
+            }
+
+            try
+            {
+                LogMessage("开始ADS连接测试...");
+                var testResult = await AdsConnectionTest.TestConnection(_selectedConfig.Ads);
+                
+                // 在日志中显示详细测试结果
+                LogMessage("=== ADS连接测试结果 ===");
+                foreach (var line in testResult.Split('\n'))
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                        LogMessage(line.Trim());
+                }
+                LogMessage("=== 测试结束 ===");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"ADS连接测试失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 更新ADS操作状态显示
+        /// </summary>
+        private void UpdateAdsOperationStatus(string operation, string result, string data, long duration)
+        {
+            try
+            {
+                if (AdsLastOperationText != null)
+                    AdsLastOperationText.Text = operation;
+                
+                if (AdsLastOperationTime != null)
+                    AdsLastOperationTime.Text = DateTime.Now.ToString("HH:mm:ss");
+                
+                if (AdsOperationResult != null)
+                {
+                    AdsOperationResult.Text = result;
+                    AdsOperationResult.Foreground = result == "成功" ? 
+                        new SolidColorBrush(Colors.Green) : 
+                        new SolidColorBrush(Colors.Red);
+                }
+                
+                if (AdsOperationDuration != null)
+                    AdsOperationDuration.Text = $"{duration}ms";
+                
+                if (AdsReturnedData != null)
+                    AdsReturnedData.Text = data;
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"更新ADS状态显示失败: {ex.Message}");
+            }
         }
 
         #endregion

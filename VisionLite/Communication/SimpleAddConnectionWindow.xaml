@@ -69,6 +69,7 @@
                 <ComboBoxItem Content="ModbusTCP服务器" Tag="ModbusTcpServer"/>
                 <ComboBoxItem Content="ModbusTCP客户端" Tag="ModbusTcpClient"/>
                 <ComboBoxItem Content="串口通讯" Tag="SerialPort"/>
+                <ComboBoxItem Content="倍福ADS" Tag="AdsClient"/>
             </ComboBox>
         </Grid>
 

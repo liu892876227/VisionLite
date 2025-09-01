@@ -1,0 +1,1505 @@
+using System;
+using System.ComponentModel;
+using TwinCAT.Ads.Internal;
+
+namespace TwinCAT.Ads
+{
+    [CLSCompliant(true)]
+    public class TcAdsClient : IDisposable
+    {
+        private class NotificationReceiver : INotificationReceiver
+        {
+            private TcAdsClient _client;
+
+            public NotificationReceiver(TcAdsClient client)
+            {
+                _client = client;
+            }
+
+            public void OnRouterNotification(AmsRouterState state)
+            {
+                if (_client._amsRouterNotificationEventHandlerDelegate != null)
+                {
+                    _client._amsRouterNotificationEventHandlerDelegate(_client, new AmsRouterNotificationEventArgs(state));
+                }
+            }
+
+            public void OnSymbolVersionChanged(AdsSymbolVersionChangedEventArgs eventArgs)
+            {
+                if (_client._adsSymbolVersionChangedEventHandlerDelegate != null)
+                {
+                    _client._adsSymbolVersionChangedEventHandlerDelegate(_client, eventArgs);
+                }
+            }
+
+            public void OnAdsStateChanged(AdsStateChangedEventArgs eventArgs)
+            {
+                if (_client._adsStateChangedEventHandlerDelegate != null)
+                {
+                    _client._adsStateChangedEventHandlerDelegate(_client, eventArgs);
+                }
+            }
+
+            public void OnNotificationError(int handle, long timeStamp)
+            {
+                if (_client.AdsNotificationError != null)
+                {
+                    _client.AdsNotificationError(_client, new AdsNotificationErrorEventArgs(new AdsInvalidNotificationException(handle, timeStamp)));
+                }
+            }
+
+            public void OnNotificationError(Exception e)
+            {
+                if (_client.AdsNotificationError != null)
+                {
+                    _client.AdsNotificationError(_client, new AdsNotificationErrorEventArgs(e));
+                }
+            }
+
+            public unsafe void OnNotification(int handle, long timeStamp, int length, NotificationEntry entry)
+            {
+                if (_client.AdsNotificationEx != null && entry.userData != null && (object)entry.userData.GetType() == typeof(AdsNotificationExUserData))
+                {
+                    AdsNotificationExUserData adsNotificationExUserData = (AdsNotificationExUserData)entry.userData;
+                    object value;
+                    fixed (byte* ptr = entry.data.GetBuffer())
+                    {
+                        value = AdsMarshal.PtrToObject(ptr + entry.offset + entry.data.Origin, entry.length, adsNotificationExUserData.type, adsNotificationExUserData.args);
+                    }
+
+                    _client.AdsNotificationEx(_client, new AdsNotificationExEventArgs(timeStamp, adsNotificationExUserData.userData, handle, value));
+                }
+                else if (_client.AdsNotification != null)
+                {
+                    _client.AdsNotification(_client, new AdsNotificationEventArgs(timeStamp, entry.userData, handle, length, entry.offset, entry.data));
+                }
+                else
+                {
+                    Trace.WriteLine("Notification event not registered", 0);
+                }
+            }
+        }
+
+        private bool _bSynchronize;
+
+        private bool _bClientCycle;
+
+        private TcAdsSyncPort _syncPort;
+
+        private NotificationReceiver _notificationReceiver;
+
+        private SymbolInfoTable _symbolInfoTable;
+
+        private AmsRouterNotificationEventHandler _amsRouterNotificationEventHandlerDelegate;
+
+        private EventHandler _adsSymbolVersionChangedEventHandlerDelegate;
+
+        private AdsStateChangedEventHandler _adsStateChangedEventHandlerDelegate;
+
+        private bool _disposed;
+
+        public bool Disposed => _disposed;
+
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [CLSCompliant(false)]
+        public ITcAdsRaw RawInterface
+        {
+            get
+            {
+                if (_syncPort == null)
+                {
+                    TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+                }
+
+                return _syncPort;
+            }
+        }
+
+        public int Timeout
+        {
+            get
+            {
+                if (_syncPort == null)
+                {
+                    TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+                }
+
+                return _syncPort.Timeout;
+            }
+            set
+            {
+                if (_syncPort == null)
+                {
+                    TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+                }
+
+                _syncPort.Timeout = value;
+            }
+        }
+
+        public bool ClientCycle
+        {
+            get
+            {
+                return _bClientCycle;
+            }
+            set
+            {
+                if (_syncPort != null)
+                {
+                    _syncPort.ClientCycle = value;
+                    _bClientCycle = _syncPort.ClientCycle;
+                }
+                else
+                {
+                    _bClientCycle = value;
+                }
+            }
+        }
+
+        public bool Synchronize
+        {
+            get
+            {
+                return _bSynchronize;
+            }
+            set
+            {
+                if (_syncPort != null)
+                {
+                    _syncPort.Synchronize = value;
+                    _bSynchronize = _syncPort.Synchronize;
+                }
+                else
+                {
+                    _bSynchronize = value;
+                }
+            }
+        }
+
+        public bool IsLocal
+        {
+            get
+            {
+                if (_syncPort == null)
+                {
+                    TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+                }
+
+                return _syncPort.IsLocal;
+            }
+        }
+
+        public int ServerPort
+        {
+            get
+            {
+                if (_syncPort == null)
+                {
+                    TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+                }
+
+                return _syncPort.TargetAddress.port;
+            }
+        }
+
+        public string ServerNetID
+        {
+            get
+            {
+                if (_syncPort == null)
+                {
+                    TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+                }
+
+                return _syncPort.TargetAddress.netId.ToString();
+            }
+        }
+
+        public int ClientPort
+        {
+            get
+            {
+                if (_syncPort == null)
+                {
+                    TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+                }
+
+                return _syncPort.Port;
+            }
+        }
+
+        public string ClientNetID
+        {
+            get
+            {
+                if (_syncPort == null)
+                {
+                    TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+                }
+
+                return _syncPort.NetId.ToString();
+            }
+        }
+
+        public bool IsConnected => _syncPort != null;
+
+        public AmsRouterState RouterState
+        {
+            get
+            {
+                TcLocalSystem instance = TcLocalSystem.GetInstance();
+                AmsRouterState amsRouterState = AmsRouterState.Removed;
+                try
+                {
+                    return instance.RouterState;
+                }
+                finally
+                {
+                    instance.Release();
+                }
+            }
+        }
+
+        public event AdsNotificationEventHandler AdsNotification;
+
+        public event AdsNotificationExEventHandler AdsNotificationEx;
+
+        public event AdsNotificationErrorEventHandler AdsNotificationError;
+
+        public event AmsRouterNotificationEventHandler AmsRouterNotification
+        {
+            add
+            {
+                _amsRouterNotificationEventHandlerDelegate = (AmsRouterNotificationEventHandler)Delegate.Combine(_amsRouterNotificationEventHandlerDelegate, value);
+            }
+            remove
+            {
+                _amsRouterNotificationEventHandlerDelegate = (AmsRouterNotificationEventHandler)Delegate.Remove(_amsRouterNotificationEventHandlerDelegate, value);
+            }
+        }
+
+        public event AdsStateChangedEventHandler AdsStateChanged
+        {
+            add
+            {
+                if (_adsStateChangedEventHandlerDelegate == null && _syncPort != null)
+                {
+                    _syncPort.RegisterStateChangedNotification();
+                }
+
+                _adsStateChangedEventHandlerDelegate = (AdsStateChangedEventHandler)Delegate.Combine(_adsStateChangedEventHandlerDelegate, value);
+            }
+            remove
+            {
+                _adsStateChangedEventHandlerDelegate = (AdsStateChangedEventHandler)Delegate.Remove(_adsStateChangedEventHandlerDelegate, value);
+                if (_adsStateChangedEventHandlerDelegate == null && _syncPort != null)
+                {
+                    _syncPort.UnregisterStateChangedNotification();
+                }
+            }
+        }
+
+        public event EventHandler AdsSymbolVersionChanged
+        {
+            add
+            {
+                if (_adsSymbolVersionChangedEventHandlerDelegate == null && _syncPort != null)
+                {
+                    _syncPort.RegisterSymbolVersionChangedNotification();
+                }
+
+                _adsSymbolVersionChangedEventHandlerDelegate = (EventHandler)Delegate.Combine(_adsSymbolVersionChangedEventHandlerDelegate, value);
+            }
+            remove
+            {
+                _adsSymbolVersionChangedEventHandlerDelegate = (EventHandler)Delegate.Remove(_adsSymbolVersionChangedEventHandlerDelegate, value);
+                if (_adsSymbolVersionChangedEventHandlerDelegate == null)
+                {
+                    _syncPort.UnregisterSymbolVersionChangedNotification();
+                }
+            }
+        }
+
+        public TcAdsClient()
+        {
+            _syncPort = null;
+            _notificationReceiver = new NotificationReceiver(this);
+            _bSynchronize = true;
+            _bClientCycle = false;
+        }
+
+        ~TcAdsClient()
+        {
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposing || _syncPort == null)
+            {
+                return;
+            }
+
+            TcLocalSystem instance = TcLocalSystem.GetInstance();
+            try
+            {
+                if (_symbolInfoTable != null)
+                {
+                    _symbolInfoTable.Dispose();
+                }
+
+                instance.CloseSyncPort(_syncPort);
+            }
+            finally
+            {
+                instance.Release();
+            }
+
+            _syncPort = null;
+            _symbolInfoTable = null;
+        }
+
+        public void Connect(string netID, int srvPort)
+        {
+            if (netID == null || netID.Length == 0)
+            {
+                Connect(srvPort);
+            }
+            else
+            {
+                Connect(new AmsNetId(netID), srvPort);
+            }
+        }
+
+        public void Connect(byte[] netID, int srvPort)
+        {
+            Connect(new AmsNetId(netID), srvPort);
+        }
+
+        public void Connect(int srvPort)
+        {
+            TcLocalSystem instance = TcLocalSystem.GetInstance();
+            try
+            {
+                if (_syncPort != null)
+                {
+                    if (_symbolInfoTable != null)
+                    {
+                        _symbolInfoTable.Dispose();
+                    }
+
+                    instance.CloseSyncPort(_syncPort);
+                }
+
+                _syncPort = instance.CreateSyncPort(srvPort, _notificationReceiver, _bClientCycle, _bSynchronize);
+                AddEventNotifications();
+                OnConnected();
+            }
+            catch (Exception ex)
+            {
+                if (_syncPort != null)
+                {
+                    _syncPort.Dispose();
+                    _syncPort = null;
+                }
+
+                throw ex;
+            }
+            finally
+            {
+                _symbolInfoTable = null;
+                instance.Release();
+            }
+        }
+
+        public void Connect(AmsNetId netID, int srvPort)
+        {
+            TcLocalSystem instance = TcLocalSystem.GetInstance();
+            try
+            {
+                if (_syncPort != null)
+                {
+                    instance.CloseSyncPort(_syncPort);
+                }
+
+                _syncPort = instance.CreateSyncPort(netID, srvPort, _notificationReceiver, _bClientCycle, _bSynchronize);
+                AddEventNotifications();
+                OnConnected();
+            }
+            catch (Exception ex)
+            {
+                if (_syncPort != null)
+                {
+                    instance.CloseSyncPort(_syncPort);
+                    _syncPort.Dispose();
+                    _syncPort = null;
+                }
+
+                throw ex;
+            }
+            finally
+            {
+                instance.Release();
+            }
+        }
+
+        public void Connect(AmsNetId netID, AmsPort srvPort)
+        {
+            TcLocalSystem instance = TcLocalSystem.GetInstance();
+            try
+            {
+                if (_syncPort != null)
+                {
+                    instance.CloseSyncPort(_syncPort);
+                }
+
+                _syncPort = instance.CreateSyncPort(netID, (int)srvPort, _notificationReceiver, _bClientCycle, _bSynchronize);
+                AddEventNotifications();
+                OnConnected();
+            }
+            catch (Exception ex)
+            {
+                if (_syncPort != null)
+                {
+                    _syncPort.Dispose();
+                    _syncPort = null;
+                }
+
+                throw ex;
+            }
+            finally
+            {
+                instance.Release();
+            }
+        }
+
+        protected virtual void OnConnected()
+        {
+        }
+
+        public int Read(int indexGroup, int indexOffset, AdsStream dataStream, int offset, int length)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (dataStream.Length < length + offset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.Read((uint)indexGroup, (uint)indexOffset, offset + dataStream.Origin, length, dataStream.GetBuffer(), throwAdsException: true, out var dataRead);
+            return dataRead;
+        }
+
+        public int Read(int indexGroup, int indexOffset, AdsStream dataStream)
+        {
+            return Read(indexGroup, indexOffset, dataStream, 0, (int)dataStream.Length);
+        }
+
+        public int Read(long indexGroup, long indexOffset, AdsStream dataStream, int offset, int length)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (dataStream.Length < length + offset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.Read((uint)indexGroup, (uint)indexOffset, offset + dataStream.Origin, length, dataStream.GetBuffer(), throwAdsException: true, out var dataRead);
+            return dataRead;
+        }
+
+        public int Read(long indexGroup, long indexOffset, AdsStream dataStream)
+        {
+            return Read(indexGroup, indexOffset, dataStream, 0, (int)dataStream.Length);
+        }
+
+        public int Read(int variableHandle, AdsStream dataStream, int offset, int length)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (dataStream.Length < length + offset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.Read(variableHandle, offset + dataStream.Origin, length, dataStream.GetBuffer(), throwAdsException: true, out var dataRead);
+            return dataRead;
+        }
+
+        public int Read(int variableHandle, AdsStream dataStream)
+        {
+            return Read(variableHandle, dataStream, 0, (int)dataStream.Length);
+        }
+
+        public void Write(int indexGroup, int indexOffset, AdsStream dataStream, int offset, int length)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (dataStream == null)
+            {
+                if (length != 0 || offset != 0)
+                {
+                    throw new ArgumentException();
+                }
+
+                dataStream = new AdsStream(0);
+            }
+
+            if (dataStream.Length < length + offset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.Write((uint)indexGroup, (uint)indexOffset, offset + dataStream.Origin, length, dataStream.GetBuffer(), throwAdsException: true);
+        }
+
+        public void Write(int indexGroup, int indexOffset, AdsStream dataStream)
+        {
+            if (dataStream == null)
+            {
+                dataStream = new AdsStream(0);
+            }
+
+            Write(indexGroup, indexOffset, dataStream, 0, (int)dataStream.Length);
+        }
+
+        public void Write(int indexGroup, int indexOffset)
+        {
+            Write(indexGroup, indexOffset, new AdsStream(0));
+        }
+
+        public void Write(long indexGroup, long indexOffset, AdsStream dataStream, int offset, int length)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (dataStream == null)
+            {
+                if (length != 0 || offset != 0)
+                {
+                    throw new ArgumentException();
+                }
+
+                dataStream = new AdsStream(0);
+            }
+
+            if (dataStream.Length < length + offset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.Write((uint)indexGroup, (uint)indexOffset, offset + dataStream.Origin, length, dataStream.GetBuffer(), throwAdsException: true);
+        }
+
+        public void Write(long indexGroup, long indexOffset, AdsStream dataStream)
+        {
+            if (dataStream == null)
+            {
+                dataStream = new AdsStream(0);
+            }
+
+            Write(indexGroup, indexOffset, dataStream, 0, (int)dataStream.Length);
+        }
+
+        public void Write(long indexGroup, long indexOffset)
+        {
+            Write(indexGroup, indexOffset, new AdsStream(0));
+        }
+
+        public void Write(int variableHandle, AdsStream dataStream, int offset, int length)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (dataStream == null)
+            {
+                if (length != 0 || offset != 0)
+                {
+                    throw new ArgumentException();
+                }
+
+                dataStream = new AdsStream(0);
+            }
+
+            if (dataStream.Length < length + offset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.Write(variableHandle, offset + dataStream.Origin, length, dataStream.GetBuffer(), throwAdsException: true);
+        }
+
+        public void Write(int variableHandle, AdsStream dataStream)
+        {
+            Write(variableHandle, dataStream, 0, (int)dataStream.Length);
+        }
+
+        public object ReadAny(int variableHandle, Type type, int[] args)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.ReadAny(variableHandle, type, args, throwAdsException: true, out var value);
+            return value;
+        }
+
+        public object ReadAny(int variableHandle, Type type)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.ReadAny(variableHandle, type, throwAdsException: true, out var value);
+            return value;
+        }
+
+        public object ReadAny(long indexGroup, long indexOffset, Type type, int[] args)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.ReadAny((uint)indexGroup, (uint)indexOffset, type, args, throwAdsException: true, out var value);
+            return value;
+        }
+
+        public object ReadAny(long indexGroup, long indexOffset, Type type)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.ReadAny((uint)indexGroup, (uint)indexOffset, type, throwAdsException: true, out var value);
+            return value;
+        }
+
+        public void WriteAny(long indexGroup, long indexOffset, object value)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.WriteAny((uint)indexGroup, (uint)indexOffset, value, throwAdsException: true);
+        }
+
+        public void WriteAny(int variableHandle, object value)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.WriteAny(variableHandle, value, throwAdsException: true);
+        }
+
+        public void WriteAny(long indexGroup, long indexOffset, object value, int[] args)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.WriteAny((uint)indexGroup, (uint)indexOffset, value, args, throwAdsException: true);
+        }
+
+        public void WriteAny(int variableHandle, object value, int[] args)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.WriteAny(variableHandle, value, args, throwAdsException: true);
+        }
+
+        public int ReadWrite(long indexGroup, long indexOffset, AdsStream rdDataStream, int rdOffset, int rdLength, AdsStream wrDataStream, int wrOffset, int wrLength)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (wrDataStream == null)
+            {
+                if (wrLength != 0 || wrOffset != 0)
+                {
+                    throw new ArgumentException();
+                }
+
+                wrDataStream = new AdsStream(0);
+            }
+
+            if (rdDataStream == null)
+            {
+                if (rdLength != 0 || rdOffset != 0)
+                {
+                    throw new ArgumentException();
+                }
+
+                rdDataStream = new AdsStream(0);
+            }
+
+            if (wrDataStream.Length < wrLength + wrOffset || rdDataStream.Length < rdLength + rdOffset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.ReadWrite((uint)indexGroup, (uint)indexOffset, rdOffset + rdDataStream.Origin, rdLength, rdDataStream.GetBuffer(), wrOffset + wrDataStream.Origin, wrLength, wrDataStream.GetBuffer(), throwAdsException: true, out var dataRead);
+            return dataRead;
+        }
+
+        public int ReadWrite(int indexGroup, int indexOffset, AdsStream rdDataStream, int rdOffset, int rdLength, AdsStream wrDataStream, int wrOffset, int wrLength)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (wrDataStream == null)
+            {
+                if (wrLength != 0 || wrOffset != 0)
+                {
+                    throw new ArgumentException();
+                }
+
+                wrDataStream = new AdsStream(0);
+            }
+
+            if (rdDataStream == null)
+            {
+                if (rdLength != 0 || rdOffset != 0)
+                {
+                    throw new ArgumentException();
+                }
+
+                rdDataStream = new AdsStream(0);
+            }
+
+            if (wrDataStream.Length < wrLength + wrOffset || rdDataStream.Length < rdLength + rdOffset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.ReadWrite((uint)indexGroup, (uint)indexOffset, rdOffset + rdDataStream.Origin, rdLength, rdDataStream.GetBuffer(), wrOffset + wrDataStream.Origin, wrLength, wrDataStream.GetBuffer(), throwAdsException: true, out var dataRead);
+            return dataRead;
+        }
+
+        public int ReadWrite(int indexGroup, int indexOffset, AdsStream rdDataStream, AdsStream wrDataStream)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (wrDataStream == null)
+            {
+                wrDataStream = new AdsStream(0);
+            }
+
+            if (rdDataStream == null)
+            {
+                rdDataStream = new AdsStream(0);
+            }
+
+            _syncPort.ReadWrite((uint)indexGroup, (uint)indexOffset, rdDataStream.Origin, (int)rdDataStream.Length, rdDataStream.GetBuffer(), wrDataStream.Origin, (int)wrDataStream.Length, wrDataStream.GetBuffer(), throwAdsException: true, out var dataRead);
+            return dataRead;
+        }
+
+        public int ReadWrite(long indexGroup, long indexOffset, AdsStream rdDataStream, AdsStream wrDataStream)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (wrDataStream == null)
+            {
+                wrDataStream = new AdsStream(0);
+            }
+
+            if (rdDataStream == null)
+            {
+                rdDataStream = new AdsStream(0);
+            }
+
+            _syncPort.ReadWrite((uint)indexGroup, (uint)indexOffset, rdDataStream.Origin, (int)rdDataStream.Length, rdDataStream.GetBuffer(), wrDataStream.Origin, (int)wrDataStream.Length, wrDataStream.GetBuffer(), throwAdsException: true, out var dataRead);
+            return dataRead;
+        }
+
+        public int AddDeviceNotificationEx(long indexGroup, long indexOffset, AdsTransMode transMode, int cycleTime, int maxDelay, object userData, Type type)
+        {
+            int length = AdsMarshal.SizeOf(type);
+            return AddDeviceNotification(indexGroup, indexOffset, new AdsStream(length), 0, length, transMode, cycleTime, maxDelay, new AdsNotificationExUserData(type, null, userData));
+        }
+
+        public int AddDeviceNotificationEx(long indexGroup, long indexOffset, AdsTransMode transMode, int cycleTime, int maxDelay, object userData, Type type, int[] args)
+        {
+            int length = AdsMarshal.SizeOf(type, args);
+            return AddDeviceNotification(indexGroup, indexOffset, new AdsStream(length), 0, length, transMode, cycleTime, maxDelay, new AdsNotificationExUserData(type, args, userData));
+        }
+
+        public int AddDeviceNotificationEx(string variableName, AdsTransMode transMode, int cycleTime, int maxDelay, object userData, Type type)
+        {
+            int length = AdsMarshal.SizeOf(type);
+            return AddDeviceNotification(variableName, new AdsStream(length), 0, length, transMode, cycleTime, maxDelay, new AdsNotificationExUserData(type, null, userData));
+        }
+
+        public int AddDeviceNotificationEx(string variableName, AdsTransMode transMode, int cycleTime, int maxDelay, object userData, Type type, int[] args)
+        {
+            int length = AdsMarshal.SizeOf(type, args);
+            return AddDeviceNotification(variableName, new AdsStream(length), 0, length, transMode, cycleTime, maxDelay, new AdsNotificationExUserData(type, args, userData));
+        }
+
+        public int AddDeviceNotification(int indexGroup, int indexOffset, AdsStream dataStream, int offset, int length, AdsTransMode transMode, int cycleTime, int maxDelay, object userData)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            return _syncPort.AddDeviceNotification((uint)indexGroup, (uint)indexOffset, dataStream, offset, length, (int)transMode, cycleTime * 10000, maxDelay * 10000, userData);
+        }
+
+        public int AddDeviceNotification(int indexGroup, int indexOffset, AdsStream dataStream, AdsTransMode transMode, int cycleTime, int maxDelay, object userData)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            return _syncPort.AddDeviceNotification((uint)indexGroup, (uint)indexOffset, dataStream, 0, (int)dataStream.Length, (int)transMode, cycleTime * 10000, maxDelay * 10000, userData);
+        }
+
+        public int AddDeviceNotification(long indexGroup, long indexOffset, AdsStream dataStream, int offset, int length, AdsTransMode transMode, int cycleTime, int maxDelay, object userData)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            return _syncPort.AddDeviceNotification((uint)indexGroup, (uint)indexOffset, dataStream, offset, length, (int)transMode, cycleTime * 10000, maxDelay * 10000, userData);
+        }
+
+        public int AddDeviceNotification(long indexGroup, long indexOffset, AdsStream dataStream, AdsTransMode transMode, int cycleTime, int maxDelay, object userData)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            return _syncPort.AddDeviceNotification((uint)indexGroup, (uint)indexOffset, dataStream, 0, (int)dataStream.Length, (int)transMode, cycleTime * 10000, maxDelay * 10000, userData);
+        }
+
+        public int AddDeviceNotification(string variableName, AdsStream dataStream, int offset, int length, AdsTransMode transMode, int cycleTime, int maxDelay, object userData)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            return _syncPort.AddDeviceNotification(variableName, dataStream, offset, length, (int)transMode, cycleTime * 10000, maxDelay * 10000, userData);
+        }
+
+        public int AddDeviceNotification(string variableName, AdsStream dataStream, AdsTransMode transMode, int cycleTime, int maxDelay, object userData)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            return _syncPort.AddDeviceNotification(variableName, dataStream, 0, (int)dataStream.Length, (int)transMode, cycleTime * 10000, maxDelay * 10000, userData);
+        }
+
+        public void DeleteDeviceNotification(int notificationHandle)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.DelDeviceNotification(notificationHandle);
+        }
+
+        public DeviceInfo ReadDeviceInfo()
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.ReadDeviceInfo(throwAdsException: true, out var deviceInfo);
+            return deviceInfo;
+        }
+
+        public void WriteControl(StateInfo stateInfo, AdsStream dataStream, int offset, int length)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (dataStream.Length < length + offset)
+            {
+                throw new ArgumentException();
+            }
+
+            _syncPort.WriteControl(stateInfo, dataStream.GetBuffer(), offset, length, throwAdsException: true);
+        }
+
+        public void WriteControl(StateInfo stateInfo)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.WriteControl(stateInfo, new byte[1], 0, 0, throwAdsException: true);
+        }
+
+        public StateInfo ReadState()
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.ReadState(throwAdsException: true, out var stateInfo);
+            return stateInfo;
+        }
+
+        public AdsErrorCode TryReadState(out StateInfo stateInfo)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            return _syncPort.ReadState(throwAdsException: false, out stateInfo);
+        }
+
+        public int CreateVariableHandle(string variableName)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            return _syncPort.CreateVariableHandle(variableName);
+        }
+
+        public void DeleteVariableHandle(int variableHandle)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            _syncPort.DeleteVariableHandle(variableHandle);
+        }
+
+        public ITcAdsSymbol ReadSymbolInfo(string name)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (_symbolInfoTable == null)
+            {
+                _symbolInfoTable = new SymbolInfoTable(this);
+            }
+
+            return _symbolInfoTable.GetSymbol(name, bLookup: false);
+        }
+
+        public TcAdsSymbolInfoLoader CreateSymbolInfoLoader()
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.PortNotConnected);
+            }
+
+            return new TcAdsSymbolInfoLoader(this);
+        }
+
+        public object ReadSymbol(string name, Type type, bool reloadSymbolInfo)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (_symbolInfoTable == null)
+            {
+                _symbolInfoTable = new SymbolInfoTable(this);
+            }
+
+            return _symbolInfoTable.ReadSymbol(name, type, reloadSymbolInfo);
+        }
+
+        public void WriteSymbol(string name, object value, bool reloadSymbolInfo)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (_symbolInfoTable == null)
+            {
+                _symbolInfoTable = new SymbolInfoTable(this);
+            }
+
+            _symbolInfoTable.WriteSymbol(name, value, reloadSymbolInfo);
+        }
+
+        public object ReadSymbol(ITcAdsSymbol symbol)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            AdsErrorCode result;
+            switch (symbol.Datatype)
+            {
+                case AdsDatatypeId.ADST_STRING:
+                    {
+                        AdsStream adsStream = new AdsStream(symbol.Size - 1);
+                        AdsBinaryReader adsBinaryReader = new AdsBinaryReader(adsStream);
+                        Read(symbol.IndexGroup, symbol.IndexOffset, adsStream);
+                        return adsBinaryReader.ReadPlcString(symbol.Size - 1);
+                    }
+                case AdsDatatypeId.ADST_REAL64:
+                    if (symbol.Size == 8)
+                    {
+                        return _syncPort.ReadReal64((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+                case AdsDatatypeId.ADST_REAL32:
+                    if (symbol.Size == 4)
+                    {
+                        return _syncPort.ReadReal32((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+                case AdsDatatypeId.ADST_UINT32:
+                    if (symbol.Size == 4)
+                    {
+                        return _syncPort.ReadUInt32((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+                case AdsDatatypeId.ADST_INT32:
+                    if (symbol.Size == 4)
+                    {
+                        return _syncPort.ReadInt32((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+                case AdsDatatypeId.ADST_UINT16:
+                    if (symbol.Size == 2)
+                    {
+                        return _syncPort.ReadUInt16((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+                case AdsDatatypeId.ADST_INT16:
+                    if (symbol.Size == 2)
+                    {
+                        return _syncPort.ReadInt16((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+                case AdsDatatypeId.ADST_UINT8:
+                    if (symbol.Size == 1)
+                    {
+                        return _syncPort.ReadUInt8((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+                case AdsDatatypeId.ADST_INT8:
+                    if (symbol.Size == 1)
+                    {
+                        return _syncPort.ReadInt8((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+                case AdsDatatypeId.ADST_BIT:
+                    if (symbol.Size == 1)
+                    {
+                        return _syncPort.ReadBoolean((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, throwAdsException: true, out result);
+                    }
+
+                    break;
+            }
+
+            throw new AdsDatatypeNotSupportedException();
+        }
+
+        public void WriteSymbol(ITcAdsSymbol symbol, object val)
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            Type type = val.GetType();
+            switch (symbol.Datatype)
+            {
+                case AdsDatatypeId.ADST_STRING:
+                    {
+                        if ((object)type != typeof(string))
+                        {
+                            throw new AdsDatatypeNotSupportedException("Cannot convert object to symbol type.");
+                        }
+
+                        AdsStream adsStream = new AdsStream(symbol.Size - 1);
+                        AdsBinaryWriter adsBinaryWriter = new AdsBinaryWriter(adsStream);
+                        adsBinaryWriter.WritePlcString((string)val, symbol.Size - 1);
+                        Write(symbol.IndexGroup, symbol.IndexOffset, adsStream);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_REAL64:
+                    {
+                        if (symbol.Size != 8)
+                        {
+                            break;
+                        }
+
+                        double val8;
+                        try
+                        {
+                            if ((object)type == typeof(double))
+                            {
+                                val8 = (double)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val8 = double.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val8, throwAdsException: true);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_REAL32:
+                    {
+                        if (symbol.Size != 4)
+                        {
+                            break;
+                        }
+
+                        float val3;
+                        try
+                        {
+                            if ((object)type == typeof(float))
+                            {
+                                val3 = (float)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val3 = float.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val3, throwAdsException: true);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_UINT32:
+                    {
+                        if (symbol.Size != 4)
+                        {
+                            break;
+                        }
+
+                        uint val6;
+                        try
+                        {
+                            if ((object)type == typeof(uint))
+                            {
+                                val6 = (uint)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val6 = uint.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val6, throwAdsException: true);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_INT32:
+                    {
+                        if (symbol.Size != 4)
+                        {
+                            break;
+                        }
+
+                        int val9;
+                        try
+                        {
+                            if ((object)type == typeof(int))
+                            {
+                                val9 = (int)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val9 = int.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val9, throwAdsException: true);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_UINT16:
+                    {
+                        if (symbol.Size != 2)
+                        {
+                            break;
+                        }
+
+                        ushort val5;
+                        try
+                        {
+                            if ((object)type == typeof(ushort))
+                            {
+                                val5 = (ushort)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val5 = ushort.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val5, throwAdsException: true);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_INT16:
+                    {
+                        if (symbol.Size != 2)
+                        {
+                            break;
+                        }
+
+                        short val10;
+                        try
+                        {
+                            if ((object)type == typeof(short))
+                            {
+                                val10 = (short)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val10 = short.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val10, throwAdsException: true);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_UINT8:
+                    {
+                        if (symbol.Size != 1)
+                        {
+                            break;
+                        }
+
+                        byte val7;
+                        try
+                        {
+                            if ((object)type == typeof(byte))
+                            {
+                                val7 = (byte)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val7 = byte.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val7, throwAdsException: true);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_INT8:
+                    {
+                        if (symbol.Size != 1)
+                        {
+                            break;
+                        }
+
+                        sbyte val4;
+                        try
+                        {
+                            if ((object)type == typeof(sbyte))
+                            {
+                                val4 = (sbyte)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val4 = sbyte.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val4, throwAdsException: true);
+                        return;
+                    }
+                case AdsDatatypeId.ADST_BIT:
+                    {
+                        if (symbol.Size != 1)
+                        {
+                            break;
+                        }
+
+                        bool val2;
+                        try
+                        {
+                            if ((object)type == typeof(bool))
+                            {
+                                val2 = (bool)val;
+                            }
+                            else
+                            {
+                                if ((object)type != typeof(string))
+                                {
+                                    break;
+                                }
+
+                                val2 = bool.Parse((string)val);
+                            }
+                        }
+                        catch
+                        {
+                            break;
+                        }
+
+                        _syncPort.Write((uint)symbol.IndexGroup, (uint)symbol.IndexOffset, val2, throwAdsException: true);
+                        return;
+                    }
+            }
+
+            throw new AdsDatatypeNotSupportedException("Cannot convert object to symbol type.");
+        }
+
+        private void AddEventNotifications()
+        {
+            if (_syncPort == null)
+            {
+                TcAdsDllWrapper.ThrowAdsException(AdsErrorCode.ClientPortNotOpen);
+            }
+
+            if (_adsSymbolVersionChangedEventHandlerDelegate != null && _syncPort != null)
+            {
+                _syncPort.RegisterSymbolVersionChangedNotification();
+            }
+
+            if (_adsStateChangedEventHandlerDelegate != null && _syncPort != null)
+            {
+                _syncPort.RegisterStateChangedNotification();
+            }
+        }
+    }
+}

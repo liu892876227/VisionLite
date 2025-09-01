@@ -682,6 +682,9 @@ namespace VisionLite
             }
         }
 
+
+
+
         #endregion
 
         #region 窗口激活与视图管理

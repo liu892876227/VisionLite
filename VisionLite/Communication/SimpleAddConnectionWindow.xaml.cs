@@ -145,6 +145,35 @@ namespace VisionLite.Communication
 
         #endregion
 
+        #region ADS相关控件字段
+
+        /// <summary>
+        /// ADS NetId输入框
+        /// </summary>
+        private TextBox _adsNetIdTextBox;
+
+        /// <summary>
+        /// ADS端口输入框
+        /// </summary>
+        private TextBox _adsPortTextBox;
+
+        /// <summary>
+        /// ADS超时时间输入框
+        /// </summary>
+        private TextBox _adsTimeoutTextBox;
+
+        /// <summary>
+        /// ADS显示名称输入框
+        /// </summary>
+        private TextBox _adsDisplayNameTextBox;
+
+        /// <summary>
+        /// ADS符号访问复选框
+        /// </summary>
+        private CheckBox _adsUseSymbolicAccessCheckBox;
+
+        #endregion
+
         /// <summary>
         /// 是否为编辑模式
         /// </summary>
@@ -242,6 +271,7 @@ namespace VisionLite.Communication
                 CommunicationType.ModbusTcpServer => 4,
                 CommunicationType.ModbusTcpClient => 5,
                 CommunicationType.SerialPort => 6,
+                CommunicationType.AdsClient => 7,
                 _ => 0
             };
             
@@ -320,6 +350,18 @@ namespace VisionLite.Communication
                     _serialEnableLoggingCheckBox.IsChecked = _config.Serial.EnableLogging;
                 if (_serialAutoReconnectCheckBox != null)
                     _serialAutoReconnectCheckBox.IsChecked = _config.Serial.AutoReconnect;
+
+                // ADS参数
+                if (_adsNetIdTextBox != null)
+                    _adsNetIdTextBox.Text = _config.Ads.TargetAmsNetId;
+                if (_adsPortTextBox != null)
+                    _adsPortTextBox.Text = _config.Ads.TargetAmsPort.ToString();
+                if (_adsTimeoutTextBox != null)
+                    _adsTimeoutTextBox.Text = _config.Ads.Timeout.ToString();
+                if (_adsDisplayNameTextBox != null)
+                    _adsDisplayNameTextBox.Text = _config.Ads.DisplayName;
+                if (_adsUseSymbolicAccessCheckBox != null)
+                    _adsUseSymbolicAccessCheckBox.IsChecked = _config.Ads.UseSymbolicAccess;
                     
                 UpdateButtonStates();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
@@ -350,6 +392,7 @@ namespace VisionLite.Communication
                 "ModbusTcpServer" => CommunicationType.ModbusTcpServer,
                 "ModbusTcpClient" => CommunicationType.ModbusTcpClient,
                 "SerialPort" => CommunicationType.SerialPort,
+                "AdsClient" => CommunicationType.AdsClient,
                 _ => CommunicationType.TcpClient
             };
 
@@ -382,6 +425,10 @@ namespace VisionLite.Communication
             else if (_config.Type == CommunicationType.SerialPort)
             {
                 CreateSerialPortParameterPanel(); // 串口参数面板
+            }
+            else if (_config.Type == CommunicationType.AdsClient)
+            {
+                CreateAdsParameterPanel(); // ADS通讯参数面板
             }
             else
             {
@@ -1045,6 +1092,161 @@ namespace VisionLite.Communication
         }
 
         /// <summary>
+        /// 创建ADS通讯参数面板
+        /// </summary>
+        private void CreateAdsParameterPanel()
+        {
+            // 创建五行：NetId、端口、超时时间、显示名称、符号访问
+            for (int i = 0; i < 5; i++)
+            {
+                ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            }
+
+            ParameterGrid.ColumnDefinitions.Clear();
+            ParameterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // AMS NetId输入
+            var netIdLabel = new Label { Content = "AMS NetId:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(netIdLabel, 0);
+            Grid.SetColumn(netIdLabel, 0);
+            ParameterGrid.Children.Add(netIdLabel);
+
+            _adsNetIdTextBox = new TextBox 
+            { 
+                Text = _config.Ads.TargetAmsNetId, 
+                Style = (Style)Resources["InputStyle"],
+                ToolTip = "格式：IP地址.1.1（如：192.168.1.100.1.1）"
+            };
+            _adsNetIdTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_adsNetIdTextBox, 0);
+            Grid.SetColumn(_adsNetIdTextBox, 1);
+            ParameterGrid.Children.Add(_adsNetIdTextBox);
+
+            // AMS端口输入
+            var adsPortLabel = new Label { Content = "AMS端口:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(adsPortLabel, 1);
+            Grid.SetColumn(adsPortLabel, 0);
+            ParameterGrid.Children.Add(adsPortLabel);
+
+            _adsPortTextBox = new TextBox 
+            { 
+                Text = _config.Ads.TargetAmsPort.ToString(), 
+                Style = (Style)Resources["InputStyle"],
+                ToolTip = "PLC Runtime通常使用801"
+            };
+            _adsPortTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_adsPortTextBox, 1);
+            Grid.SetColumn(_adsPortTextBox, 1);
+            ParameterGrid.Children.Add(_adsPortTextBox);
+
+            // 超时时间输入
+            var timeoutLabel = new Label { Content = "超时时间(ms):", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(timeoutLabel, 2);
+            Grid.SetColumn(timeoutLabel, 0);
+            ParameterGrid.Children.Add(timeoutLabel);
+
+            _adsTimeoutTextBox = new TextBox 
+            { 
+                Text = _config.Ads.Timeout.ToString(), 
+                Style = (Style)Resources["InputStyle"],
+                ToolTip = "连接和读写操作的超时时间，建议3000-10000毫秒"
+            };
+            _adsTimeoutTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_adsTimeoutTextBox, 2);
+            Grid.SetColumn(_adsTimeoutTextBox, 1);
+            ParameterGrid.Children.Add(_adsTimeoutTextBox);
+
+            // 显示名称输入
+            var displayNameLabel = new Label { Content = "显示名称:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(displayNameLabel, 3);
+            Grid.SetColumn(displayNameLabel, 0);
+            ParameterGrid.Children.Add(displayNameLabel);
+
+            _adsDisplayNameTextBox = new TextBox 
+            { 
+                Text = _config.Ads.DisplayName, 
+                Style = (Style)Resources["InputStyle"],
+                ToolTip = "用于识别此PLC连接的友好名称"
+            };
+            _adsDisplayNameTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_adsDisplayNameTextBox, 3);
+            Grid.SetColumn(_adsDisplayNameTextBox, 1);
+            ParameterGrid.Children.Add(_adsDisplayNameTextBox);
+
+            // 符号访问复选框
+            var checkboxPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            
+            _adsUseSymbolicAccessCheckBox = new CheckBox 
+            { 
+                Content = "启用符号访问",
+                IsChecked = _config.Ads.UseSymbolicAccess,
+                ToolTip = "启用后可通过变量名直接访问PLC变量（推荐）",
+                Margin = new Thickness(0, 5, 10, 5),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            _adsUseSymbolicAccessCheckBox.Checked += (s, e) => UpdateButtonStates();
+            _adsUseSymbolicAccessCheckBox.Unchecked += (s, e) => UpdateButtonStates();
+            checkboxPanel.Children.Add(_adsUseSymbolicAccessCheckBox);
+
+            // 添加连接测试快捷按钮（用于ADS连接验证）
+            var quickTestButton = new Button
+            {
+                Content = "快速测试",
+                Width = 80,
+                Height = 25,
+                Margin = new Thickness(10, 5, 0, 5),
+                ToolTip = "仅测试ADS连接，不验证变量访问"
+            };
+            quickTestButton.Click += async (s, e) => await QuickTestAdsConnection();
+            checkboxPanel.Children.Add(quickTestButton);
+
+            Grid.SetRow(checkboxPanel, 4);
+            Grid.SetColumn(checkboxPanel, 1);
+            ParameterGrid.Children.Add(checkboxPanel);
+        }
+
+        /// <summary>
+        /// 快速测试ADS连接
+        /// </summary>
+        private async Task QuickTestAdsConnection()
+        {
+            try
+            {
+                // 从UI更新配置
+                UpdateConfigFromUI();
+                
+                // 验证配置
+                var validation = _config.Validate();
+                if (!validation.isValid)
+                {
+                    MessageBox.Show($"配置验证失败：{validation.errorMessage}", "配置错误", 
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 执行快速连接测试
+                bool result = await AdsConnectionTest.QuickConnectionTest(_config.Ads.TargetAmsNetId, _config.Ads.TargetAmsPort);
+                
+                if (result)
+                {
+                    MessageBox.Show("ADS连接测试成功！", "测试结果", 
+                                    MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("ADS连接测试失败，请检查NetId、端口和网络连接。", "测试结果", 
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"测试过程中发生异常：{ex.Message}", "测试异常", 
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
         /// 更新按钮状态
         /// </summary>
         private void UpdateButtonStates()
@@ -1165,6 +1367,25 @@ namespace VisionLite.Communication
 
                 if (_serialAutoReconnectCheckBox != null)
                     _config.Serial.AutoReconnect = _serialAutoReconnectCheckBox.IsChecked ?? true;
+            }
+
+            // 更新ADS参数
+            if (_config.Type == CommunicationType.AdsClient)
+            {
+                if (_adsNetIdTextBox != null && !string.IsNullOrWhiteSpace(_adsNetIdTextBox.Text))
+                    _config.Ads.TargetAmsNetId = _adsNetIdTextBox.Text.Trim();
+
+                if (_adsPortTextBox != null && int.TryParse(_adsPortTextBox.Text, out int adsPort))
+                    _config.Ads.TargetAmsPort = adsPort;
+
+                if (_adsTimeoutTextBox != null && int.TryParse(_adsTimeoutTextBox.Text, out int adsTimeout))
+                    _config.Ads.Timeout = adsTimeout;
+
+                if (_adsDisplayNameTextBox != null && !string.IsNullOrWhiteSpace(_adsDisplayNameTextBox.Text))
+                    _config.Ads.DisplayName = _adsDisplayNameTextBox.Text.Trim();
+
+                if (_adsUseSymbolicAccessCheckBox != null)
+                    _config.Ads.UseSymbolicAccess = _adsUseSymbolicAccessCheckBox.IsChecked ?? true;
             }
         }
 
@@ -1323,6 +1544,7 @@ namespace VisionLite.Communication
                 "ModbusTcpServer" => "ModbusTCP服务器",
                 "ModbusTcpClient" => "ModbusTCP客户端",
                 "SerialPort" => "串口通讯",
+                "AdsClient" => "倍福PLC",
                 _ => string.Empty
             };
         }

@@ -42,7 +42,12 @@ namespace VisionLite.Communication
         /// <summary>
         /// 串口通讯
         /// </summary>
-        SerialPort
+        SerialPort,
+        
+        /// <summary>
+        /// 倍福ADS通讯
+        /// </summary>
+        AdsClient
     }
 
     /// <summary>
@@ -264,6 +269,11 @@ namespace VisionLite.Communication
         public SerialConfig Serial { get; set; } = new SerialConfig();
 
         /// <summary>
+        /// ADS通讯配置
+        /// </summary>
+        public AdsConnectionConfig Ads { get; set; } = new AdsConnectionConfig();
+
+        /// <summary>
         /// 获取协议类型的显示名称
         /// </summary>
         public string TypeDisplayName
@@ -279,6 +289,7 @@ namespace VisionLite.Communication
                     CommunicationType.ModbusTcpServer => "ModbusTCP服务器",
                     CommunicationType.ModbusTcpClient => "ModbusTCP客户端",
                     CommunicationType.SerialPort => "串口通讯",
+                    CommunicationType.AdsClient => "倍福ADS",
                     _ => "未知"
                 };
             }
@@ -300,6 +311,7 @@ namespace VisionLite.Communication
                     CommunicationType.ModbusTcpServer => $"监听端口:{Port}, 单元ID:{ModbusTcp.UnitId}",
                     CommunicationType.ModbusTcpClient => $"服务器:{IpAddress}:{Port}, 单元ID:{ModbusTcpClient.UnitId}",
                     CommunicationType.SerialPort => $"串口:{Serial.PortName}, 波特率:{Serial.BaudRate}",
+                    CommunicationType.AdsClient => $"NetId:{Ads.TargetAmsNetId}, 端口:{Ads.TargetAmsPort}",
                     _ => ""
                 };
             }
@@ -380,6 +392,13 @@ namespace VisionLite.Communication
                     return (false, "重连间隔必须大于0毫秒");
             }
 
+            // ADS通讯验证
+            if (Type == CommunicationType.AdsClient)
+            {
+                if (!Ads.IsValid(out string adsError))
+                    return (false, $"ADS配置无效: {adsError}");
+            }
+
             return (true, null);
         }
 
@@ -430,6 +449,14 @@ namespace VisionLite.Communication
                     EnableLogging = this.Serial.EnableLogging,
                     AutoReconnect = this.Serial.AutoReconnect,
                     ReconnectInterval = this.Serial.ReconnectInterval
+                },
+                Ads = new AdsConnectionConfig
+                {
+                    TargetAmsNetId = this.Ads.TargetAmsNetId,
+                    TargetAmsPort = this.Ads.TargetAmsPort,
+                    Timeout = this.Ads.Timeout,
+                    UseSymbolicAccess = this.Ads.UseSymbolicAccess,
+                    DisplayName = this.Ads.DisplayName
                 }
             };
         }
@@ -453,6 +480,7 @@ namespace VisionLite.Communication
                 CommunicationType.ModbusTcpServer => new ModbusTcpServer(IpAddress, Port, ModbusTcp),
                 CommunicationType.ModbusTcpClient => new ModbusTcpClient(Name, IpAddress, Port, ModbusTcpClient),
                 CommunicationType.SerialPort => new SerialCommunication(Name, Serial),
+                CommunicationType.AdsClient => new AdsCommunication(Ads),
                 _ => throw new NotSupportedException($"不支持的协议类型: {Type}")
             };
         }
@@ -591,6 +619,20 @@ namespace VisionLite.Communication
                     AutoReconnect = true,
                     ReconnectInterval = 5000
                 }
+            };
+        }
+
+        /// <summary>
+        /// 获取默认的倍福ADS通讯配置
+        /// </summary>
+        /// <returns>默认ADS通讯配置</returns>
+        public static SimpleConnectionConfig GetDefaultAdsClient()
+        {
+            return new SimpleConnectionConfig
+            {
+                Name = "倍福PLC",
+                Type = CommunicationType.AdsClient,
+                Ads = AdsConnectionConfig.CreateDefault()
             };
         }
     }

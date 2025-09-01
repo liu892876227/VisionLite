@@ -41,12 +41,12 @@
                     <!--菜单栏-->
                     <RowDefinition Height="25"/>
                     <!--快捷工具条-->
-                    <RowDefinition Height="25"/>
+                    <RowDefinition Height="30"/>
                 </Grid.RowDefinitions>
                 <!-- 快捷工具条 -->
                 <Border Grid.Row="1" Background="#FF4F4F4F">
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="通讯设置" Width="80" Margin="5" Click="CommunicationButton_Click"/>
+                        <Button Content="通讯设置" Width="100" Margin="5" Click="CommunicationButton_Click"/>
                     </StackPanel>
                 </Border>
             </Grid>
