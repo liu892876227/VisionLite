@@ -143,6 +143,7 @@ namespace VisionLite.Communication
                 // 隐藏专用操作界面
                 ModbusTcpOperationPanel.Visibility = Visibility.Collapsed;
                 AdsOperationPanel.Visibility = Visibility.Collapsed;
+                S7OperationPanel.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -821,13 +822,14 @@ namespace VisionLite.Communication
         private void UpdateOperationPanels()
         {
             // 检查控件是否已初始化
-            if (ModbusTcpOperationPanel == null || SerialOperationPanel == null || AdsOperationPanel == null)
+            if (ModbusTcpOperationPanel == null || SerialOperationPanel == null || AdsOperationPanel == null || S7OperationPanel == null)
                 return;
                 
             // 隐藏所有专用操作面板
             ModbusTcpOperationPanel.Visibility = Visibility.Collapsed;
             SerialOperationPanel.Visibility = Visibility.Collapsed;
             AdsOperationPanel.Visibility = Visibility.Collapsed;
+            S7OperationPanel.Visibility = Visibility.Collapsed;
             
             // 根据连接类型显示对应的操作面板
             if (_selectedConfig?.Type == CommunicationType.ModbusTcpClient)
@@ -844,6 +846,11 @@ namespace VisionLite.Communication
             {
                 AdsOperationPanel.Visibility = Visibility.Visible;
                 InitializeAdsPanel();
+            }
+            else if (_selectedConfig?.Type == CommunicationType.S7Client)
+            {
+                S7OperationPanel.Visibility = Visibility.Visible;
+                InitializeS7Panel();
             }
         }
 
@@ -1284,6 +1291,40 @@ namespace VisionLite.Communication
         }
 
         /// <summary>
+        /// 初始化S7操作面板的默认设置
+        /// </summary>
+        private void InitializeS7Panel()
+        {
+            // 检查S7面板控件是否已初始化
+            if (S7OperationTypeComboBox == null || S7DataTypeComboBox == null)
+                return;
+                
+            // 设置默认操作类型
+            if (S7OperationTypeComboBox.SelectedIndex == -1)
+                S7OperationTypeComboBox.SelectedIndex = 0; // 默认选择读取
+            
+            // 设置默认数据类型
+            if (S7DataTypeComboBox.SelectedIndex == -1)
+                S7DataTypeComboBox.SelectedIndex = 0; // 默认选择BOOL
+
+            // 更新控件状态
+            UpdateS7Controls();
+        }
+
+        /// <summary>
+        /// 更新S7控件的启用状态
+        /// </summary>
+        private void UpdateS7Controls()
+        {
+            // 检查是否已连接
+            bool isConnected = _selectedCommunication?.Status == ConnectionStatus.Connected;
+            
+            // 启用或禁用执行按钮
+            if (ExecuteS7OperationButton != null)
+                ExecuteS7OperationButton.IsEnabled = isConnected;
+        }
+
+        /// <summary>
         /// 更新ADS控件的启用状态
         /// </summary>
         private void UpdateAdsControls()
@@ -1468,6 +1509,280 @@ namespace VisionLite.Communication
             catch (Exception ex)
             {
                 LogMessage($"更新ADS状态显示失败: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region S7 PLC操作方法
+
+        /// <summary>
+        /// 执行S7操作按钮点击事件
+        /// </summary>
+        private async void ExecuteS7OperationButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedCommunication is not S7Communication s7Comm)
+            {
+                LogMessage("错误：未找到S7通讯连接");
+                return;
+            }
+
+            if (s7Comm.Status != ConnectionStatus.Connected)
+            {
+                LogMessage("错误：S7连接未建立，请先连接");
+                return;
+            }
+
+            // 获取界面输入
+            var selectedOperation = (S7OperationTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+            var selectedDataType = (S7DataTypeComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+            var address = S7AddressTextBox.Text?.Trim();
+            var value = S7ValueTextBox.Text?.Trim();
+
+            if (string.IsNullOrEmpty(selectedOperation) || string.IsNullOrEmpty(selectedDataType) || string.IsNullOrEmpty(address))
+            {
+                LogMessage("错误：请选择操作类型、数据类型并输入地址");
+                return;
+            }
+
+            // 执行操作
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            string operation = "";
+            string result = "";
+            string returnData = "";
+
+            try
+            {
+                if (selectedOperation == "read")
+                {
+                    operation = $"读取 {address}";
+                    LogMessage($"执行S7读取操作: {address} (类型: {selectedDataType})");
+                    
+                    // 根据数据类型执行读取操作
+                    bool readSuccess = false;
+                    switch (selectedDataType)
+                    {
+                        case "BOOL":
+                            bool boolValue = s7Comm.ReadBool(address);
+                            readSuccess = true;
+                            returnData = boolValue.ToString();
+                            break;
+                        case "BYTE":
+                            byte byteValue = s7Comm.ReadByte(address);
+                            readSuccess = true;
+                            returnData = byteValue.ToString();
+                            break;
+                        case "WORD":
+                            short wordValue = s7Comm.ReadInt16(address);
+                            readSuccess = true;
+                            returnData = ((ushort)wordValue).ToString();
+                            break;
+                        case "DWORD":
+                            int dwordValue = s7Comm.ReadInt32(address);
+                            readSuccess = true;
+                            returnData = ((uint)dwordValue).ToString();
+                            break;
+                        case "INT":
+                            short intValue = s7Comm.ReadInt16(address);
+                            readSuccess = true;
+                            returnData = intValue.ToString();
+                            break;
+                        case "DINT":
+                            int dintValue = s7Comm.ReadInt32(address);
+                            readSuccess = true;
+                            returnData = dintValue.ToString();
+                            break;
+                        case "REAL":
+                            float realValue = s7Comm.ReadReal(address);
+                            readSuccess = true;
+                            returnData = realValue.ToString("F3");
+                            break;
+                        case "LREAL":
+                            double lrealValue = s7Comm.ReadLReal(address);
+                            readSuccess = true;
+                            returnData = lrealValue.ToString("F3");
+                            break;
+                        case "STRING":
+                            string stringValue = s7Comm.ReadString(address, 256);
+                            readSuccess = true;
+                            returnData = $"\"{stringValue}\"";
+                            break;
+                    }
+                    
+                    result = readSuccess ? "成功" : "失败";
+                    LogMessage($"S7读取{result}: {address} = {returnData}");
+                }
+                else if (selectedOperation == "write")
+                {
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        LogMessage("错误：写入操作需要提供写入值");
+                        return;
+                    }
+
+                    operation = $"写入 {address} = {value}";
+                    LogMessage($"执行S7写入操作: {address} = {value} (类型: {selectedDataType})");
+                    
+                    // 根据数据类型执行写入操作
+                    bool writeSuccess = false;
+                    switch (selectedDataType)
+                    {
+                        case "BOOL":
+                            if (bool.TryParse(value, out bool boolVal))
+                            {
+                                s7Comm.WriteBool(address, boolVal);
+                                writeSuccess = true;
+                            }
+                            break;
+                        case "BYTE":
+                            if (byte.TryParse(value, out byte byteVal))
+                            {
+                                s7Comm.WriteByte(address, byteVal);
+                                writeSuccess = true;
+                            }
+                            break;
+                        case "WORD":
+                            if (ushort.TryParse(value, out ushort wordVal))
+                            {
+                                s7Comm.WriteInt16(address, (short)wordVal);
+                                writeSuccess = true;
+                            }
+                            break;
+                        case "DWORD":
+                            if (uint.TryParse(value, out uint dwordVal))
+                            {
+                                s7Comm.WriteInt32(address, (int)dwordVal);
+                                writeSuccess = true;
+                            }
+                            break;
+                        case "INT":
+                            if (short.TryParse(value, out short intVal))
+                            {
+                                s7Comm.WriteInt16(address, intVal);
+                                writeSuccess = true;
+                            }
+                            break;
+                        case "DINT":
+                            if (int.TryParse(value, out int dintVal))
+                            {
+                                s7Comm.WriteInt32(address, dintVal);
+                                writeSuccess = true;
+                            }
+                            break;
+                        case "REAL":
+                            if (float.TryParse(value, out float realVal))
+                            {
+                                s7Comm.WriteReal(address, realVal);
+                                writeSuccess = true;
+                            }
+                            break;
+                        case "LREAL":
+                            if (double.TryParse(value, out double lrealVal))
+                            {
+                                s7Comm.WriteLReal(address, lrealVal);
+                                writeSuccess = true;
+                            }
+                            break;
+                        case "STRING":
+                            s7Comm.WriteString(address, value, 256);
+                            writeSuccess = true;
+                            break;
+                    }
+                    
+                    result = writeSuccess ? "成功" : "失败";
+                    returnData = writeSuccess ? "写入完成" : "写入失败";
+                    
+                    LogMessage($"S7写入{result}: {address} = {value}");
+                }
+            }
+            catch (Exception ex)
+            {
+                result = "异常";
+                returnData = ex.Message;
+                LogMessage($"S7操作异常: {ex.Message}");
+            }
+            finally
+            {
+                stopwatch.Stop();
+                
+                // 更新状态显示
+                UpdateS7OperationStatus(operation, result, returnData, stopwatch.ElapsedMilliseconds);
+            }
+        }
+
+        /// <summary>
+        /// S7连接测试按钮点击事件
+        /// </summary>
+        private async void S7ConnectionTestButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (_selectedConfig?.Type != CommunicationType.S7Client)
+            {
+                LogMessage("错误：请先选择S7连接");
+                return;
+            }
+
+            try
+            {
+                LogMessage("开始S7连接测试...");
+                var tester = new S7ConnectionTest(_selectedConfig.S7);
+                
+                // 设置测试消息接收器
+                tester.TestMessageReceived += (message) => LogMessage(message);
+                
+                // 执行基础连接测试
+                bool basicTestResult = await tester.RunBasicConnectionTestAsync();
+                
+                if (basicTestResult)
+                {
+                    LogMessage("S7基础连接测试成功！");
+                    
+                    // 执行数据读写测试
+                    bool dataTestResult = await tester.RunDataReadWriteTestAsync("DB1.DBX0.0");
+                    LogMessage($"S7数据读写测试: {(dataTestResult ? "成功" : "失败")}");
+                }
+                else
+                {
+                    LogMessage("S7基础连接测试失败！");
+                }
+                
+                LogMessage("=== S7测试结束 ===");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"S7连接测试失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 更新S7操作状态显示
+        /// </summary>
+        private void UpdateS7OperationStatus(string operation, string result, string data, long duration)
+        {
+            try
+            {
+                if (S7LastOperationText != null)
+                    S7LastOperationText.Text = operation;
+                
+                if (S7LastOperationTime != null)
+                    S7LastOperationTime.Text = DateTime.Now.ToString("HH:mm:ss");
+                
+                if (S7OperationResult != null)
+                {
+                    S7OperationResult.Text = result;
+                    S7OperationResult.Foreground = result == "成功" ? 
+                        new SolidColorBrush(Colors.Green) : 
+                        new SolidColorBrush(Colors.Red);
+                }
+                
+                if (S7OperationDuration != null)
+                    S7OperationDuration.Text = $"{duration}ms";
+                
+                if (S7ReturnedData != null)
+                    S7ReturnedData.Text = data;
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"更新S7状态显示失败: {ex.Message}");
             }
         }
 

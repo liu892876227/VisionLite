@@ -70,6 +70,7 @@
                 <ComboBoxItem Content="ModbusTCP客户端" Tag="ModbusTcpClient"/>
                 <ComboBoxItem Content="串口通讯" Tag="SerialPort"/>
                 <ComboBoxItem Content="倍福ADS" Tag="AdsClient"/>
+                <ComboBoxItem Content="西门子S7 PLC" Tag="S7Client"/>
             </ComboBox>
         </Grid>
 

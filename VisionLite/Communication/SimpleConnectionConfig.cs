@@ -1,6 +1,7 @@
 // Communication/SimpleConnectionConfig.cs  
 // 简化的连接配置 - 替代复杂的配置管理系统
 using System;
+using S7.Net;
 
 namespace VisionLite.Communication
 {
@@ -47,7 +48,12 @@ namespace VisionLite.Communication
         /// <summary>
         /// 倍福ADS通讯
         /// </summary>
-        AdsClient
+        AdsClient,
+        
+        /// <summary>
+        /// 西门子S7 PLC通讯
+        /// </summary>
+        S7Client
     }
 
     /// <summary>
@@ -274,6 +280,11 @@ namespace VisionLite.Communication
         public AdsConnectionConfig Ads { get; set; } = new AdsConnectionConfig();
 
         /// <summary>
+        /// 西门子S7通讯配置
+        /// </summary>
+        public S7ConnectionConfig S7 { get; set; } = new S7ConnectionConfig();
+
+        /// <summary>
         /// 获取协议类型的显示名称
         /// </summary>
         public string TypeDisplayName
@@ -290,6 +301,7 @@ namespace VisionLite.Communication
                     CommunicationType.ModbusTcpClient => "ModbusTCP客户端",
                     CommunicationType.SerialPort => "串口通讯",
                     CommunicationType.AdsClient => "倍福ADS",
+                    CommunicationType.S7Client => "西门子S7 PLC",
                     _ => "未知"
                 };
             }
@@ -312,6 +324,7 @@ namespace VisionLite.Communication
                     CommunicationType.ModbusTcpClient => $"服务器:{IpAddress}:{Port}, 单元ID:{ModbusTcpClient.UnitId}",
                     CommunicationType.SerialPort => $"串口:{Serial.PortName}, 波特率:{Serial.BaudRate}",
                     CommunicationType.AdsClient => $"NetId:{Ads.TargetAmsNetId}, 端口:{Ads.TargetAmsPort}",
+                    CommunicationType.S7Client => $"PLC:{S7.IpAddress} ({S7.CpuType})",
                     _ => ""
                 };
             }
@@ -399,6 +412,13 @@ namespace VisionLite.Communication
                     return (false, $"ADS配置无效: {adsError}");
             }
 
+            // S7通讯验证
+            if (Type == CommunicationType.S7Client)
+            {
+                if (!S7.IsValid(out string s7Error))
+                    return (false, $"S7配置无效: {s7Error}");
+            }
+
             return (true, null);
         }
 
@@ -457,6 +477,18 @@ namespace VisionLite.Communication
                     Timeout = this.Ads.Timeout,
                     UseSymbolicAccess = this.Ads.UseSymbolicAccess,
                     DisplayName = this.Ads.DisplayName
+                },
+                S7 = new S7ConnectionConfig
+                {
+                    DisplayName = this.S7.DisplayName,
+                    IpAddress = this.S7.IpAddress,
+                    CpuType = this.S7.CpuType,
+                    Rack = this.S7.Rack,
+                    Slot = this.S7.Slot,
+                    ConnectionTimeout = this.S7.ConnectionTimeout,
+                    EnableHeartbeat = this.S7.EnableHeartbeat,
+                    HeartbeatInterval = this.S7.HeartbeatInterval,
+                    HeartbeatAddress = this.S7.HeartbeatAddress
                 }
             };
         }
@@ -481,6 +513,7 @@ namespace VisionLite.Communication
                 CommunicationType.ModbusTcpClient => new ModbusTcpClient(Name, IpAddress, Port, ModbusTcpClient),
                 CommunicationType.SerialPort => new SerialCommunication(Name, Serial),
                 CommunicationType.AdsClient => new AdsCommunication(Ads),
+                CommunicationType.S7Client => new S7Communication(S7),
                 _ => throw new NotSupportedException($"不支持的协议类型: {Type}")
             };
         }
@@ -633,6 +666,31 @@ namespace VisionLite.Communication
                 Name = "倍福PLC",
                 Type = CommunicationType.AdsClient,
                 Ads = AdsConnectionConfig.CreateDefault()
+            };
+        }
+
+        /// <summary>
+        /// 获取默认的西门子S7通讯配置
+        /// </summary>
+        /// <returns>默认S7通讯配置</returns>
+        public static SimpleConnectionConfig GetDefaultS7Client()
+        {
+            return new SimpleConnectionConfig
+            {
+                Name = "西门子PLC",
+                Type = CommunicationType.S7Client,
+                S7 = new S7ConnectionConfig
+                {
+                    DisplayName = "西门子PLC",
+                    IpAddress = "192.168.1.10",
+                    CpuType = CpuType.S71500,
+                    Rack = 0,
+                    Slot = 1,
+                    ConnectionTimeout = 5000,
+                    EnableHeartbeat = true,
+                    HeartbeatInterval = 5000,
+                    HeartbeatAddress = "DB1.DBX272.0"
+                }
             };
         }
     }

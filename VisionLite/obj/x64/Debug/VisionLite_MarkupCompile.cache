@@ -8,13 +8,13 @@ E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\
 VisionLite
 none
 false
-
+DEBUG;TRACE
 E:\mySoftware\VisionLite\VisionLite\App.xaml
-6377285993
+6-2131066502
 
-381888718431
-31-721289763
+40-399331847
+371997947962
 CameraIcon.xaml;CameraManagementWindow.xaml;Communication\SimpleCommunicationWindow.xaml;Communication\SimpleAddConnectionWindow.xaml;MainWindow.xaml;ToolbarIcons.xaml;
 
-True
+False
 

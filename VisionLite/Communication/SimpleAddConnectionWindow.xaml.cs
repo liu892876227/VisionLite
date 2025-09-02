@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using S7.Net;
 
 namespace VisionLite.Communication
 {
@@ -174,6 +175,35 @@ namespace VisionLite.Communication
 
         #endregion
 
+        #region S7相关控件字段
+
+        /// <summary>
+        /// S7 PLC IP地址输入框
+        /// </summary>
+        private TextBox _s7IpTextBox;
+
+        /// <summary>
+        /// S7 CPU类型选择框
+        /// </summary>
+        private ComboBox _s7CpuTypeComboBox;
+
+        /// <summary>
+        /// S7机架号输入框
+        /// </summary>
+        private TextBox _s7RackTextBox;
+
+        /// <summary>
+        /// S7槽位号输入框
+        /// </summary>
+        private TextBox _s7SlotTextBox;
+
+        /// <summary>
+        /// S7连接超时输入框
+        /// </summary>
+        private TextBox _s7TimeoutTextBox;
+
+        #endregion
+
         /// <summary>
         /// 是否为编辑模式
         /// </summary>
@@ -261,7 +291,7 @@ namespace VisionLite.Communication
         {
             ConnectionNameTextBox.Text = _config.Name;
             
-            // 设置协议类型（按照XAML中ComboBoxItem的顺序：TcpClient=0, TcpServer=1, UdpClient=2, UdpServer=3, ModbusTcpServer=4, ModbusTcpClient=5, SerialPort=6）
+            // 设置协议类型（按照XAML中ComboBoxItem的顺序：TcpClient=0, TcpServer=1, UdpClient=2, UdpServer=3, ModbusTcpServer=4, ModbusTcpClient=5, SerialPort=6, AdsClient=7, S7Client=8）
             ProtocolTypeComboBox.SelectedIndex = _config.Type switch
             {
                 CommunicationType.TcpClient => 0,
@@ -272,6 +302,7 @@ namespace VisionLite.Communication
                 CommunicationType.ModbusTcpClient => 5,
                 CommunicationType.SerialPort => 6,
                 CommunicationType.AdsClient => 7,
+                CommunicationType.S7Client => 8,
                 _ => 0
             };
             
@@ -393,6 +424,7 @@ namespace VisionLite.Communication
                 "ModbusTcpClient" => CommunicationType.ModbusTcpClient,
                 "SerialPort" => CommunicationType.SerialPort,
                 "AdsClient" => CommunicationType.AdsClient,
+                "S7Client" => CommunicationType.S7Client,
                 _ => CommunicationType.TcpClient
             };
 
@@ -429,6 +461,10 @@ namespace VisionLite.Communication
             else if (_config.Type == CommunicationType.AdsClient)
             {
                 CreateAdsParameterPanel(); // ADS通讯参数面板
+            }
+            else if (_config.Type == CommunicationType.S7Client)
+            {
+                CreateS7ParameterPanel(); // 西门子S7 PLC参数面板
             }
             else
             {
@@ -1207,6 +1243,116 @@ namespace VisionLite.Communication
         }
 
         /// <summary>
+        /// 创建S7 PLC参数面板
+        /// </summary>
+        private void CreateS7ParameterPanel()
+        {
+            // 创建四行：IP地址、CPU类型、机架/槽位、连接超时
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+
+            ParameterGrid.ColumnDefinitions.Clear();
+            ParameterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Auto) });
+            ParameterGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+            // IP地址输入
+            var ipLabel = new Label { Content = "PLC IP地址:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(ipLabel, 0);
+            Grid.SetColumn(ipLabel, 0);
+            ParameterGrid.Children.Add(ipLabel);
+
+            _s7IpTextBox = new TextBox 
+            { 
+                Text = _config.S7.IpAddress ?? "192.168.1.10", 
+                Style = (Style)Resources["InputStyle"],
+                ToolTip = "西门子PLC的IP地址"
+            };
+            _s7IpTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_s7IpTextBox, 0);
+            Grid.SetColumn(_s7IpTextBox, 1);
+            ParameterGrid.Children.Add(_s7IpTextBox);
+
+            // CPU类型选择
+            var cpuTypeLabel = new Label { Content = "CPU类型:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(cpuTypeLabel, 1);
+            Grid.SetColumn(cpuTypeLabel, 0);
+            ParameterGrid.Children.Add(cpuTypeLabel);
+
+            _s7CpuTypeComboBox = new ComboBox
+            {
+                Height = 25,
+                Margin = new Thickness(0, 5, 0, 5),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            _s7CpuTypeComboBox.Items.Add(new ComboBoxItem { Content = "S7-200", Tag = CpuType.S7200 });
+            _s7CpuTypeComboBox.Items.Add(new ComboBoxItem { Content = "S7-300", Tag = CpuType.S7300 });
+            _s7CpuTypeComboBox.Items.Add(new ComboBoxItem { Content = "S7-400", Tag = CpuType.S7400 });
+            _s7CpuTypeComboBox.Items.Add(new ComboBoxItem { Content = "S7-1200", Tag = CpuType.S71200 });
+            _s7CpuTypeComboBox.Items.Add(new ComboBoxItem { Content = "S7-1500", Tag = CpuType.S71500, IsSelected = true });
+            _s7CpuTypeComboBox.SelectionChanged += (s, e) => UpdateButtonStates();
+            Grid.SetRow(_s7CpuTypeComboBox, 1);
+            Grid.SetColumn(_s7CpuTypeComboBox, 1);
+            ParameterGrid.Children.Add(_s7CpuTypeComboBox);
+
+            // 机架和槽位（水平排列）
+            var rackSlotLabel = new Label { Content = "机架/槽位:", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(rackSlotLabel, 2);
+            Grid.SetColumn(rackSlotLabel, 0);
+            ParameterGrid.Children.Add(rackSlotLabel);
+
+            var rackSlotPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            
+            _s7RackTextBox = new TextBox 
+            { 
+                Text = _config.S7.Rack.ToString(), 
+                Width = 50, 
+                Height = 25, 
+                Margin = new Thickness(0, 5, 10, 5),
+                VerticalContentAlignment = VerticalAlignment.Center,
+                ToolTip = "机架号，通常为0"
+            };
+            _s7RackTextBox.TextChanged += ParameterTextBox_TextChanged;
+            rackSlotPanel.Children.Add(_s7RackTextBox);
+
+            rackSlotPanel.Children.Add(new Label { Content = "/", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0) });
+
+            _s7SlotTextBox = new TextBox 
+            { 
+                Text = _config.S7.Slot.ToString(), 
+                Width = 50, 
+                Height = 25, 
+                Margin = new Thickness(10, 5, 0, 5),
+                VerticalContentAlignment = VerticalAlignment.Center,
+                ToolTip = "槽位号，S7-1200/1500通常为1"
+            };
+            _s7SlotTextBox.TextChanged += ParameterTextBox_TextChanged;
+            rackSlotPanel.Children.Add(_s7SlotTextBox);
+
+            Grid.SetRow(rackSlotPanel, 2);
+            Grid.SetColumn(rackSlotPanel, 1);
+            ParameterGrid.Children.Add(rackSlotPanel);
+
+            // 连接超时
+            var timeoutLabel = new Label { Content = "连接超时(ms):", Style = (Style)Resources["LabelStyle"] };
+            Grid.SetRow(timeoutLabel, 3);
+            Grid.SetColumn(timeoutLabel, 0);
+            ParameterGrid.Children.Add(timeoutLabel);
+
+            _s7TimeoutTextBox = new TextBox 
+            { 
+                Text = _config.S7.ConnectionTimeout.ToString(), 
+                Style = (Style)Resources["InputStyle"],
+                ToolTip = "连接超时时间，单位毫秒"
+            };
+            _s7TimeoutTextBox.TextChanged += ParameterTextBox_TextChanged;
+            Grid.SetRow(_s7TimeoutTextBox, 3);
+            Grid.SetColumn(_s7TimeoutTextBox, 1);
+            ParameterGrid.Children.Add(_s7TimeoutTextBox);
+        }
+
+        /// <summary>
         /// 快速测试ADS连接
         /// </summary>
         private async Task QuickTestAdsConnection()
@@ -1387,6 +1533,25 @@ namespace VisionLite.Communication
                 if (_adsUseSymbolicAccessCheckBox != null)
                     _config.Ads.UseSymbolicAccess = _adsUseSymbolicAccessCheckBox.IsChecked ?? true;
             }
+
+            // 更新S7参数
+            if (_config.Type == CommunicationType.S7Client)
+            {
+                if (_s7IpTextBox != null && !string.IsNullOrWhiteSpace(_s7IpTextBox.Text))
+                    _config.S7.IpAddress = _s7IpTextBox.Text.Trim();
+
+                if (_s7CpuTypeComboBox?.SelectedItem is ComboBoxItem cpuItem && cpuItem.Tag is CpuType cpuType)
+                    _config.S7.CpuType = cpuType;
+
+                if (_s7RackTextBox != null && int.TryParse(_s7RackTextBox.Text, out int rack))
+                    _config.S7.Rack = rack;
+
+                if (_s7SlotTextBox != null && int.TryParse(_s7SlotTextBox.Text, out int slot))
+                    _config.S7.Slot = slot;
+
+                if (_s7TimeoutTextBox != null && int.TryParse(_s7TimeoutTextBox.Text, out int timeout))
+                    _config.S7.ConnectionTimeout = timeout;
+            }
         }
 
         #endregion
@@ -1545,6 +1710,7 @@ namespace VisionLite.Communication
                 "ModbusTcpClient" => "ModbusTCP客户端",
                 "SerialPort" => "串口通讯",
                 "AdsClient" => "倍福PLC",
+                "S7Client" => "西门子PLC",
                 _ => string.Empty
             };
         }

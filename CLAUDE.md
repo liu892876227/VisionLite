@@ -45,6 +45,7 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - **ModbusTcpServer**: ModbusTCP 服务器端实现
 - **SerialCommunication**: 串口通讯实现
 - **AdsCommunication**: 倍福 ADS 通讯实现，支持 TwinCAT PLC 变量读写
+- **S7Communication**: 西门子 S7 PLC 通讯实现，基于 S7netplus 库
 
 #### 辅助组件
 - **ModbusAddressManager**: Modbus 地址管理器
@@ -53,6 +54,8 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - **SimpleCommunicationWindow**: 通讯配置界面
 - **AdsConnectionConfig**: ADS 连接参数配置
 - **AdsConnectionTest**: ADS 连接测试工具
+- **S7ConnectionConfig**: 西门子 S7 连接参数配置
+- **S7ConnectionTest**: 西门子 S7 连接测试工具
 
 ### 主要依赖库
 - **HalconDotNet**: 机器视觉算法库，用于图像处理和显示
@@ -63,6 +66,7 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - **NModbus4**: ModbusTCP 通讯库（v2.1.0）
 - **System.Drawing.Common**: 图形处理支持（v9.0.7）
 - **TwinCAT.Ads**: 倍福 ADS 通讯库，用于与 TwinCAT PLC 通讯
+- **S7netplus**: 西门子 S7 PLC 通讯开源库（v0.20.0）
 
 ### UI 架构
 - **MainWindow**: 主窗口，管理所有相机显示和工具栏交互
@@ -113,8 +117,11 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - Release 配置输出到 `bin\x64\Release\`
 - **推荐构建命令**:
   ```bash
-  # 使用完整路径避免版本冲突
-  cd "VisionLite" && "C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\amd64\MSBuild.exe" VisionLite.csproj /p:Configuration=Debug /p:Platform=x64
+  # 验证可用的编译命令（Debug版本）
+  cd VisionLite && "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" VisionLite.csproj -p:Configuration=Debug -p:Platform=x64 -verbosity:minimal
+  
+  # Release版本编译
+  cd VisionLite && "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" VisionLite.csproj -p:Configuration=Release -p:Platform=x64 -verbosity:minimal
   ```
 
 ### 测试和验证
@@ -146,3 +153,12 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - 实现变量存在性检查和类型安全的读写操作
 - 支持多种 PLC 数据类型（BOOL、BYTE、INT、DINT、REAL、LREAL、STRING）
 - 提供连接状态监控和异常处理机制
+
+### S7 通讯（西门子 PLC）
+- 基于 S7netplus 开源库实现，支持西门子 S7 系列 PLC 通讯
+- 支持 S7-200/300/400/1200/1500 全系列 CPU
+- 提供完整的数据类型读写（BOOL/BYTE/WORD/DWORD/REAL/LREAL/STRING）
+- 支持 DB 块、M 区、I/Q 区域访问
+- 实现批量读写操作，提高通讯效率
+- 支持心跳检测、自动重连和连接状态监控
+- 集成专用测试工具 S7ConnectionTest，支持连接测试和性能验证
