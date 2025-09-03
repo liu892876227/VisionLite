@@ -1,0 +1,1982 @@
+用于 .NET Framework 的 Microsoft (R) 生成引擎版本 17.2.1+52cd2da31
+版权所有(C) Microsoft Corporation。保留所有权利。
+
+生成启动时间为 2025/9/3 星期三 9:12:00。
+进程 = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+MSBuild 可执行文件路径 = "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+命令行参数 = ""C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" VisionLite.csproj -p:Configuration=Debug -p:Platform=x64 -verbosity:detailed"
+当前目录 = "E:\mySoftware\VisionLite\VisionLite"
+MSBuild 版本 = "17.2.1+52cd2da31"
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+尝试使用扩展路径 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild 导入 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\$(MSBuildToolsVersion)\Microsoft.Common.props
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Microsoft.Common.props (57,5) 处重新分配属性: $(MSBuildProjectExtensionsPath)=“E:\mySoftware\VisionLite\VisionLite\obj\”(先前值:“obj\”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+尝试使用扩展路径 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild 导入 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\$(MSBuildToolsVersion)\Imports\Microsoft.Common.props\ImportBefore\*
+“Configuration”属性是全局属性，不能修改。
+“Platform”属性是全局属性，不能修改。
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+“Configuration”属性是全局属性，不能修改。
+“Platform”属性是全局属性，不能修改。
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (12,5) 处重新分配属性: $(DefineCommonItemSchemas)=“false”(先前值:“true”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (13,5) 处重新分配属性: $(DefineCommonCapabilities)=“false”(先前值:“true”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (14,5) 处重新分配属性: $(DefineCommonReferenceSchemas)=“false”(先前值:“true”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+“Platform”属性是全局属性，不能修改。
+“Configuration”属性是全局属性，不能修改。
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (176,5) 处重新分配属性: $(_DebugSymbolsProduced)=“true”(先前值:“false”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (186,5) 处重新分配属性: $(_DocumentationFileProduced)=“false”(先前值:“true”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (508,5) 处重新分配属性: $(ProcessorArchitecture)=“amd64”(先前值:“x64”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (560,5) 处重新分配属性: $(DelaySign)=“”(先前值:“false”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (629,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};”(先前值:“{CandidateAssemblyFiles}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (630,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem}”(先前值:“{CandidateAssemblyFiles};”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (631,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (632,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (633,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (634,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (635,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (636,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC};{RawFileName}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (637,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC};{RawFileName};bin\x64\Debug\”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC};{RawFileName}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (3739,5) 处重新分配属性: $(_SGenGenerateSerializationAssembliesConfig)=“Auto”(先前值:“”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (3740,5) 处重新分配属性: $(_SGenGenerateSerializationAssembliesConfig)=“Off”(先前值:“Auto”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (4874,5) 处重新分配属性: $(_TargetsThatPrepareProjectReferences)=“
+      AssignProjectConfiguration;
+      _SplitProjectReferencesByFileExistence
+    ”(先前值:“_SplitProjectReferencesByFileExistence”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\CodeAnalysis\Microsoft.CodeAnalysis.targets (125,5) 处重新分配属性: $(_CodeAnalysisTreatWarningsAsErrors)=“false”(先前值:“”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\CodeAnalysis\Microsoft.CodeAnalysis.targets (167,9) 处重新分配属性: $(PrepareForRunDependsOn)=“
+      CopyFilesToOutputDirectory
+    ;RunCodeAnalysis”(先前值:“
+      CopyFilesToOutputDirectory
+    ”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets (75,5) 处重新分配属性: $(ResolveReferencesDependsOn)=“
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ”(先前值:“
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (97,7) 处重新分配属性: $(PrepareResourceNamesDependsOn)=“
+                    AssignWinFXEmbeddedResource;
+                    
+      AssignTargetPaths;
+      SplitResourcesByCulture;
+      CreateManifestResourceNames;
+      CreateCustomManifestResourceNames
+    
+      ”(先前值:“
+      AssignTargetPaths;
+      SplitResourcesByCulture;
+      CreateManifestResourceNames;
+      CreateCustomManifestResourceNames
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (108,7) 处重新分配属性: $(PrepareResourcesDependsOn)=“
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+      ”(先前值:“
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (184,5) 处重新分配属性: $(CompileDependsOn)=“
+        
+      ResolveReferences;
+      ResolveKeySource;
+      SetWin32ManifestProperties;
+      FindReferenceAssembliesForReferences;
+      _GenerateCompileInputs;
+      BeforeCompile;
+      _TimeStampBeforeCompile;
+      _GenerateCompileDependencyCache;
+      CoreCompile;
+      _TimeStampAfterCompile;
+      AfterCompile;
+    ;
+        _AfterCompileWinFXInternal
+    ”(先前值:“
+      ResolveReferences;
+      ResolveKeySource;
+      SetWin32ManifestProperties;
+      FindReferenceAssembliesForReferences;
+      _GenerateCompileInputs;
+      BeforeCompile;
+      _TimeStampBeforeCompile;
+      _GenerateCompileDependencyCache;
+      CoreCompile;
+      _TimeStampAfterCompile;
+      AfterCompile;
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (813,9) 处重新分配属性: $(PublishBuildDependsOn)=“
+            BuildOnlySettings;
+            PrepareForBuild;
+            ResolveReferences;
+            PrepareResources;
+            ResolveKeySource;
+            PrepareResourcesForSatelliteAssemblies;
+            GenerateSerializationAssemblies;
+            CreateSatelliteAssemblies;
+        ”(先前值:“
+      BuildOnlySettings;
+      PrepareForBuild;
+      ResolveReferences;
+      PrepareResources;
+      ResolveKeySource;
+      GenerateSerializationAssemblies;
+      CreateSatelliteAssemblies;
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.Data.Entity.targets (35,5) 处重新分配属性: $(BuildDependsOn)=“
+      EntityDeploy;
+      
+      BeforeBuild;
+      CoreBuild;
+      AfterBuild
+    
+    ”(先前值:“
+      BeforeBuild;
+      CoreBuild;
+      AfterBuild
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.Data.Entity.targets (42,5) 处重新分配属性: $(CleanDependsOn)=“
+      
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      CleanReferencedProjects;
+      CleanPublishFolder;
+      AfterClean
+    ;
+      EntityClean;
+    ”(先前值:“
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      CleanReferencedProjects;
+      CleanPublishFolder;
+      AfterClean
+    ”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.Xaml.targets (35,5) 处重新分配属性: $(PrepareResourcesDependsOn)=“
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    ”(先前值:“
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+      ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WorkflowBuildExtensions.targets (16,5) 处重新分配属性: $(PrepareResourcesDependsOn)=“
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    ”(先前值:“
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    ”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\TeamTest\Microsoft.TeamTest.targets (4,5) 处重新分配属性: $(ResolveReferencesDependsOn)=“
+      
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ;
+      ResolveTestReferences
+    ”(先前值:“
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+尝试使用扩展路径 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild 导入 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\$(MSBuildToolsVersion)\Microsoft.Common.targets\ImportAfter\*
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\NuGet\17.0\Microsoft.NuGet.targets (74,5) 处重新分配属性: $(ProjectLockFile)=“obj\project.assets.json”(先前值:“E:\mySoftware\VisionLite\VisionLite\obj\project.assets.json”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\NuGet\17.0\Microsoft.NuGet.targets (185,5) 处重新分配属性: $(ResolveAssemblyReferencesDependsOn)=“
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      GetFrameworkPaths;
+      GetReferenceAssemblyPaths;
+      PrepareForBuild;
+      ResolveSDKReferences;
+      ExpandSDKReferences;
+    ;ResolveNuGetPackageAssets”(先前值:“
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      GetFrameworkPaths;
+      GetReferenceAssemblyPaths;
+      PrepareForBuild;
+      ResolveSDKReferences;
+      ExpandSDKReferences;
+    ”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\NuGet\17.0\Microsoft.NuGet.targets (186,5) 处重新分配属性: $(PrepareResourcesDependsOn)=“ResolveNuGetPackageAssets;
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    ”(先前值:“
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    ”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\NuGet\17.0\Microsoft.NuGet.targets (267,5) 处重新分配属性: $(_HandlePackageFileConflictsAfter)=“ResolveNuGetPackageAssets;ResolveNuGetPackageAssetsNonAOT”(先前值:“ResolveNuGetPackageAssets”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+正在使用项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ResolveFrameworkReferences”重写项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets”中的目标“ResolveFrameworkReferences”。
+正在使用项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets”中的目标“GetFrameworkPaths”重写项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GetFrameworkPaths”。
+正在使用项目“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“SatelliteDllsProjectOutputGroup”重写项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“SatelliteDllsProjectOutputGroup”。
+正在使用项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.WorkflowBuildExtensions.targets”中的目标“GenerateCompiledExpressionsTempFile”重写项目“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WorkflowBuildExtensions.targets”中的目标“GenerateCompiledExpressionsTempFile”。
+正在使用项目“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets”中的目标“CollectPackageReferences”重写项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets”中的目标“CollectPackageReferences”。
+项目中不存在 AfterTargets 特性中的“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\CodeAnalysis\Microsoft.CodeAnalysis.targets (446,11)”位置列出的目标“ClCompile”，将忽略该目标。
+节点 1 上的项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”(默认目标)。
+项目文件包含 ToolsVersion="15.0"。此工具集未知或缺失(在此情况下，您可以通过安装合适的 MSBuild 版本来解决此问题)，或者生成可能已被强制到特定的 ToolsVersion (出于策略原因)。将项目视为具有 ToolsVersion="Current"。有关详细信息，请参阅 http://go.microsoft.com/fwlink/?LinkId=293424。
+由于条件的计算结果为 false，已跳过目标“EntityDeploy”；('@(EntityDeploy)' != '')的计算结果为('' != '')。
+由于条件的计算结果为 false，已跳过目标“EnableIntermediateOutputPathMismatchWarning”；('$(RestoreProjectStyle)' == 'PackageReference')的计算结果为('' == 'PackageReference')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_CheckForInvalidConfigurationAndPlatform”(目标“EntityDeploy”依赖于它):
+由于 false 条件，已跳过任务“Error”；( '$(_InvalidConfigurationError)' == 'true' )计算为( '' == 'true' )。
+由于 false 条件，已跳过任务“Warning”；( '$(_InvalidConfigurationWarning)' == 'true' )计算为( '' == 'true' )。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“Message”任务。
+任务“Message”
+  Configuration=Debug
+已完成执行任务“Message”的操作。
+任务“Message”
+  Platform=x64
+已完成执行任务“Message”的操作。
+由于 false 条件，已跳过任务“Error”；('$(OutDir)' != '' and !HasTrailingSlash('$(OutDir)'))计算为('bin\x64\Debug\' != '' and !HasTrailingSlash('bin\x64\Debug\'))。
+由于 false 条件，已跳过任务“Error”；('$(IntermediateOutputPath)' != '' and !HasTrailingSlash('$(IntermediateOutputPath)'))计算为('obj\x64\Debug\' != '' and !HasTrailingSlash('obj\x64\Debug\'))。
+由于 false 条件，已跳过任务“Error”；('$(BaseIntermediateOutputPath)' != '' and !HasTrailingSlash('$(BaseIntermediateOutputPath)'))计算为('obj\' != '' and !HasTrailingSlash('obj\'))。
+由于 false 条件，已跳过任务“Error”；( '$(_InitialMSBuildProjectExtensionsPath)' != '' And '$(MSBuildProjectExtensionsPath)' != '$(_InitialMSBuildProjectExtensionsPath)' )计算为( 'E:\mySoftware\VisionLite\VisionLite\obj\' != '' And 'E:\mySoftware\VisionLite\VisionLite\obj\' != 'E:\mySoftware\VisionLite\VisionLite\obj\' )。
+由于 false 条件，已跳过任务“Warning”；( '$(EnableBaseIntermediateOutputPathMismatchWarning)' == 'true' And '$(_InitialBaseIntermediateOutputPath)' != '$(BaseIntermediateOutputPath)' And '$(BaseIntermediateOutputPath)' != '$(MSBuildProjectExtensionsPath)' )计算为( '' == 'true' And 'obj\' != 'obj\' And 'obj\' != 'E:\mySoftware\VisionLite\VisionLite\obj\' )。
+已完成在项目“VisionLite.csproj”中生成目标“_CheckForInvalidConfigurationAndPlatform”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“BeforeBuild”(目标“Build”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“BeforeBuild”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“BuildOnlySettings”(目标“CoreBuild”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“BuildOnlySettings”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets”中的目标“GetFrameworkPaths”(目标“PrepareForBuild”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“GetFrameworkPaths”的操作。
+由于条件的计算结果为 false，已跳过目标“GetWinFXPath”；(('@(Page)' != '' or '@(ApplicationDefinition)' != '' or '@(Resource)' != '') and ('$(GetWinFXNativePath)' != '' or '$(GetWinFXWoWPath)' != '' ))的计算结果为(('CameraIcon.xaml;CameraManagementWindow.xaml;Communication\SimpleCommunicationWindow.xaml;...' != '' or 'App.xaml' != '' or '' != '') and ('' != '' or '' != '' ))。
+已跳过目标“GetFrameworkPaths”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GetReferenceAssemblyPaths”(目标“PrepareForBuild”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“GetReferenceAssemblyPaths”任务。
+任务“GetReferenceAssemblyPaths”
+已完成执行任务“GetReferenceAssemblyPaths”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“GetReferenceAssemblyPaths”的操作。
+由于条件的计算结果为 false，已跳过目标“AssignLinkMetadata”；( '$(SynthesizeLinkMetadata)' == 'true' )的计算结果为( '' == 'true' )。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“PrepareForBuild”(目标“CoreBuild”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“FindAppConfigFile”任务。
+任务“FindAppConfigFile”
+  已找到“App.config”。
+已完成执行任务“FindAppConfigFile”的操作。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“MakeDir”任务。
+任务“MakeDir”
+已完成执行任务“MakeDir”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“PrepareForBuild”的操作。
+由于条件的计算结果为 false，已跳过目标“PreBuildEvent”；('$(PreBuildEvent)'!='')的计算结果为(''!='')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“BeforeResolveReferences”(目标“ResolveReferences”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“BeforeResolveReferences”的操作。
+由于条件的计算结果为 false，已跳过目标“AssignProjectConfiguration”；('$(CurrentSolutionConfigurationContents)' != '' or '@(ProjectReference)'!='')的计算结果为('' != '' or ''!='')。
+由于条件的计算结果为 false，已跳过目标“AssignProjectConfiguration”；('$(CurrentSolutionConfigurationContents)' != '' or '@(ProjectReference)'!='')的计算结果为('' != '' or ''!='')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_SplitProjectReferencesByFileExistence”(目标“PrepareProjectReferences”依赖于它):
+由于 false 条件，已跳过任务“ResolveNonMSBuildProjectOutput”；('$(BuildingInsideVisualStudio)'=='true' and '@(ProjectReferenceWithConfiguration)'!='')计算为(''=='true' and ''!='')。
+已完成在项目“VisionLite.csproj”中生成目标“_SplitProjectReferencesByFileExistence”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_AddOutputPathToGlobalPropertiesToRemove”(目标“_GetProjectReferenceTargetFrameworkProperties”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“_AddOutputPathToGlobalPropertiesToRemove”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_GetProjectReferenceTargetFrameworkProperties”(目标“PrepareProjectReferences”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“MSBuild”任务。
+任务“MSBuild”
+已完成执行任务“MSBuild”的操作。
+由于 false 条件，已跳过任务“GetReferenceNearestTargetFrameworkTask”；('@(_ProjectReferenceTargetFrameworkPossibilities)' != '' and '$(ReferringTargetFrameworkForProjectReferences)' != ''
+                                                        And '$(GetReferenceNearestTargetFrameworkTaskSupportsTargetPlatformParameter)' == 'true' and '%(_ProjectReferenceTargetFrameworkPossibilities.IsVcxOrNativeProj)' != 'true')计算为('' != '' and '.NETFramework,Version=v4.7.2' != ''
+                                                        And 'true' == 'true' and '' != 'true')。
+由于 false 条件，已跳过任务“GetReferenceNearestTargetFrameworkTask”；('@(_ProjectReferenceTargetFrameworkPossibilities)' != '' and '$(ReferringTargetFrameworkForProjectReferences)' != ''
+                                                        And '$(GetReferenceNearestTargetFrameworkTaskSupportsTargetPlatformParameter)' != 'true' and '%(_ProjectReferenceTargetFrameworkPossibilities.IsVcxOrNativeProj)' != 'true')计算为('' != '' and '.NETFramework,Version=v4.7.2' != ''
+                                                        And 'true' != 'true' and '' != 'true')。
+已完成在项目“VisionLite.csproj”中生成目标“_GetProjectReferenceTargetFrameworkProperties”的操作。
+由于条件的计算结果为 false，已跳过目标“_GetProjectReferencePlatformProperties”；('$(EnableDynamicPlatformResolution)' == 'true'
+                     and '$(BuildingInsideVisualStudio)' != 'true'
+                     and '@(_MSBuildProjectReferenceExistent)' != '')的计算结果为('' == 'true'
+                     and '' != 'true'
+                     and '' != '')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“PrepareProjectReferences”(目标“ResolveProjectReferences”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“PrepareProjectReferences”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ResolveProjectReferences”(目标“ResolveReferences”依赖于它):
+由于 false 条件，已跳过任务“MSBuild”；('%(_MSBuildProjectReferenceExistent.BuildReference)' == 'true' and '@(ProjectReferenceWithConfiguration)' != '' and ('$(BuildingInsideVisualStudio)' == 'true' or '$(BuildProjectReferences)' != 'true') and '$(VisualStudioVersion)' != '10.0' and '@(_MSBuildProjectReferenceExistent)' != '')计算为('' == 'true' and '' != '' and ('' == 'true' or 'true' != 'true') and '17.0' != '10.0' and '' != '')。
+由于 false 条件，已跳过任务“MSBuild”；('%(_MSBuildProjectReferenceExistent.BuildReference)' == 'true' and '@(ProjectReferenceWithConfiguration)' != '' and '$(BuildingInsideVisualStudio)' != 'true' and '$(BuildProjectReferences)' == 'true' and '@(_MSBuildProjectReferenceExistent)' != '')计算为('' == 'true' and '' != '' and '' != 'true' and 'true' == 'true' and '' != '')。
+由于 false 条件，已跳过任务“MSBuild”；('%(_MSBuildProjectReferenceExistent.BuildReference)' == 'true' and '@(ProjectReferenceWithConfiguration)' != '' and '$(BuildingProject)' == 'true' and '@(_MSBuildProjectReferenceExistent)' != '')计算为('' == 'true' and '' != '' and 'true' == 'true' and '' != '')。
+由于 false 条件，已跳过任务“Warning”；('@(ProjectReferenceWithConfiguration)' != '' and '@(_MSBuildProjectReferenceNonexistent)' != '')计算为('' != '' and '' != '')。
+已完成在项目“VisionLite.csproj”中生成目标“ResolveProjectReferences”的操作。
+由于条件的计算结果为 false，已跳过目标“FindInvalidProjectReferences”；('$(FindInvalidProjectReferences)' == 'true')的计算结果为('' == 'true')。
+由于条件的计算结果为 false，已跳过目标“ResolveNativeReferences”；('@(NativeReference)'!='')的计算结果为(''!='')。
+已跳过目标“ResolveProjectReferences”。以前的生成已成功。
+由于条件的计算结果为 false，已跳过目标“FindInvalidProjectReferences”；('$(FindInvalidProjectReferences)' == 'true')的计算结果为('' == 'true')。
+已跳过目标“GetFrameworkPaths”。以前的生成已成功。
+已跳过目标“GetReferenceAssemblyPaths”。以前的生成已成功。
+已跳过目标“PrepareForBuild”。以前的生成已成功。
+由于条件的计算结果为 false，已跳过目标“GetInstalledSDKLocations”；('@(SDKReference)' != '')的计算结果为('' != '')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ResolveSDKReferences”(目标“ResolveAssemblyReferences”依赖于它):
+由于 false 条件，已跳过任务“ResolveSDKReference”；('@(SDKReference)'!='')计算为(''!='')。
+已完成在项目“VisionLite.csproj”中生成目标“ResolveSDKReferences”的操作。
+已跳过目标“ResolveSDKReferences”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ExpandSDKReferences”(目标“ResolveAssemblyReferences”依赖于它):
+由于 false 条件，已跳过任务“GetSDKReferenceFiles”；('@(ResolvedSDKReference)'!='')计算为(''!='')。
+已完成在项目“VisionLite.csproj”中生成目标“ExpandSDKReferences”的操作。
+由于条件的计算结果为 false，已跳过目标“ResolveNuGetPackageAssets”；('$(ResolveNuGetPackages)' == 'true' and exists('$(ProjectLockFile)'))的计算结果为('true' == 'true' and exists('obj\project.assets.json'))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\Microsoft.NET.Build.Extensions\Microsoft.NET.Build.Extensions.NETFramework.targets”中的目标“ImplicitlyExpandNETStandardFacades”(目标“ResolveAssemblyReferences”依赖于它):
+由于 false 条件，已跳过任务“GetDependsOnNETStandard”；('$(_RunGetDependsOnNETStandard)' == 'true')计算为('' == 'true')。
+由于 false 条件，已跳过任务“NETBuildExtensionsError”；('$(DependsOnNETStandard)' == 'true' AND '$(NETStandardInbox)' != 'true' AND '$(_UsingOldSDK)' == 'true')计算为('' == 'true' AND 'true' != 'true' AND '' == 'true')。
+由于 false 条件，已跳过任务“AddFacadesToReferences”；('@(_NETStandardLibraryNETFrameworkLib)' != '')计算为('' != '')。
+已完成在项目“VisionLite.csproj”中生成目标“ImplicitlyExpandNETStandardFacades”的操作。
+已跳过目标“GetFrameworkPaths”。以前的生成已成功。
+已跳过目标“GetReferenceAssemblyPaths”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\Microsoft.NET.Build.Extensions\Microsoft.NET.Build.Extensions.ConflictResolution.targets”中的目标“_HandlePackageFileConflicts”(目标“ResolveAssemblyReferences”依赖于它):
+正在使用程序集“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\Microsoft.NET.Build.Extensions\\tools\net472\Microsoft.NET.Build.Extensions.Tasks.dll”中的“ResolvePackageFileConflicts”任务。
+任务“ResolvePackageFileConflicts”
+已完成执行任务“ResolvePackageFileConflicts”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_HandlePackageFileConflicts”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ResolveAssemblyReferences”(目标“ResolveReferences”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“ResolveAssemblyReference”任务。
+任务“ResolveAssemblyReference”
+  TargetFrameworkMoniker:
+      .NETFramework,Version=v4.7.2
+  TargetFrameworkMonikerDisplayName:
+      .NET Framework 4.7.2
+  TargetedRuntimeVersion:
+      v4.0.30319
+  Assemblies:
+      AForge, Version=2.2.5.0, Culture=neutral, PublicKeyToken=c1db6ff4eaa06aeb, processorArchitecture=MSIL
+          HintPath =“..\packages\AForge.2.2.5\lib\AForge.dll”
+      AForge.Video, Version=2.2.5.0, Culture=neutral, PublicKeyToken=cbfb6e07d173c401, processorArchitecture=MSIL
+          HintPath =“..\packages\AForge.Video.2.2.5\lib\AForge.Video.dll”
+      AForge.Video.DirectShow, Version=2.2.5.0, Culture=neutral, PublicKeyToken=61ea4348d43881b7, processorArchitecture=MSIL
+          HintPath =“..\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll”
+      halcondotnet, Version=24.11.1.1, Culture=neutral, PublicKeyToken=4973bed59ddbf2b8, processorArchitecture=MSIL
+          HintPath =“..\..\..\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”
+          SpecificVersion =“False”
+      MvCameraControl.Net, Version=3.4.0.1, Culture=neutral, PublicKeyToken=52fddfb3f94be800, processorArchitecture=MSIL
+          HintPath =“..\..\..\..\..\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll”
+          SpecificVersion =“False”
+      Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL
+          HintPath =“..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll”
+      NModbus4, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL
+          HintPath =“..\packages\NModbus4.2.1.0\lib\net40\NModbus4.dll”
+      S7.Net, Version=0.20.0.0, Culture=neutral, PublicKeyToken=d5812d469e84c693, processorArchitecture=MSIL
+          HintPath =“..\packages\S7netplus.0.20.0\lib\net462\S7.Net.dll”
+      System
+      System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL
+          HintPath =“..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll”
+      System.Data
+      System.Design
+      System.Drawing
+      System.Drawing.Common, Version=9.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL
+          HintPath =“..\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.dll”
+      System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL
+          HintPath =“..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll”
+      System.Numerics
+      System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+          HintPath =“..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll”
+      System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL
+          HintPath =“..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll”
+      System.Windows.Forms
+      System.Xml
+      Microsoft.CSharp
+      System.Xml.Linq
+      System.Data.DataSetExtensions
+      System.Net.Http
+      System.Xaml
+      TwinCAT.Ads, Version=4.3.32.0, Culture=neutral, PublicKeyToken=180016cd49e5e8c3, processorArchitecture=MSIL
+          HintPath =“..\testdll\倍福引用包\TwinCAT.Ads.dll”
+          SpecificVersion =“False”
+      TwinCAT.Ads.Reactive
+          HintPath =“..\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll”
+      WindowsBase
+      PresentationCore
+      PresentationFramework
+      Xceed.Wpf.AvalonDock, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL
+          HintPath =“..\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.dll”
+      Xceed.Wpf.AvalonDock.Themes.Aero, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL
+          HintPath =“..\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll”
+      Xceed.Wpf.AvalonDock.Themes.Metro, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL
+          HintPath =“..\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll”
+      Xceed.Wpf.AvalonDock.Themes.VS2010, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL
+          HintPath =“..\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll”
+      Xceed.Wpf.Toolkit, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL
+          HintPath =“..\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.Toolkit.dll”
+      System.Core
+  AssemblyFiles:
+      C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\mscorlib.dll
+  CandidateAssemblyFiles:
+  TargetFrameworkDirectories:
+      C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\,C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Facades\
+  InstalledAssemblyTables:
+  IgnoreInstalledAssemblyTable:
+      False
+  SearchPaths:
+      {CandidateAssemblyFiles}
+      {HintPathFromItem}
+      {TargetFrameworkDirectory}
+      {AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2}
+      {Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx}
+      {AssemblyFolders}
+      {GAC}
+      {RawFileName}
+      bin\x64\Debug\
+  AllowedAssemblyExtensions:
+      .winmd
+      .dll
+      .exe
+  AllowedRelatedFileExtensions:
+      .pdb
+      .xml
+      .pri
+      .dll.config
+      .exe.config
+  AppConfigFile:
+      App.config
+  AutoUnify:
+      True
+  CopyLocalDependenciesWhenParentReferenceInGac:
+      True
+  FindDependencies:
+      True
+  TargetProcessorArchitecture:
+      amd64
+  StateFile:
+      obj\x64\Debug\VisionLite.csproj.AssemblyReference.cache
+  InstalledAssemblySubsetTables:
+  IgnoreInstalledAssemblySubsetTable:
+      False
+  TargetFrameworkSubsets:
+  FullTargetFrameworkSubsetNames:
+      Full
+  ProfileName:
+      
+  FullFrameworkFolders:
+      C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\
+  LatestTargetFrameworkDirectories:
+  ProfileTablesLocation:
+  统一主引用“mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      使用此版本而不是“E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      使用此版本而不是“E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      使用此版本而不是“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\mscorlib.dll”。
+      在搜索路径位置“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\mscorlib.dll”找到引用。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“AForge, Version=2.2.5.0, Culture=neutral, PublicKeyToken=c1db6ff4eaa06aeb”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.xml”。
+      此引用的 ImageRuntimeVersion 是“v2.0.50727”。
+  主引用“AForge.Video, Version=2.2.5.0, Culture=neutral, PublicKeyToken=cbfb6e07d173c401”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.xml”。
+      此引用的 ImageRuntimeVersion 是“v2.0.50727”。
+  主引用“AForge.Video.DirectShow, Version=2.2.5.0, Culture=neutral, PublicKeyToken=61ea4348d43881b7”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.xml”。
+      此引用的 ImageRuntimeVersion 是“v2.0.50727”。
+  主引用“halcondotnet, Version=24.11.1.1, Culture=neutral, PublicKeyToken=4973bed59ddbf2b8”。
+      解析的文件路径为“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.xml”。
+      此引用的 ImageRuntimeVersion 是“v2.0.50727”。
+  主引用“MvCameraControl.Net, Version=4.5.0.2, Culture=neutral, PublicKeyToken=a3c7c5e3a730cd12”。
+      解析的文件路径为“E:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.xml”。
+  主引用“Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.xml”。
+  主引用“NModbus4, Version=2.1.0.0, Culture=neutral, PublicKeyToken=null”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\NModbus4.2.1.0\lib\net40\NModbus4.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\NModbus4.2.1.0\lib\net40\NModbus4.xml”。
+  主引用“S7.Net, Version=0.20.0.0, Culture=neutral, PublicKeyToken=d5812d469e84c693”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\S7netplus.0.20.0\lib\net462\S7.Net.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\S7netplus.0.20.0\lib\net462\S7.Net.xml”。
+  统一主引用“System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      使用此版本而不是“E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      使用此版本而不是“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.xml”。
+  主引用“System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  统一主引用“System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Design.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Design.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  统一主引用“System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”。
+      使用此版本而不是“E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      使用此版本而不是“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Drawing.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Drawing.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“System.Drawing.Common, Version=9.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.pdb”。
+      找到相关文件“E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.xml”。
+  主引用“System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\System.Memory.4.5.5\lib\net461\System.Memory.xml”。
+  主引用“System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Numerics.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Numerics.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.xml”。
+  主引用“System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.xml”。
+  统一主引用“System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      使用此版本而不是“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“2.0.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“Microsoft.CSharp, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Microsoft.CSharp.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Microsoft.CSharp.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“System.Xml.Linq, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.Linq.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.Linq.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“System.Data.DataSetExtensions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.DataSetExtensions.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.DataSetExtensions.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“System.Net.Http, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Net.Http.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Net.Http.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“System.Xaml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xaml.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xaml.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  统一主引用“TwinCAT.Ads, Version=4.4.0.0, Culture=neutral, PublicKeyToken=180016cd49e5e8c3”。
+      使用此版本而不是“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll”中的原始版本“4.3.0.0”，因为 AutoUnify 为“true”。
+      解析的文件路径为“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.xml”。
+  主引用“TwinCAT.Ads.Reactive, Version=4.3.0.0, Culture=neutral, PublicKeyToken=180016cd49e5e8c3”。
+      解析的文件路径为“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到相关文件“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.xml”。
+  统一主引用“WindowsBase, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“3.0.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\WindowsBase.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\WindowsBase.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  统一主引用“PresentationCore, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“3.0.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  统一主引用“PresentationFramework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“3.0.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationFramework.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationFramework.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  主引用“Xceed.Wpf.AvalonDock, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+      找到附属文件“cs-CZ\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“de\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“es\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“fr\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“hu\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“it\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“ja-JP\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“nl-BE\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“pt-BR\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“ro\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“ru\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“sv\Xceed.Wpf.AvalonDock.resources.dll”。
+      找到附属文件“zh-Hans\Xceed.Wpf.AvalonDock.resources.dll”。
+  主引用“Xceed.Wpf.AvalonDock.Themes.Aero, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+  主引用“Xceed.Wpf.AvalonDock.Themes.Metro, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+  主引用“Xceed.Wpf.AvalonDock.Themes.VS2010, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+  主引用“Xceed.Wpf.Toolkit, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4”。
+      解析的文件路径为“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.Toolkit.dll”。
+      在搜索路径位置“{HintPathFromItem}”找到引用。
+  统一主引用“System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      使用此版本而不是“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”中的原始版本“3.5.0.0”，因为存在此框架文件的更新版本。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Core.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Core.winmd”，但它不存在。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  依赖项“System.Runtime.Serialization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Runtime.Serialization.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45”。
+          已考虑使用“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\System.Runtime.Serialization.winmd”，但它不存在。
+          已考虑使用“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\System.Runtime.Serialization.dll”，但它不存在。
+          已考虑使用“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\System.Runtime.Serialization.exe”，但它不存在。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Runtime.Serialization.winmd”，但它不存在。
+      “Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL”所必需的。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  依赖项“System.ComponentModel.Composition, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.ComponentModel.Composition.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“E:\mySoftware\VisionLite\testdll\倍福引用包”。
+          已考虑使用“E:\mySoftware\VisionLite\testdll\倍福引用包\System.ComponentModel.Composition.winmd”，但它不存在。
+          已考虑使用“E:\mySoftware\VisionLite\testdll\倍福引用包\System.ComponentModel.Composition.dll”，但它不存在。
+          已考虑使用“E:\mySoftware\VisionLite\testdll\倍福引用包\System.ComponentModel.Composition.exe”，但它不存在。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.ComponentModel.Composition.winmd”，但它不存在。
+      “TwinCAT.Ads, Version=4.3.32.0, Culture=neutral, PublicKeyToken=180016cd49e5e8c3, processorArchitecture=MSIL”所必需的。
+      “TwinCAT.Ads.Reactive”所必需的。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  依赖项“System.Reactive, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263”。
+      未能解析此引用。未能找到程序集“System.Reactive, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263”。请检查磁盘上是否存在该程序集。 如果您的代码需要此引用，则可能出现编译错误。
+          用于 SearchPath“E:\mySoftware\VisionLite\testdll\倍福引用包”。
+          已考虑使用“E:\mySoftware\VisionLite\testdll\倍福引用包\System.Reactive.winmd”，但它不存在。
+          已考虑使用“E:\mySoftware\VisionLite\testdll\倍福引用包\System.Reactive.dll”，但它不存在。
+          已考虑使用“E:\mySoftware\VisionLite\testdll\倍福引用包\System.Reactive.exe”，但它不存在。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Facades\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Facades\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Facades\System.Reactive.exe”，但它不存在。
+          用于 SearchPath“{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2}”。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\Microsoft\SqlDb\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\Microsoft\SqlDb\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\Microsoft\SqlDb\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\PublicAssemblies\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\PublicAssemblies\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\PublicAssemblies\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v4.5\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v4.5\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v4.5\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v4.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v4.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v4.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v2.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v2.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\ReferenceAssemblies\v2.0\System.Reactive.exe”，但它不存在。
+          用于 SearchPath“{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx}”。
+          已考虑 AssemblyFoldersEx 位置。
+          用于 SearchPath“{AssemblyFolders}”。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2902.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2902.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2902.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2903.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2903.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2903.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2904.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2904.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2904.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2905.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2905.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2905.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2906.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2906.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2906.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2907.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2907.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2907.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2908.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2908.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2908.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2909.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2909.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2909.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2910.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2910.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2910.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2911.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2911.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\WINDOWS\Microsoft.NET\DirectX for Managed Code\1.0.2911.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\v3.0\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\v3.0\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\v3.0\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\v3.5\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\v3.5\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\v3.5\System.Reactive.exe”，但它不存在。
+          已考虑使用“E:\Study\MVS\Development\MVFG\DotNet\win32\System.Reactive.winmd”，但它不存在。
+          已考虑使用“E:\Study\MVS\Development\MVFG\DotNet\win32\System.Reactive.dll”，但它不存在。
+          已考虑使用“E:\Study\MVS\Development\MVFG\DotNet\win32\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files\Basler\pylon 5\Development\Assemblies\Basler.Pylon\x86\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files\Basler\pylon 5\Development\Assemblies\Basler.Pylon\x86\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files\Basler\pylon 5\Development\Assemblies\Basler.Pylon\x86\System.Reactive.exe”，但它不存在。
+          已考虑使用“C:\Program Files\Basler\pylon 5\Development\Assemblies\PylonC.Net\System.Reactive.winmd”，但它不存在。
+          已考虑使用“C:\Program Files\Basler\pylon 5\Development\Assemblies\PylonC.Net\System.Reactive.dll”，但它不存在。
+          已考虑使用“C:\Program Files\Basler\pylon 5\Development\Assemblies\PylonC.Net\System.Reactive.exe”，但它不存在。
+          用于 SearchPath“{GAC}”。
+          已考虑使用“System.Reactive, Version=4.1.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263”，但未在 GAC 中找到它。
+          用于 SearchPath“bin\x64\Debug\”。
+          已考虑使用“bin\x64\Debug\System.Reactive.winmd”，但它不存在。
+          已考虑使用“bin\x64\Debug\System.Reactive.dll”，但它不存在。
+          已考虑使用“bin\x64\Debug\System.Reactive.exe”，但它不存在。
+      “TwinCAT.Ads.Reactive”所必需的。
+  依赖项“System.ComponentModel.DataAnnotations, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”。
+      解析的文件路径为“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.ComponentModel.DataAnnotations.dll”。
+      在搜索路径位置“{TargetFrameworkDirectory}”找到引用。
+          用于 SearchPath“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40”。
+          已考虑使用“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\System.ComponentModel.DataAnnotations.winmd”，但它不存在。
+          已考虑使用“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\System.ComponentModel.DataAnnotations.dll”，但它不存在。
+          已考虑使用“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\System.ComponentModel.DataAnnotations.exe”，但它不存在。
+          用于 SearchPath“{TargetFrameworkDirectory}”。
+          已考虑使用“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.ComponentModel.DataAnnotations.winmd”，但它不存在。
+      “Xceed.Wpf.Toolkit, Version=4.7.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL”所必需的。
+      此引用不是“CopyLocal”，因为它是系统必备文件。
+  AssemblyFoldersEx 位置:“{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx}”
+          C:\Program Files\Basler\pylon 5\Development\Assemblies\Basler.Pylon\x64\
+          E:\Study\MVS\Development\MVFG\DotNet\win64
+          C:\Program Files\Basler\pylon 5\Development\Assemblies\PylonC.Net\
+          C:\Program Files (x86)\Microsoft.NET\Primary Interop Assemblies\
+          C:\Program Files\VisionMaster4.4.0\MVDAlgorithmSDK\ReferencedAssemblies\Control
+          C:\Program Files\VisionMaster4.4.0\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms
+          C:\Program Files\VisionMaster4.4.0\MVDAlgorithmSDK\ReferencedAssemblies\Common
+          C:\Program Files\Basler\pylon 5\Development\Assemblies\Basler.Pylon\x86\
+          E:\Study\MVS\Development\MVFG\DotNet\win32
+          C:\Program Files (x86)\Common Files\Microsoft Shared\MSEnv\PublicAssemblies
+          C:\Program Files (x86)\Microsoft Chart Controls\Assemblies
+已完成执行任务“ResolveAssemblyReference”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“ResolveAssemblyReferences”的操作。
+已跳过目标“ResolveAssemblyReferences”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_GenerateSuggestedBindingRedirectsCache”(目标“GenerateBindingRedirects”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“Hash”任务。
+任务“Hash”
+已完成执行任务“Hash”的操作。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“WriteLinesToFile”任务。
+任务“WriteLinesToFile”
+已完成执行任务“WriteLinesToFile”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_GenerateSuggestedBindingRedirectsCache”的操作。
+已跳过目标“ResolveAssemblyReferences”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\Microsoft.NET.Build.Extensions\Microsoft.NET.Build.Extensions.NETFramework.targets”中的目标“_RemoveZipFileSuggestedRedirect”(目标“GenerateBindingRedirects”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“_RemoveZipFileSuggestedRedirect”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GenerateBindingRedirects”(目标“ResolveReferences”依赖于它):
+正在完全生成目标“GenerateBindingRedirects”。
+输出文件“obj\x64\Debug\VisionLite.exe.config”不存在。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“GenerateBindingRedirects”任务。
+任务“GenerateBindingRedirects”
+  ResolveAssemblyReferences 中没有建议的绑定重定向。
+已完成执行任务“GenerateBindingRedirects”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“GenerateBindingRedirects”的操作。
+由于条件的计算结果为 false，已跳过目标“GenerateBindingRedirectsUpdateAppConfig”；('$(AutoGenerateBindingRedirects)' == 'true' and '$(GenerateBindingRedirectsOutputType)' == 'true' and Exists('$(_GenerateBindingRedirectsIntermediateAppConfig)'))的计算结果为('true' == 'true' and 'true' == 'true' and Exists('obj\x64\Debug\VisionLite.exe.config'))。
+由于条件的计算结果为 false，已跳过目标“ResolveComReferences”；('@(COMReference)'!='' or '@(COMFileReference)'!='')的计算结果为(''!='' or ''!='')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“AfterResolveReferences”(目标“ResolveReferences”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“AfterResolveReferences”的操作。
+已跳过目标“GetReferenceAssemblyPaths”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets”中的目标“ImplicitlyExpandDesignTimeFacades”(目标“ResolveReferences”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“ImplicitlyExpandDesignTimeFacades”的操作。
+由于条件的计算结果为 false，已跳过目标“ResolveTestReferences”；('@(Shadow)'!='')的计算结果为(''!='')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ResolveReferences”(目标“CoreBuild”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“ResolveReferences”的操作。
+由于条件的计算结果为 false，已跳过目标“ResolveNuGetPackageAssets”；('$(ResolveNuGetPackages)' == 'true' and exists('$(ProjectLockFile)'))的计算结果为('true' == 'true' and exists('obj\project.assets.json'))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WorkflowBuildExtensions.targets”中的目标“ValidationExtension”(目标“PrepareResources”依赖于它):
+由于 false 条件，已跳过任务“WorkflowBuildMessageTask”；('$(SkipWorkflowValidation)'!='' and '$(SkipWorkflowValidation)'!='true' and '$(SkipWorkflowValidation)'!='false')计算为(''!='' and ''!='true' and ''!='false')。
+已完成在项目“VisionLite.csproj”中生成目标“ValidationExtension”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WorkflowBuildExtensions.targets”中的目标“ExpressionBuildExtension”(目标“PrepareResources”依赖于它):
+由于 false 条件，已跳过任务“WorkflowBuildMessageTask”；('$(DisableWorkflowCompiledExpressions)'!='' and '$(DisableWorkflowCompiledExpressions)'!='true' and '$(DisableWorkflowCompiledExpressions)'!='false')计算为(''!='' and ''!='true' and ''!='false')。
+已完成在项目“VisionLite.csproj”中生成目标“ExpressionBuildExtension”的操作。
+由于条件的计算结果为 false，已跳过目标“XamlMarkupCompilePass1”；('@(XamlPage)' != '' or '@(XamlAppDef)' != '')的计算结果为('' != '' or '' != '')。
+由于条件的计算结果为 false，已跳过目标“XamlMarkupCompileReadGeneratedFileList”；('@(XamlPage)' != '' or '@(XamlAppDef)' != '')的计算结果为('' != '' or '' != '')。
+由于条件的计算结果为 false，已跳过目标“XamlMarkupCompileAddFilesGenerated”；('@(XamlPage)' != '' or '@(XamlAppDef)' != '')的计算结果为('' != '' or '' != '')。
+由于条件的计算结果为 false，已跳过目标“XamlMarkupCompilePass2”；('$(XamlRequiresCompilationPass2)' == 'true' )的计算结果为('false' == 'true' )。
+由于条件的计算结果为 false，已跳过目标“XamlMarkupCompileReadPass2Flag”；('@(XamlPage)' != '' or '@(XamlAppDef)' != '')的计算结果为('' != '' or '' != '')。
+由于条件的计算结果为 false，已跳过目标“XamlMarkupCompileAddExtensionFilesGenerated”；('@(XamlPage)' != '' or '@(XamlAppDef)' != '')的计算结果为('' != '' or '' != '')。
+由于条件的计算结果为 false，已跳过目标“AddDeferredValidationErrorsFileToFileWrites”；(Exists('$(DeferredValidationErrorsFileName)'))的计算结果为(Exists('obj\x64\Debug\\AC2C1ABA-CCF6-44D4-8127-588FD4D0A860-DeferredValidationErrors.xml'))。
+由于条件的计算结果为 false，已跳过目标“ReportValidationBuildExtensionErrors”；('$(SkipWorkflowValidation)' != 'true' and ('@(XamlPage)' != '' or '@(XamlAppDef)' != ''))的计算结果为('' != 'true' and ('' != '' or '' != ''))。
+由于条件的计算结果为 false，已跳过目标“SplashScreenValidation”；('@(SplashScreen)' != '')的计算结果为('' != '')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“MarkupCompilePass1”(目标“PrepareResources”依赖于它):
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+正在使用程序集“PresentationBuildTasks, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”中的“MarkupCompilePass1”任务。
+任务“MarkupCompilePass1”
+  
+  
+  Microsoft (R) 生成任务“MarkupCompilePass1”版本“4.8.9032.0 built by: NET481REL1”。
+  版权所有(C) Microsoft Corporation 2005。保留所有权利。
+  
+  
+  输入: 标记 ApplicationDefinition 文件:“E:\mySoftware\VisionLite\VisionLite\App.xaml”。
+  当前的项目目录是“E:\mySoftware\VisionLite\VisionLite\”。
+  分析结果:“All”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\CameraIcon.xaml”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\CameraManagementWindow.xaml”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\Communication\SimpleAddConnectionWindow.xaml”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\MainWindow.xaml”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\ToolbarIcons.xaml”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\Vision\UI\Controls\ImageDisplayControl.xaml”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\Vision\UI\Controls\ParameterPanel.xaml”。
+  重新编译的 XAML 文件:“E:\mySoftware\VisionLite\VisionLite\Vision\UI\Windows\VisionToolWindow.xaml”。
+  启动标记编译。
+  OutputType 是“exe”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll”。
+  输入: 程序集 Reference 文件:“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Microsoft.CSharp.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\mscorlib.dll”。
+  输入: 程序集 Reference 文件:“E:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\NModbus4.2.1.0\lib\net40\NModbus4.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationFramework.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\S7netplus.0.20.0\lib\net462\S7.Net.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Core.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.DataSetExtensions.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Design.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Drawing.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Net.Http.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Numerics.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xaml.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.Linq.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll”。
+  输入: 程序集 Reference 文件:“C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\WindowsBase.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll”。
+  输入: 程序集 Reference 文件:“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.Toolkit.dll”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\App.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“App.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\CameraIcon.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“CameraIcon.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\CameraManagementWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“CameraManagementWindow.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“Communication\SimpleCommunicationWindow.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\Communication\SimpleAddConnectionWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“Communication\SimpleAddConnectionWindow.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\MainWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“MainWindow.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\ToolbarIcons.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“ToolbarIcons.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\Vision\UI\Controls\ImageDisplayControl.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“Vision\UI\Controls\ImageDisplayControl.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\Vision\UI\Controls\ParameterPanel.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“Vision\UI\Controls\ParameterPanel.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\Vision\UI\Windows\VisionToolWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“Vision\UI\Windows\VisionToolWindow.xaml”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraIcon.baml”。
+  生成的代码文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.g.cs”。
+  生成的代码文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.g.cs”。
+  生成的代码文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.g.cs”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.baml”。
+  生成的代码文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.g.cs”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ToolbarIcons.baml”。
+  生成的代码文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ImageDisplayControl.g.cs”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ImageDisplayControl.baml”。
+  生成的代码文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ParameterPanel.g.cs”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ParameterPanel.baml”。
+  生成的代码文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Windows\VisionToolWindow.g.cs”。
+  生成的代码文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.g.cs”。
+  已完成标记编译。
+  MarkupCompilePass1 成功生成 BAML 或源代码文件。
+已完成执行任务“MarkupCompilePass1”的操作。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+已完成在项目“VisionLite.csproj”中生成目标“MarkupCompilePass1”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“AfterMarkupCompilePass1”(目标“PrepareResources”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“AfterMarkupCompilePass1”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“GenerateTemporaryTargetAssembly”(目标“MarkupCompilePass2ForMainAssembly”依赖于它):
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)' == 'true')计算为('' == 'true')。
+正在使用程序集“PresentationBuildTasks, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”中的“GenerateTemporaryTargetAssembly”任务。
+任务“GenerateTemporaryTargetAssembly”
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+尝试使用扩展路径 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild 导入 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\$(MSBuildToolsVersion)\Microsoft.Common.props
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Microsoft.Common.props (57,5) 处重新分配属性: $(MSBuildProjectExtensionsPath)=“E:\mySoftware\VisionLite\VisionLite\obj\”(先前值:“obj\”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+尝试使用扩展路径 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild 导入 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\$(MSBuildToolsVersion)\Imports\Microsoft.Common.props\ImportBefore\*
+“Configuration”属性是全局属性，不能修改。
+“Platform”属性是全局属性，不能修改。
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+“Configuration”属性是全局属性，不能修改。
+“Platform”属性是全局属性，不能修改。
+“AssemblyName”属性是全局属性，不能修改。
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (12,5) 处重新分配属性: $(DefineCommonItemSchemas)=“false”(先前值:“true”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (13,5) 处重新分配属性: $(DefineCommonCapabilities)=“false”(先前值:“true”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets (14,5) 处重新分配属性: $(DefineCommonReferenceSchemas)=“false”(先前值:“true”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+“Platform”属性是全局属性，不能修改。
+“Configuration”属性是全局属性，不能修改。
+“IntermediateOutputPath”属性是全局属性，不能修改。
+“IntermediateOutputPath”属性是全局属性，不能修改。
+“IntermediateOutputPath”属性是全局属性，不能修改。
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (176,5) 处重新分配属性: $(_DebugSymbolsProduced)=“true”(先前值:“false”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (186,5) 处重新分配属性: $(_DocumentationFileProduced)=“false”(先前值:“true”)
+“AssemblyName”属性是全局属性，不能修改。
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (508,5) 处重新分配属性: $(ProcessorArchitecture)=“amd64”(先前值:“x64”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (560,5) 处重新分配属性: $(DelaySign)=“”(先前值:“false”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (629,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};”(先前值:“{CandidateAssemblyFiles}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (630,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem}”(先前值:“{CandidateAssemblyFiles};”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (631,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (632,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (633,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (634,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (635,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (636,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC};{RawFileName}”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (637,5) 处重新分配属性: $(AssemblySearchPaths)=“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC};{RawFileName};bin\x64\Debug\”(先前值:“{CandidateAssemblyFiles};;{HintPathFromItem};{TargetFrameworkDirectory};{AssemblyFoldersFromConfig:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\AssemblyFolders.config,v4.7.2};;{Registry:Software\Microsoft\.NETFramework,v4.7.2,AssemblyFoldersEx};{AssemblyFolders};{GAC};{RawFileName}”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (3739,5) 处重新分配属性: $(_SGenGenerateSerializationAssembliesConfig)=“Auto”(先前值:“”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (3740,5) 处重新分配属性: $(_SGenGenerateSerializationAssembliesConfig)=“Off”(先前值:“Auto”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets (4874,5) 处重新分配属性: $(_TargetsThatPrepareProjectReferences)=“
+      AssignProjectConfiguration;
+      _SplitProjectReferencesByFileExistence
+    ”(先前值:“_SplitProjectReferencesByFileExistence”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\CodeAnalysis\Microsoft.CodeAnalysis.targets (125,5) 处重新分配属性: $(_CodeAnalysisTreatWarningsAsErrors)=“false”(先前值:“”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\CodeAnalysis\Microsoft.CodeAnalysis.targets (167,9) 处重新分配属性: $(PrepareForRunDependsOn)=“
+      CopyFilesToOutputDirectory
+    ;RunCodeAnalysis”(先前值:“
+      CopyFilesToOutputDirectory
+    ”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets (75,5) 处重新分配属性: $(ResolveReferencesDependsOn)=“
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ”(先前值:“
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (97,7) 处重新分配属性: $(PrepareResourceNamesDependsOn)=“
+                    AssignWinFXEmbeddedResource;
+                    
+      AssignTargetPaths;
+      SplitResourcesByCulture;
+      CreateManifestResourceNames;
+      CreateCustomManifestResourceNames
+    
+      ”(先前值:“
+      AssignTargetPaths;
+      SplitResourcesByCulture;
+      CreateManifestResourceNames;
+      CreateCustomManifestResourceNames
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (108,7) 处重新分配属性: $(PrepareResourcesDependsOn)=“
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+      ”(先前值:“
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (184,5) 处重新分配属性: $(CompileDependsOn)=“
+        
+      ResolveReferences;
+      ResolveKeySource;
+      SetWin32ManifestProperties;
+      FindReferenceAssembliesForReferences;
+      _GenerateCompileInputs;
+      BeforeCompile;
+      _TimeStampBeforeCompile;
+      _GenerateCompileDependencyCache;
+      CoreCompile;
+      _TimeStampAfterCompile;
+      AfterCompile;
+    ;
+        _AfterCompileWinFXInternal
+    ”(先前值:“
+      ResolveReferences;
+      ResolveKeySource;
+      SetWin32ManifestProperties;
+      FindReferenceAssembliesForReferences;
+      _GenerateCompileInputs;
+      BeforeCompile;
+      _TimeStampBeforeCompile;
+      _GenerateCompileDependencyCache;
+      CoreCompile;
+      _TimeStampAfterCompile;
+      AfterCompile;
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets (813,9) 处重新分配属性: $(PublishBuildDependsOn)=“
+            BuildOnlySettings;
+            PrepareForBuild;
+            ResolveReferences;
+            PrepareResources;
+            ResolveKeySource;
+            PrepareResourcesForSatelliteAssemblies;
+            GenerateSerializationAssemblies;
+            CreateSatelliteAssemblies;
+        ”(先前值:“
+      BuildOnlySettings;
+      PrepareForBuild;
+      ResolveReferences;
+      PrepareResources;
+      ResolveKeySource;
+      GenerateSerializationAssemblies;
+      CreateSatelliteAssemblies;
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.Data.Entity.targets (35,5) 处重新分配属性: $(BuildDependsOn)=“
+      EntityDeploy;
+      
+      BeforeBuild;
+      CoreBuild;
+      AfterBuild
+    
+    ”(先前值:“
+      BeforeBuild;
+      CoreBuild;
+      AfterBuild
+    ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.Data.Entity.targets (42,5) 处重新分配属性: $(CleanDependsOn)=“
+      
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      CleanReferencedProjects;
+      CleanPublishFolder;
+      AfterClean
+    ;
+      EntityClean;
+    ”(先前值:“
+      BeforeClean;
+      UnmanagedUnregistration;
+      CoreClean;
+      CleanReferencedProjects;
+      CleanPublishFolder;
+      AfterClean
+    ”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.Xaml.targets (35,5) 处重新分配属性: $(PrepareResourcesDependsOn)=“
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    ”(先前值:“
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+      ”)
+在 C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WorkflowBuildExtensions.targets (16,5) 处重新分配属性: $(PrepareResourcesDependsOn)=“
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    ”(先前值:“
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    ”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\TeamTest\Microsoft.TeamTest.targets (4,5) 处重新分配属性: $(ResolveReferencesDependsOn)=“
+      
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ;
+      ResolveTestReferences
+    ”(先前值:“
+      
+      BeforeResolveReferences;
+      AssignProjectConfiguration;
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      ResolveNativeReferences;
+      ResolveAssemblyReferences;
+      GenerateBindingRedirects;
+      ResolveComReferences;
+      AfterResolveReferences
+    ;
+      ImplicitlyExpandDesignTimeFacades
+    ”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+尝试使用扩展路径 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild 导入 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\$(MSBuildToolsVersion)\Microsoft.Common.targets\ImportAfter\*
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\NuGet\17.0\Microsoft.NuGet.targets (74,5) 处重新分配属性: $(ProjectLockFile)=“obj\project.assets.json”(先前值:“E:\mySoftware\VisionLite\VisionLite\obj\project.assets.json”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\NuGet\17.0\Microsoft.NuGet.targets (185,5) 处重新分配属性: $(ResolveAssemblyReferencesDependsOn)=“
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      GetFrameworkPaths;
+      GetReferenceAssemblyPaths;
+      PrepareForBuild;
+      ResolveSDKReferences;
+      ExpandSDKReferences;
+    ;ResolveNuGetPackageAssets”(先前值:“
+      ResolveProjectReferences;
+      FindInvalidProjectReferences;
+      GetFrameworkPaths;
+      GetReferenceAssemblyPaths;
+      PrepareForBuild;
+      ResolveSDKReferences;
+      ExpandSDKReferences;
+    ”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\NuGet\17.0\Microsoft.NuGet.targets (186,5) 处重新分配属性: $(PrepareResourcesDependsOn)=“ResolveNuGetPackageAssets;
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    ”(先前值:“
+      ValidationExtension;
+      ExpressionBuildExtension;
+      
+      XamlMarkupCompilePass1;
+      XamlMarkupCompilePass2;
+      
+                MarkupCompilePass1;
+                AfterMarkupCompilePass1;
+                MarkupCompilePass2ForMainAssembly;
+                FileClassification;
+                MainResourcesGeneration;
+                
+      ;
+      PrepareResourceNames;
+      ResGen;
+      CompileLicxFiles
+    
+       
+    
+    ”)
+在 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\NuGet\17.0\Microsoft.NuGet.targets (267,5) 处重新分配属性: $(_HandlePackageFileConflictsAfter)=“ResolveNuGetPackageAssets;ResolveNuGetPackageAssetsNonAOT”(先前值:“ResolveNuGetPackageAssets”)
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+将用于 $(MSBuildExtensionsPath) 的搜索路径为 C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild;$(MSBuildProgramFiles32)\MSBuild
+正在使用项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ResolveFrameworkReferences”重写项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets”中的目标“ResolveFrameworkReferences”。
+正在使用项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets”中的目标“GetFrameworkPaths”重写项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GetFrameworkPaths”。
+正在使用项目“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“SatelliteDllsProjectOutputGroup”重写项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“SatelliteDllsProjectOutputGroup”。
+正在使用项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.WorkflowBuildExtensions.targets”中的目标“GenerateCompiledExpressionsTempFile”重写项目“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WorkflowBuildExtensions.targets”中的目标“GenerateCompiledExpressionsTempFile”。
+正在使用项目“C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets”中的目标“CollectPackageReferences”重写项目“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\Managed\Microsoft.Managed.DesignTime.targets”中的目标“CollectPackageReferences”。
+项目中不存在 AfterTargets 特性中的“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VisualStudio\v17.0\CodeAnalysis\Microsoft.CodeAnalysis.targets (446,11)”位置列出的目标“ClCompile”，将忽略该目标。
+项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”(1)正在节点 1 上生成“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”(2) (_CompileTemporaryAssembly 个目标)。
+项目文件包含 ToolsVersion="15.0"。此工具集未知或缺失(在此情况下，您可以通过安装合适的 MSBuild 版本来解决此问题)，或者生成可能已被强制到特定的 ToolsVersion (出于策略原因)。将项目视为具有 ToolsVersion="Current"。有关详细信息，请参阅 http://go.microsoft.com/fwlink/?LinkId=293424。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“BuildOnlySettings”(目标“_CompileTemporaryAssembly”依赖于它):
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“BuildOnlySettings”的操作。
+由于条件的计算结果为 false，已跳过目标“ResolveKeySource”；($(SignManifests) == 'true' or $(SignAssembly) == 'true')的计算结果为( == 'true' or  == 'true')。
+由于条件的计算结果为 false，已跳过目标“_ComputeNonExistentFileProperty”；(('$(BuildingInsideVisualStudio)' == 'true') and ('$(BuildingOutOfProcess)' != 'true') and (('$(BuildingProject)' == 'false') or ('$(UseHostCompilerIfAvailable)' == 'true')))的计算结果为(('' == 'true') and ('' != 'true') and (('true' == 'false') or ('true' == 'true')))。
+由于条件的计算结果为 false，已跳过目标“ResolveCodeAnalysisRuleSet”；('$(CodeAnalysisRuleSet)' != '')的计算结果为('' != '')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“ShimReferencePathsWhenCommonTargetsDoesNotUnderstandReferenceAssemblies”(目标“_BeforeVBCSCoreCompile”依赖于它):
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“ShimReferencePathsWhenCommonTargetsDoesNotUnderstandReferenceAssemblies”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“_BeforeVBCSCoreCompile”(目标“CoreCompile”依赖于它):
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“_BeforeVBCSCoreCompile”的操作。
+已跳过目标“ShimReferencePathsWhenCommonTargetsDoesNotUnderstandReferenceAssemblies”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“_ComputeSkipAnalyzers”(目标“CoreCompile”依赖于它):
+由于 false 条件，已跳过任务“ShowMessageForImplicitlySkipAnalyzers”；('$(_ImplicitlySkipAnalyzers)' == 'true')计算为('' == 'true')。
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“_ComputeSkipAnalyzers”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.NETFramework.CurrentVersion.targets”中的目标“GetFrameworkPaths”(目标“PrepareForBuild”依赖于它):
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“GetFrameworkPaths”的操作。
+由于条件的计算结果为 false，已跳过目标“GetWinFXPath”；(('@(Page)' != '' or '@(ApplicationDefinition)' != '' or '@(Resource)' != '') and ('$(GetWinFXNativePath)' != '' or '$(GetWinFXWoWPath)' != '' ))的计算结果为(('' != '' or '' != '' or '' != '') and ('' != '' or '' != '' ))。
+已跳过目标“GetFrameworkPaths”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GetReferenceAssemblyPaths”(目标“PrepareForBuild”依赖于它):
+任务“GetReferenceAssemblyPaths”
+已完成执行任务“GetReferenceAssemblyPaths”的操作。
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“GetReferenceAssemblyPaths”的操作。
+由于条件的计算结果为 false，已跳过目标“AssignLinkMetadata”；( '$(SynthesizeLinkMetadata)' == 'true' )的计算结果为( '' == 'true' )。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“PrepareForBuild”(目标“GenerateMSBuildEditorConfigFile”依赖于它):
+任务“FindAppConfigFile”
+  已找到“App.config”。
+已完成执行任务“FindAppConfigFile”的操作。
+任务“MakeDir”
+已完成执行任务“MakeDir”的操作。
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“PrepareForBuild”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“GenerateMSBuildEditorConfigFileShouldRun”(目标“GenerateMSBuildEditorConfigFile”依赖于它):
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“GenerateMSBuildEditorConfigFileShouldRun”的操作。
+由于条件的计算结果为 false，已跳过目标“GenerateMSBuildEditorConfigFileCore”；('$(_GeneratedEditorConfigShouldRun)' == 'true')的计算结果为('' == 'true')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“GenerateMSBuildEditorConfigFile”(目标“CoreCompile”依赖于它):
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“GenerateMSBuildEditorConfigFile”的操作。
+由于条件的计算结果为 false，已跳过目标“_SetPathMapFromSourceRoots”；('$(DeterministicSourcePaths)' == 'true')的计算结果为('' == 'true')。
+由于条件的计算结果为 false，已跳过目标“CreateCompilerGeneratedFilesOutputPath”；('$(EmitCompilerGeneratedFiles)' == 'true' and !('$(DesignTimeBuild)' == 'true' OR '$(BuildingProject)' != 'true'))的计算结果为('false' == 'true' and !('' == 'true' OR 'true' != 'true'))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.ServiceModel.targets”中的目标“PreXsdCodeGen”(目标“CoreCompile”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“CallTarget”任务。
+任务“CallTarget”
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.ServiceModel.targets”中的目标“CleanXsdCodeGen”(目标“PreXsdCodeGen”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“Delete”任务。
+任务“Delete”
+已完成执行任务“Delete”的操作。
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“CleanXsdCodeGen”的操作。
+已完成执行任务“CallTarget”的操作。
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“PreXsdCodeGen”的操作。
+由于条件的计算结果为 false，已跳过目标“XsdCodeGen”；( '$(XsdCodeGenPreCondition)' == 'True' )的计算结果为( 'False' == 'True' )。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.CSharp.Core.targets”中的目标“CoreCompile”(目标“_CompileTemporaryAssembly”依赖于它):
+正在完全生成目标“CoreCompile”。
+输出文件“obj\x64\Debug\VisionLite.exe”不存在。
+正在使用程序集“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll”中的“Csc”任务。
+任务“Csc”
+  C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\csc.exe /noconfig /nowarn:1701,1702 /fullpaths /nostdlib+ /platform:x64 /errorreport:prompt /warn:4 /define:DEBUG;TRACE /highentropyva+ /reference:E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll /reference:E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll /reference:E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll /reference:E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Microsoft.CSharp.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\mscorlib.dll" /reference:E:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll /reference:E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll /reference:E:\mySoftware\VisionLite\packages\NModbus4.2.1.0\lib\net40\NModbus4.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationFramework.dll" /reference:E:\mySoftware\VisionLite\packages\S7netplus.0.20.0\lib\net462\S7.Net.dll /reference:E:\mySoftware\VisionLite\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Core.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.DataSetExtensions.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Design.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll" /reference:E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Drawing.dll" /reference:E:\mySoftware\VisionLite\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Net.Http.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Numerics.dll" /reference:E:\mySoftware\VisionLite\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll /reference:E:\mySoftware\VisionLite\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xaml.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.Linq.dll" /reference:"E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.dll" /reference:"E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\WindowsBase.dll" /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.dll /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.Toolkit.dll /debug+ /debug:full /filealign:512 /optimize- /out:obj\x64\Debug\VisionLite.exe /subsystemversion:6.00 /target:exe /utf8output /deterministic+ /langversion:9.0 CameraManagementWindow.xaml.cs Communication\SimpleCommunicationWindow.xaml.cs Communication\SimpleAddConnectionWindow.xaml.cs Communication\SimpleConnectionConfig.cs Communication\ICommunication.cs Communication\IMessageProtocol.cs Communication\ITcpServer.cs Communication\Message.cs Communication\TcpCommunication.cs Communication\TcpServer.cs Communication\UdpCommunication.cs Communication\UdpServer.cs Communication\ModbusAddressMap.cs Communication\ModbusAddressManager.cs Communication\ModbusTcpServer.cs Communication\ModbusTcpClient.cs Communication\SerialCommunication.cs Communication\VisionLiteProtocol.cs Communication\AdsCommunication.cs Communication\AdsConnectionConfig.cs Communication\AdsConnectionTest.cs Communication\S7Communication.cs Communication\S7ConnectionConfig.cs Communication\S7ConnectionTest.cs Vision\VisionToolLauncher.cs Vision\Core\Interfaces\IVisionProcessor.cs Vision\Core\Models\VisionImage.cs Vision\Core\Models\ProcessResult.cs Vision\Core\Models\ParameterInfo.cs Vision\Core\Models\GeometryElement.cs Vision\Core\Attributes\ParameterAttribute.cs Vision\Core\Base\VisionProcessorBase.cs Vision\Processors\Preprocessing\FilterProcessors\GaussianFilterProcessor.cs Vision\UI\Controls\ImageDisplayControl.xaml.cs Vision\UI\Controls\ParameterPanel.xaml.cs Vision\UI\Windows\VisionToolWindow.xaml.cs WindowRoiState.cs WindowToolbarAdorner.cs HalconCameraDevice.cs DeviceInfo.cs HikvisionCameraDevice.cs ICameraDevice.cs InfoWindowAdorner.cs ParameterTranslator.cs RoiAdorner.cs RoiUpdatedEventArgs.cs WindowInfo.cs App.xaml.cs MainWindow.xaml.cs Properties\AssemblyInfo.cs Properties\Resources.Designer.cs Properties\Settings.Designer.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ImageDisplayControl.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ParameterPanel.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Windows\VisionToolWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\GeneratedInternalTypeHelper.g.cs
+  CompilerServer: server failed - server rejected the request 'Failed to connect to server' - cb6e733d-109d-4768-8c62-53e5da1c7254
+  Microsoft(R) Visual C# 编译器 版本 4.2.0-4.22281.5 (8d3180e5)
+  版权所有(C) Microsoft Corporation。保留所有权利。
+  
+E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(103,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(205,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\S7Communication.cs(234,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml.cs(1341,28): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml.cs(1522,28): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(44,24): warning CS0414: 字段“AdsCommunication._heartbeatVariable”已被赋值，但从未使用过它的值 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+已完成执行任务“Csc”的操作。
+由于 false 条件，已跳过任务“CallTarget”；('$(TargetsTriggeredByCompilation)' != '')计算为('' != '')。
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“CoreCompile”的操作。
+由于条件的计算结果为 false，已跳过目标“_TouchLastBuildWithSkipAnalyzers”；('$(_SkipAnalyzers)' == 'true')的计算结果为('' == 'true')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“_CompileTemporaryAssembly”(入口点):
+已完成在项目“VisionLite_pxuygva2_wpftmp.csproj”中生成目标“_CompileTemporaryAssembly”的操作。
+已完成生成项目“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”(_CompileTemporaryAssembly 个目标)的操作。
+已完成执行任务“GenerateTemporaryTargetAssembly”的操作。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“CreateItem”任务。
+任务“CreateItem”
+已完成执行任务“CreateItem”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“GenerateTemporaryTargetAssembly”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“MarkupCompilePass2”(目标“MarkupCompilePass2ForMainAssembly”依赖于它):
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+正在使用程序集“PresentationBuildTasks, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”中的“MarkupCompilePass2”任务。
+任务“MarkupCompilePass2”
+  
+  
+  Microsoft (R) 生成任务“MarkupCompilePass2”版本“4.8.9032.0 built by: NET481REL1”。
+  版权所有(C) Microsoft Corporation 2005。保留所有权利。
+  
+  
+  当前的项目目录是“E:\mySoftware\VisionLite\VisionLite\”。
+  正在准备标记编译...
+  OutputType 是“exe”。
+  输入: 本地引用标记 ApplicationDefinition 文件是“E:\mySoftware\VisionLite\VisionLite\App.xaml”。
+  输入: 本地引用标记 Page 文件:“E:\mySoftware\VisionLite\VisionLite\CameraManagementWindow.xaml”。
+  输入: 本地引用标记 Page 文件:“E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml”。
+  输入: 本地引用标记 Page 文件:“E:\mySoftware\VisionLite\VisionLite\MainWindow.xaml”。
+  输入: 本地引用标记 Page 文件:“E:\mySoftware\VisionLite\VisionLite\Vision\UI\Windows\VisionToolWindow.xaml”。
+  启动标记编译。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\App.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“App.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\CameraManagementWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“CameraManagementWindow.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“Communication\SimpleCommunicationWindow.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\MainWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“MainWindow.xaml”。
+  输入文件“E:\mySoftware\VisionLite\VisionLite\Vision\UI\Windows\VisionToolWindow.xaml”在目录“E:\mySoftware\VisionLite\VisionLite\”处被解析为新的相对路径“Vision\UI\Windows\VisionToolWindow.xaml”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.baml”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.baml”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.baml”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.baml”。
+  生成的 BAML 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Windows\VisionToolWindow.baml”。
+  已完成标记编译。
+  MarkupCompilePass2 成功生成 BAML 或源代码文件。
+已完成执行任务“MarkupCompilePass2”的操作。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+已完成在项目“VisionLite.csproj”中生成目标“MarkupCompilePass2”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“AfterMarkupCompilePass2”(目标“MarkupCompilePass2ForMainAssembly”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“AfterMarkupCompilePass2”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“CleanupTemporaryTargetAssembly”(目标“MarkupCompilePass2ForMainAssembly”依赖于它):
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+任务“Delete”
+  正在删除文件“obj\x64\Debug\VisionLite.exe”。
+已完成执行任务“Delete”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“CleanupTemporaryTargetAssembly”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“MarkupCompilePass2ForMainAssembly”(目标“PrepareResources”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“MarkupCompilePass2ForMainAssembly”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“FileClassification”(目标“PrepareResources”依赖于它):
+正在使用程序集“PresentationBuildTasks, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”中的“FileClassifier”任务。
+任务“FileClassifier”
+  
+  
+  Microsoft (R) 生成任务“FileClassifier”版本“4.8.9032.0 built by: NET481REL1”。
+  版权所有(C) Microsoft Corporation 2005。保留所有权利。
+  
+  
+已完成执行任务“FileClassifier”的操作。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+已完成在项目“VisionLite.csproj”中生成目标“FileClassification”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“MainResourcesGeneration”(目标“PrepareResources”依赖于它):
+正在完全生成目标“MainResourcesGeneration”。
+输出文件“obj\x64\Debug\VisionLite.g.resources”不存在。
+由于 false 条件，已跳过任务“Message”；('$(MSBuildTargetsVerbose)'=='true')计算为(''=='true')。
+正在使用程序集“PresentationBuildTasks, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35”中的“ResourcesGenerator”任务。
+任务“ResourcesGenerator”
+  
+  
+  Microsoft (R) 生成任务“ResourcesGenerator”版本“4.8.9032.0 built by: NET481REL1”。
+  版权所有(C) Microsoft Corporation 2005。保留所有权利。
+  
+  
+  正在生成 .resources 文件:“obj\x64\Debug\VisionLite.g.resources”...
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraIcon.baml”...
+  资源 ID 是“cameraicon.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.baml”...
+  资源 ID 是“communication/simpleaddconnectionwindow.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ToolbarIcons.baml”...
+  资源 ID 是“toolbaricons.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ImageDisplayControl.baml”...
+  资源 ID 是“vision/ui/controls/imagedisplaycontrol.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ParameterPanel.baml”...
+  资源 ID 是“vision/ui/controls/parameterpanel.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.baml”...
+  资源 ID 是“app.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.baml”...
+  资源 ID 是“cameramanagementwindow.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.baml”...
+  资源 ID 是“communication/simplecommunicationwindow.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.baml”...
+  资源 ID 是“mainwindow.baml”。
+  正在读取 Resource 文件:“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Windows\VisionToolWindow.baml”...
+  资源 ID 是“vision/ui/windows/visiontoolwindow.baml”。
+  生成的 .resources 文件:“obj\x64\Debug\VisionLite.g.resources”。
+已完成执行任务“ResourcesGenerator”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“MainResourcesGeneration”的操作。
+由于条件的计算结果为 false，已跳过目标“AssignWinFXEmbeddedResource”；('@(WinFXEmbeddedResource)' != '')的计算结果为('' != '')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“CopyAdditionalFiles”(目标“AssignTargetPaths”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“CopyAdditionalFiles”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“AssignTargetPaths”(目标“PrepareResourceNames”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“AssignTargetPath”任务。
+任务“AssignTargetPath”
+已完成执行任务“AssignTargetPath”的操作。
+任务“AssignTargetPath”
+已完成执行任务“AssignTargetPath”的操作。
+任务“AssignTargetPath”
+已完成执行任务“AssignTargetPath”的操作。
+任务“AssignTargetPath”
+已完成执行任务“AssignTargetPath”的操作。
+由于 false 条件，已跳过任务“AssignTargetPath”；('@(_DeploymentBaseManifestWithTargetPath)'=='' and '%(None.Extension)'=='.manifest')计算为(''=='' and '.config'=='.manifest')。
+由于 false 条件，已跳过任务“AssignTargetPath”；('@(_DeploymentBaseManifestWithTargetPath)'=='' and '%(None.Extension)'=='.manifest')计算为(''=='' and '.settings'=='.manifest')。
+已完成在项目“VisionLite.csproj”中生成目标“AssignTargetPaths”的操作。
+已跳过目标“AssignTargetPaths”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“SplitResourcesByCulture”(目标“PrepareResourceNames”依赖于它):
+由于 false 条件，已跳过任务“Warning”；('@(ResxWithNoCulture)'!='')计算为(''!='')。
+由于 false 条件，已跳过任务“Warning”；('@(ResxWithCulture)'!='')计算为(''!='')。
+由于 false 条件，已跳过任务“Warning”；('@(NonResxWithCulture)'!='')计算为(''!='')。
+由于 false 条件，已跳过任务“Warning”；('@(NonResxWithNoCulture)'!='')计算为(''!='')。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“AssignCulture”任务。
+任务“AssignCulture”
+  为文件“Properties\Resources.resx”指定了区域性“”。
+已完成执行任务“AssignCulture”的操作。
+任务“AssignCulture”
+  为文件“obj\x64\Debug\VisionLite.g.resources”指定了区域性“”。
+已完成执行任务“AssignCulture”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“SplitResourcesByCulture”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.CSharp.CurrentVersion.targets”中的目标“CreateManifestResourceNames”(目标“PrepareResourceNames”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“CreateCSharpManifestResourceName”任务。
+任务“CreateCSharpManifestResourceName”
+  根命名空间为“VisionLite”。
+  资源文件“Properties\Resources.resx”不依赖于其他任何文件。
+  资源文件“Properties\Resources.resx”获得了清单资源名称“VisionLite.Properties.Resources”。
+  资源文件“obj\x64\Debug\VisionLite.g.resources”不依赖于其他任何文件。
+  资源文件“obj\x64\Debug\VisionLite.g.resources”获得了清单资源名称“VisionLite.obj.x64.Debug.VisionLite.g.resources”。
+已完成执行任务“CreateCSharpManifestResourceName”的操作。
+由于 false 条件，已跳过任务“CreateCSharpManifestResourceName”；('%(EmbeddedResource.ManifestResourceName)' == '' and '%(EmbeddedResource.WithCulture)' == 'true' and '%(EmbeddedResource.Type)' == 'Non-Resx')计算为('' == '' and 'false' == 'true' and 'Resx' == 'Non-Resx')。
+已完成在项目“VisionLite.csproj”中生成目标“CreateManifestResourceNames”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“CreateCustomManifestResourceNames”(目标“PrepareResourceNames”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“CreateCustomManifestResourceNames”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“PrepareResourceNames”(目标“PrepareResources”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“PrepareResourceNames”的操作。
+已跳过目标“ResolveAssemblyReferences”。以前的生成已成功。
+已跳过目标“SplitResourcesByCulture”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“BeforeResGen”(目标“ResGen”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“BeforeResGen”的操作。
+已跳过目标“ResolveReferences”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“FindReferenceAssembliesForReferences”(目标“CoreResGen”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“FindReferenceAssembliesForReferences”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“CoreResGen”(目标“ResGen”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“GenerateResource”任务。
+任务“GenerateResource”
+  在运行时为“CLR4”、进程体系结构为“x64”的外部任务宿主中从程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”启动任务“GenerateResource”。
+  输出文件“obj\x64\Debug\VisionLite.Properties.Resources.resources”不存在。
+  "C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.8 Tools\resgen.exe" /useSourcePath /r:E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll /r:E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll /r:E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll /r:E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Microsoft.CSharp.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\mscorlib.dll" /r:E:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll /r:E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll /r:E:\mySoftware\VisionLite\packages\NModbus4.2.1.0\lib\net40\NModbus4.dll /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationFramework.dll" /r:E:\mySoftware\VisionLite\packages\S7netplus.0.20.0\lib\net462\S7.Net.dll /r:E:\mySoftware\VisionLite\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Core.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.DataSetExtensions.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Design.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll" /r:E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.dll /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Drawing.dll" /r:E:\mySoftware\VisionLite\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Net.Http.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Numerics.dll" /r:E:\mySoftware\VisionLite\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll /r:E:\mySoftware\VisionLite\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xaml.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.Linq.dll" /r:"E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.dll" /r:"E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\WindowsBase.dll" /r:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.dll /r:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll /r:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll /r:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll /r:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.Toolkit.dll /compile Properties\Resources.resx,obj\x64\Debug\VisionLite.Properties.Resources.resources
+  正在将资源文件“Properties\Resources.resx”处理到“obj\x64\Debug\VisionLite.Properties.Resources.resources”中。
+  正在处理来自文件“Properties\Resources.resx”的 0 资源。
+已完成执行任务“GenerateResource”的操作。
+由于 false 条件，已跳过任务“GenerateResource”；('%(EmbeddedResource.Type)' == 'Resx' and '%(EmbeddedResource.GenerateResource)' != 'false' and '$(GenerateResourceMSBuildRuntime)' != 'CLR2')计算为('Resx' == 'Resx' and 'false' != 'false' and 'CurrentRuntime' != 'CLR2')。
+由于 false 条件，已跳过任务“GenerateResource”；('%(EmbeddedResource.Type)' == 'Resx' and '%(EmbeddedResource.GenerateResource)' != 'false' and '$(GenerateResourceMSBuildRuntime)' == 'CLR2')计算为('Resx' == 'Resx' and '' != 'false' and 'CurrentRuntime' == 'CLR2')。
+由于 false 条件，已跳过任务“GenerateResource”；('%(EmbeddedResource.Type)' == 'Resx' and '%(EmbeddedResource.GenerateResource)' != 'false' and '$(GenerateResourceMSBuildRuntime)' == 'CLR2')计算为('Resx' == 'Resx' and 'false' != 'false' and 'CurrentRuntime' == 'CLR2')。
+已完成在项目“VisionLite.csproj”中生成目标“CoreResGen”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“AfterResGen”(目标“ResGen”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“AfterResGen”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ResGen”(目标“PrepareResources”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“ResGen”的操作。
+由于条件的计算结果为 false，已跳过目标“CompileLicxFiles”；('@(_LicxFile)'!='')的计算结果为(''!='')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“PrepareResources”(目标“CoreBuild”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“PrepareResources”的操作。
+由于条件的计算结果为 false，已跳过目标“ResolveKeySource”；($(SignManifests) == 'true' or $(SignAssembly) == 'true')的计算结果为( == 'true' or  == 'true')。
+已跳过目标“ResolveReferences”。以前的生成已成功。
+由于条件的计算结果为 false，已跳过目标“ResolveKeySource”；($(SignManifests) == 'true' or $(SignAssembly) == 'true')的计算结果为( == 'true' or  == 'true')。
+由于条件的计算结果为 false，已跳过目标“ResolveComReferences”；('@(COMReference)'!='' or '@(COMFileReference)'!='')的计算结果为(''!='' or ''!='')。
+由于条件的计算结果为 false，已跳过目标“ResolveNativeReferences”；('@(NativeReference)'!='')的计算结果为(''!='')。
+由于条件的计算结果为 false，已跳过目标“_SetExternalWin32ManifestProperties”；('$(GenerateClickOnceManifests)'=='true' or '@(NativeReference)'!='' or '@(ResolvedIsolatedComModules)'!='')的计算结果为(''=='true' or ''!='' or ''!='')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_SetEmbeddedWin32ManifestProperties”(目标“SetWin32ManifestProperties”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“GetFrameworkPath”任务。
+任务“GetFrameworkPath”
+已完成执行任务“GetFrameworkPath”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_SetEmbeddedWin32ManifestProperties”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“SetWin32ManifestProperties”(目标“Compile”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“SetWin32ManifestProperties”的操作。
+已跳过目标“FindReferenceAssembliesForReferences”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_GenerateCompileInputs”(目标“Compile”依赖于它):
+由于 false 条件，已跳过任务“Warning”；('@(ManifestResourceWithNoCulture)'!='' and '%(ManifestResourceWithNoCulture.EmittedForCompatibilityOnly)'=='')计算为('obj\x64\Debug\VisionLite.g.resources;obj\x64\Debug\VisionLite.Properties.Resources.resources'!='' and 'true'=='')。
+由于 false 条件，已跳过任务“Warning”；('@(ManifestNonResxWithNoCultureOnDisk)'!='' and '%(ManifestNonResxWithNoCultureOnDisk.EmittedForCompatibilityOnly)'=='')计算为(''!='' and ''=='')。
+已完成在项目“VisionLite.csproj”中生成目标“_GenerateCompileInputs”的操作。
+已跳过目标“PrepareForBuild”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“GenerateMSBuildEditorConfigFileShouldRun”(目标“GenerateMSBuildEditorConfigFile”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“GenerateMSBuildEditorConfigFileShouldRun”的操作。
+由于条件的计算结果为 false，已跳过目标“GenerateMSBuildEditorConfigFileCore”；('$(_GeneratedEditorConfigShouldRun)' == 'true')的计算结果为('' == 'true')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“GenerateMSBuildEditorConfigFile”(目标“BeforeCompile”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“GenerateMSBuildEditorConfigFile”的操作。
+已跳过目标“PrepareForBuild”。以前的生成已成功。
+已跳过目标“GetReferenceAssemblyPaths”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.CSharp.CurrentVersion.targets”中的目标“_SetTargetFrameworkMonikerAttribute”(目标“GenerateTargetFrameworkMonikerAttribute”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“_SetTargetFrameworkMonikerAttribute”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GenerateTargetFrameworkMonikerAttribute”(目标“BeforeCompile”依赖于它):
+正在跳过目标“GenerateTargetFrameworkMonikerAttribute”，因为所有输出文件相对于输入文件而言都是最新的。
+输入文件:C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.targets
+输出文件:obj\x64\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs
+已完成在项目“VisionLite.csproj”中生成目标“GenerateTargetFrameworkMonikerAttribute”的操作。
+由于条件的计算结果为 false，已跳过目标“GenerateAdditionalSources”；('@(AssemblyAttributes)' != '' and '$(GenerateAdditionalSources)' == 'true')的计算结果为('' != '' and '' == 'true')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“BeforeCompile”(目标“Compile”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“BeforeCompile”的操作。
+由于条件的计算结果为 false，已跳过目标“_TimeStampBeforeCompile”；('$(RunPostBuildEvent)'=='OnOutputUpdated' or ('$(RegisterForComInterop)'=='true' and '$(OutputType)'=='library'))的计算结果为(''=='OnOutputUpdated' or (''=='true' and 'Exe'=='library'))。
+已跳过目标“ResolveAssemblyReferences”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_GenerateCompileDependencyCache”(目标“Compile”依赖于它):
+任务“Hash”
+已完成执行任务“Hash”的操作。
+任务“WriteLinesToFile”
+已完成执行任务“WriteLinesToFile”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_GenerateCompileDependencyCache”的操作。
+由于条件的计算结果为 false，已跳过目标“_ComputeNonExistentFileProperty”；(('$(BuildingInsideVisualStudio)' == 'true') and ('$(BuildingOutOfProcess)' != 'true') and (('$(BuildingProject)' == 'false') or ('$(UseHostCompilerIfAvailable)' == 'true')))的计算结果为(('' == 'true') and ('' != 'true') and (('true' == 'false') or ('true' == 'true')))。
+由于条件的计算结果为 false，已跳过目标“ResolveCodeAnalysisRuleSet”；('$(CodeAnalysisRuleSet)' != '')的计算结果为('' != '')。
+由于条件的计算结果为 false，已跳过目标“ShimReferencePathsWhenCommonTargetsDoesNotUnderstandReferenceAssemblies”；('@(ReferencePathWithRefAssemblies)' == '')的计算结果为('E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll;E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll;E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll;...' == '')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“_BeforeVBCSCoreCompile”(目标“CoreCompile”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“_BeforeVBCSCoreCompile”的操作。
+由于条件的计算结果为 false，已跳过目标“ShimReferencePathsWhenCommonTargetsDoesNotUnderstandReferenceAssemblies”；('@(ReferencePathWithRefAssemblies)' == '')的计算结果为('E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll;E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll;E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll;...' == '')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.Managed.Core.targets”中的目标“_ComputeSkipAnalyzers”(目标“CoreCompile”依赖于它):
+由于 false 条件，已跳过任务“ShowMessageForImplicitlySkipAnalyzers”；('$(_ImplicitlySkipAnalyzers)' == 'true')计算为('' == 'true')。
+已完成在项目“VisionLite.csproj”中生成目标“_ComputeSkipAnalyzers”的操作。
+由于条件的计算结果为 false，已跳过目标“_SetPathMapFromSourceRoots”；('$(DeterministicSourcePaths)' == 'true')的计算结果为('' == 'true')。
+由于条件的计算结果为 false，已跳过目标“CreateCompilerGeneratedFilesOutputPath”；('$(EmitCompilerGeneratedFiles)' == 'true' and !('$(DesignTimeBuild)' == 'true' OR '$(BuildingProject)' != 'true'))的计算结果为('false' == 'true' and !('' == 'true' OR 'true' != 'true'))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.ServiceModel.targets”中的目标“PreXsdCodeGen”(目标“CoreCompile”依赖于它):
+任务“CallTarget”
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.ServiceModel.targets”中的目标“CleanXsdCodeGen”(目标“PreXsdCodeGen”依赖于它):
+任务“Delete”
+已完成执行任务“Delete”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“CleanXsdCodeGen”的操作。
+已完成执行任务“CallTarget”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“PreXsdCodeGen”的操作。
+由于条件的计算结果为 false，已跳过目标“XsdCodeGen”；( '$(XsdCodeGenPreCondition)' == 'True' )的计算结果为( 'False' == 'True' )。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\Microsoft.CSharp.Core.targets”中的目标“CoreCompile”(目标“Compile”依赖于它):
+正在完全生成目标“CoreCompile”。
+输出文件“obj\x64\Debug\VisionLite.exe”不存在。
+任务“Csc”
+  C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Roslyn\csc.exe /noconfig /nowarn:1701,1702 /fullpaths /nostdlib+ /platform:x64 /errorreport:prompt /warn:4 /define:DEBUG;TRACE /highentropyva+ /reference:E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll /reference:E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll /reference:E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll /reference:E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\Microsoft.CSharp.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\mscorlib.dll" /reference:E:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll /reference:E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll /reference:E:\mySoftware\VisionLite\packages\NModbus4.2.1.0\lib\net40\NModbus4.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationCore.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\PresentationFramework.dll" /reference:E:\mySoftware\VisionLite\packages\S7netplus.0.20.0\lib\net462\S7.Net.dll /reference:E:\mySoftware\VisionLite\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Core.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.DataSetExtensions.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Data.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Design.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.dll" /reference:E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Drawing.dll" /reference:E:\mySoftware\VisionLite\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Net.Http.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Numerics.dll" /reference:E:\mySoftware\VisionLite\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll /reference:E:\mySoftware\VisionLite\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xaml.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Xml.Linq.dll" /reference:"E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.dll" /reference:"E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll" /reference:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\WindowsBase.dll" /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.dll /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll /reference:E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.Toolkit.dll /debug+ /debug:full /filealign:512 /optimize- /out:obj\x64\Debug\VisionLite.exe /subsystemversion:6.00 /resource:obj\x64\Debug\VisionLite.g.resources /resource:obj\x64\Debug\VisionLite.Properties.Resources.resources /target:exe /utf8output /deterministic+ /langversion:9.0 CameraManagementWindow.xaml.cs Communication\SimpleCommunicationWindow.xaml.cs Communication\SimpleAddConnectionWindow.xaml.cs Communication\SimpleConnectionConfig.cs Communication\ICommunication.cs Communication\IMessageProtocol.cs Communication\ITcpServer.cs Communication\Message.cs Communication\TcpCommunication.cs Communication\TcpServer.cs Communication\UdpCommunication.cs Communication\UdpServer.cs Communication\ModbusAddressMap.cs Communication\ModbusAddressManager.cs Communication\ModbusTcpServer.cs Communication\ModbusTcpClient.cs Communication\SerialCommunication.cs Communication\VisionLiteProtocol.cs Communication\AdsCommunication.cs Communication\AdsConnectionConfig.cs Communication\AdsConnectionTest.cs Communication\S7Communication.cs Communication\S7ConnectionConfig.cs Communication\S7ConnectionTest.cs Vision\VisionToolLauncher.cs Vision\Core\Interfaces\IVisionProcessor.cs Vision\Core\Models\VisionImage.cs Vision\Core\Models\ProcessResult.cs Vision\Core\Models\ParameterInfo.cs Vision\Core\Models\GeometryElement.cs Vision\Core\Attributes\ParameterAttribute.cs Vision\Core\Base\VisionProcessorBase.cs Vision\Processors\Preprocessing\FilterProcessors\GaussianFilterProcessor.cs Vision\UI\Controls\ImageDisplayControl.xaml.cs Vision\UI\Controls\ParameterPanel.xaml.cs Vision\UI\Windows\VisionToolWindow.xaml.cs WindowRoiState.cs WindowToolbarAdorner.cs HalconCameraDevice.cs DeviceInfo.cs HikvisionCameraDevice.cs ICameraDevice.cs InfoWindowAdorner.cs ParameterTranslator.cs RoiAdorner.cs RoiUpdatedEventArgs.cs WindowInfo.cs App.xaml.cs MainWindow.xaml.cs Properties\AssemblyInfo.cs Properties\Resources.Designer.cs Properties\Settings.Designer.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ImageDisplayControl.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ParameterPanel.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Windows\VisionToolWindow.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.g.cs E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\GeneratedInternalTypeHelper.g.cs "obj\x64\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs"
+  Microsoft(R) Visual C# 编译器 版本 4.2.0-4.22281.5 (8d3180e5)
+  版权所有(C) Microsoft Corporation。保留所有权利。
+E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(103,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(205,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\S7Communication.cs(234,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml.cs(1341,28): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml.cs(1522,28): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(44,24): warning CS0414: 字段“AdsCommunication._heartbeatVariable”已被赋值，但从未使用过它的值 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+  CompilerServer: server - server processed compilation - adb01ab2-29c2-4015-b684-e7072096f952
+已完成执行任务“Csc”的操作。
+由于 false 条件，已跳过任务“CallTarget”；('$(TargetsTriggeredByCompilation)' != '')计算为('' != '')。
+已完成在项目“VisionLite.csproj”中生成目标“CoreCompile”的操作。
+由于条件的计算结果为 false，已跳过目标“_TouchLastBuildWithSkipAnalyzers”；('$(_SkipAnalyzers)' == 'true')的计算结果为('' == 'true')。
+由于条件的计算结果为 false，已跳过目标“_TimeStampAfterCompile”；('$(RunPostBuildEvent)'=='OnOutputUpdated' or ('$(RegisterForComInterop)'=='true' and '$(OutputType)'=='library'))的计算结果为(''=='OnOutputUpdated' or (''=='true' and 'Exe'=='library'))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“AfterCompile”(目标“Compile”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“AfterCompile”的操作。
+由于条件的计算结果为 false，已跳过目标“PrepareResourcesForSatelliteAssemblies”；('$(UICulture)' != '')的计算结果为('' != '')。
+由于条件的计算结果为 false，已跳过目标“MergeLocalizationDirectives”；('@(GeneratedLocalizationFiles)' !='')的计算结果为('' !='')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“AfterCompileWinFX”(目标“_AfterCompileWinFXInternal”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“AfterCompileWinFX”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.WinFx.targets”中的目标“_AfterCompileWinFXInternal”(目标“Compile”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“_AfterCompileWinFXInternal”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“Compile”(目标“CoreBuild”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“Compile”的操作。
+由于条件的计算结果为 false，已跳过目标“DeferredValidation”；('$(SkipWorkflowValidation)' != 'true' and ('@(XamlPage)' != '' or '@(XamlAppDef)' != ''))的计算结果为('' != 'true' and ('' != '' or '' != ''))。
+由于条件的计算结果为 false，已跳过目标“ExportWindowsMDFile”；('$(ExportWinMDFile)' == 'true')的计算结果为('' == 'true')。
+由于条件的计算结果为 false，已跳过目标“UnmanagedUnregistration”；((('$(_AssemblyTimestampBeforeCompile)' != '$(_AssemblyTimestampAfterCompile)' or '$(RegisterForComInterop)' != 'true' or '$(OutputType)' != 'library') or
+                    ('$(_AssemblyTimestampBeforeCompile)' == '')) and
+                   Exists('@(_UnmanagedRegistrationCache)'))的计算结果为((('' != '' or '' != 'true' or 'Exe' != 'library') or
+                    ('' == '')) and
+                   Exists('obj\VisionLite.csproj.UnmanagedRegistration.cache'))。
+由于条件的计算结果为 false，已跳过目标“GenerateSerializationAssemblies”；('$(_SGenGenerateSerializationAssembliesConfig)' == 'On' or ('@(WebReferenceUrl)'!='' and '$(_SGenGenerateSerializationAssembliesConfig)' == 'Auto'))的计算结果为('Off' == 'On' or (''!='' and 'Off' == 'Auto'))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_GenerateSatelliteAssemblyInputs”(目标“CreateSatelliteAssemblies”依赖于它):
+由于 false 条件，已跳过任务“Warning”；('@(ManifestResourceWithCulture)'!='' and '%(ManifestResourceWithCulture.EmittedForCompatibilityOnly)'=='')计算为(''!='' and ''=='')。
+由于 false 条件，已跳过任务“Warning”；('@(ManifestNonResxWithCultureOnDisk)'!='' and '%(ManifestNonResxWithCultureOnDisk.EmittedForCompatibilityOnly)'=='')计算为(''!='' and ''=='')。
+已完成在项目“VisionLite.csproj”中生成目标“_GenerateSatelliteAssemblyInputs”的操作。
+已跳过目标“CreateManifestResourceNames”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“ComputeIntermediateSatelliteAssemblies”(目标“CreateSatelliteAssemblies”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“ComputeIntermediateSatelliteAssemblies”的操作。
+由于条件的计算结果为 false，已跳过目标“GenerateSatelliteAssemblies”；('@(_SatelliteAssemblyResourceInputs)' != '' and '$(GenerateSatelliteAssembliesForCore)' != 'true')的计算结果为('' != '' and '' != 'true')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“CreateSatelliteAssemblies”(目标“CoreBuild”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“CreateSatelliteAssemblies”的操作。
+由于条件的计算结果为 false，已跳过目标“GenerateManifests”；('$(GenerateClickOnceManifests)'=='true' or '@(NativeReference)'!='' or '@(ResolvedIsolatedComModules)'!='' or '$(GenerateAppxManifest)' == 'true')的计算结果为(''=='true' or ''!='' or ''!='' or '' == 'true')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GetTargetPathWithTargetPlatformMoniker”(目标“GetTargetPath”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“GetTargetPathWithTargetPlatformMoniker”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GetTargetPath”(目标“CoreBuild”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“GetTargetPath”的操作。
+已跳过目标“ComputeIntermediateSatelliteAssemblies”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_CopyFilesMarkedCopyLocal”(目标“CopyFilesToOutputDirectory”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“Copy”任务。
+任务“Copy”
+  正在将文件从“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.dll”。
+  正在将文件从“E:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\MvCameraControl.Net.dll”。
+  正在将文件从“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\halcondotnet.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.DirectShow.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\NModbus4.2.1.0\lib\net40\NModbus4.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\NModbus4.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\S7netplus.0.20.0\lib\net462\S7.Net.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\S7.Net.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Buffers.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Memory.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Numerics.Vectors.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.Reactive.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.Aero.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.Metro.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.VS2010.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\Xceed.Wpf.Toolkit.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.Toolkit.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\AForge.2.2.5\lib\AForge.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\AForge.Video.2.2.5\lib\AForge.Video.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.DirectShow.xml”。
+  正在将文件从“E:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\halcondotnet.xml”。
+  正在将文件从“E:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\MvCameraControl.Net.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\NModbus4.2.1.0\lib\net40\NModbus4.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\NModbus4.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\S7netplus.0.20.0\lib\net462\S7.Net.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\S7.Net.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Buffers.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.pdb”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.pdb”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Drawing.Common.9.0.7\lib\net462\System.Drawing.Common.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Memory.4.5.5\lib\net461\System.Memory.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Memory.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Numerics.Vectors.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\testdll\倍福引用包\TwinCAT.Ads.Reactive.xml”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.Reactive.xml”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\cs-CZ\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\cs-CZ\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\de\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\de\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\es\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\es\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\fr\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\fr\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\hu\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\hu\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\it\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\it\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\ja-JP\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\ja-JP\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\pt-BR\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\pt-BR\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\nl-BE\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\nl-BE\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\ro\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\ro\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\ru\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\ru\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\sv\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\sv\Xceed.Wpf.AvalonDock.resources.dll”。
+  正在将文件从“E:\mySoftware\VisionLite\packages\Extended.Wpf.Toolkit.4.7.25104.5739\lib\net40\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll”。
+已完成执行任务“Copy”的操作。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“Touch”任务。
+任务“Touch”
+  正在创建“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CopyComplete”，因为已指定“AlwaysCreate”。
+已完成执行任务“Touch”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_CopyFilesMarkedCopyLocal”的操作。
+已跳过目标“AssignTargetPaths”。以前的生成已成功。
+由于条件的计算结果为 false，已跳过目标“AssignProjectConfiguration”；('$(CurrentSolutionConfigurationContents)' != '' or '@(ProjectReference)'!='')的计算结果为('' != '' or ''!='')。
+已跳过目标“_SplitProjectReferencesByFileExistence”。以前的生成已成功。
+已跳过目标“_GetProjectReferenceTargetFrameworkProperties”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_PopulateCommonStateForGetCopyToOutputDirectoryItems”(目标“GetCopyToOutputDirectoryItems”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“_PopulateCommonStateForGetCopyToOutputDirectoryItems”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\Microsoft.Xaml.targets”中的目标“GetCopyToOutputDirectoryXamlAppDefs”(目标“GetCopyToOutputDirectoryItems”依赖于它):
+任务“AssignTargetPath”
+已完成执行任务“AssignTargetPath”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“GetCopyToOutputDirectoryXamlAppDefs”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“GetCopyToOutputDirectoryItems”(目标“_CopySourceItemsToOutputDirectory”依赖于它):
+任务“CallTarget”
+已跳过目标“_PopulateCommonStateForGetCopyToOutputDirectoryItems”。以前的生成已成功。
+已跳过目标“_AddOutputPathToGlobalPropertiesToRemove”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences”(目标“GetCopyToOutputDirectoryItems”依赖于它):
+由于 false 条件，已跳过任务“MSBuild”；('@(_MSBuildProjectReferenceExistent)' != '' and '$(_GetChildProjectCopyToOutputDirectoryItems)' == 'true' and '%(_MSBuildProjectReferenceExistent.Private)' != 'false' and '$(UseCommonOutputDirectory)' != 'true')计算为('' != '' and 'true' == 'true' and '' != 'false' and 'false' != 'true')。
+任务“AssignTargetPath”
+已完成执行任务“AssignTargetPath”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences”的操作。
+已完成执行任务“CallTarget”的操作。
+任务“CallTarget”
+已跳过目标“AssignTargetPaths”。以前的生成已成功。
+已跳过目标“_PopulateCommonStateForGetCopyToOutputDirectoryItems”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_GetCopyToOutputDirectoryItemsFromThisProject”(目标“GetCopyToOutputDirectoryItems”依赖于它):
+任务“AssignTargetPath”
+已完成执行任务“AssignTargetPath”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_GetCopyToOutputDirectoryItemsFromThisProject”的操作。
+已完成执行任务“CallTarget”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“GetCopyToOutputDirectoryItems”的操作。
+由于条件的计算结果为 false，已跳过目标“_CopyOutOfDateSourceItemsToOutputDirectory”；( '@(_SourceItemsToCopyToOutputDirectory)' != '' )的计算结果为( '' != '' )。
+由于条件的计算结果为 false，已跳过目标“_CopyOutOfDateSourceItemsToOutputDirectoryAlways”；( '@(_SourceItemsToCopyToOutputDirectoryAlways)' != '' )的计算结果为( '' != '' )。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_CopySourceItemsToOutputDirectory”(目标“CopyFilesToOutputDirectory”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“_CopySourceItemsToOutputDirectory”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_CopyAppConfigFile”(目标“CopyFilesToOutputDirectory”依赖于它):
+正在完全生成目标“_CopyAppConfigFile”。
+输出文件“bin\x64\Debug\VisionLite.exe.config”不存在。
+任务“Copy”
+  正在将文件从“E:\mySoftware\VisionLite\VisionLite\App.config”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\VisionLite.exe.config”。
+已完成执行任务“Copy”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_CopyAppConfigFile”的操作。
+由于条件的计算结果为 false，已跳过目标“_CopyManifestFiles”；( '$(_DeploymentCopyApplicationManifest)'=='true' or '$(GenerateClickOnceManifests)'=='true' )的计算结果为( ''=='true' or ''=='true' )。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_CheckForCompileOutputs”(目标“CopyFilesToOutputDirectory”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“_CheckForCompileOutputs”的操作。
+由于条件的计算结果为 false，已跳过目标“_SGenCheckForOutputs”；('$(_SGenGenerateSerializationAssembliesConfig)' == 'On' or ('@(WebReferenceUrl)'!='' and '$(_SGenGenerateSerializationAssembliesConfig)' == 'Auto'))的计算结果为('Off' == 'On' or (''!='' and 'Off' == 'Auto'))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“CopyFilesToOutputDirectory”(目标“PrepareForRun”依赖于它):
+任务“Copy”
+  正在将文件从“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.exe”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\VisionLite.exe”。
+已完成执行任务“Copy”的操作。
+由于 false 条件，已跳过任务“CopyRefAssembly”；('$(ProduceReferenceAssembly)' == 'true' and '$(CopyBuildOutputToOutputDirectory)' == 'true' and '$(SkipCopyBuildProduct)' != 'true')计算为('false' == 'true' and 'true' == 'true' and '' != 'true')。
+任务“Message”
+  VisionLite -> E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\VisionLite.exe
+已完成执行任务“Message”的操作。
+由于 false 条件，已跳过任务“Copy”；('@(AddModules)' != '')计算为('' != '')。
+由于 false 条件，已跳过任务“Copy”；('$(_SGenDllCreated)'=='true')计算为('false'=='true')。
+任务“Copy”
+  正在将文件从“E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.pdb”复制到“E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\VisionLite.pdb”。
+已完成执行任务“Copy”的操作。
+由于 false 条件，已跳过任务“Copy”；('$(_DocumentationFileProduced)'=='true' and '$(CopyDocumentationFileToOutputDirectory)'=='true')计算为('false'=='true' and 'true'=='true')。
+由于 false 条件，已跳过任务“Copy”；('@(IntermediateSatelliteAssembliesWithTargetPath)' != '')计算为('' != '')。
+由于 false 条件，已跳过任务“Copy”；('@(ReferenceComWrappersToCopyLocal)' != '' or '@(ResolvedIsolatedComModules)' != '' or '@(_DeploymentLooseManifestFile)' != '' or '@(NativeReferenceFile)' != '' )计算为('' != '' or '' != '' or '' != '' or '' != '' )。
+由于 false 条件，已跳过任务“Copy”；('$(SkipCopyWinMDArtifact)' != 'true' and '@(WinMDExpArtifacts)' != '')计算为('' != 'true' and '' != '')。
+由于 false 条件，已跳过任务“Message”；('$(SkipCopyWinMDArtifact)' != 'true' and '$(_WindowsMetadataOutputPath)' != '')计算为('' != 'true' and '' != '')。
+已完成在项目“VisionLite.csproj”中生成目标“CopyFilesToOutputDirectory”的操作。
+由于条件的计算结果为 false，已跳过目标“RunCodeAnalysis”；('$(RunCodeAnalysisOnThisProject)'=='true')的计算结果为(''=='true')。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“PrepareForRun”(目标“CoreBuild”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“PrepareForRun”的操作。
+由于条件的计算结果为 false，已跳过目标“UnmanagedRegistration”；('$(RegisterForComInterop)'=='true' and '$(OutputType)'=='library')的计算结果为(''=='true' and 'Exe'=='library')。
+已跳过目标“_CheckForCompileOutputs”。以前的生成已成功。
+由于条件的计算结果为 false，已跳过目标“_SGenCheckForOutputs”；('$(_SGenGenerateSerializationAssembliesConfig)' == 'On' or ('@(WebReferenceUrl)'!='' and '$(_SGenGenerateSerializationAssembliesConfig)' == 'Auto'))的计算结果为('Off' == 'On' or (''!='' and 'Off' == 'Auto'))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“_CleanGetCurrentAndPriorFileWrites”(目标“IncrementalClean”依赖于它):
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“ReadLinesFromFile”任务。
+任务“ReadLinesFromFile”
+已完成执行任务“ReadLinesFromFile”的操作。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“ConvertToAbsolutePath”任务。
+任务“ConvertToAbsolutePath”
+已完成执行任务“ConvertToAbsolutePath”的操作。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“FindUnderPath”任务。
+任务“FindUnderPath”
+  比较路径为“E:\mySoftware\VisionLite\VisionLite”。
+已完成执行任务“FindUnderPath”的操作。
+任务“FindUnderPath”
+  比较路径为“bin\x64\Debug\”。
+已完成执行任务“FindUnderPath”的操作。
+任务“FindUnderPath”
+  比较路径为“obj\x64\Debug\”。
+已完成执行任务“FindUnderPath”的操作。
+正在使用程序集“Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a”中的“RemoveDuplicates”任务。
+任务“RemoveDuplicates”
+已完成执行任务“RemoveDuplicates”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“_CleanGetCurrentAndPriorFileWrites”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“IncrementalClean”(目标“CoreBuild”依赖于它):
+任务“FindUnderPath”
+  比较路径为“bin\x64\Debug\”。
+已完成执行任务“FindUnderPath”的操作。
+任务“FindUnderPath”
+  比较路径为“obj\x64\Debug\”。
+已完成执行任务“FindUnderPath”的操作。
+任务“Delete”
+已完成执行任务“Delete”的操作。
+任务“RemoveDuplicates”
+已完成执行任务“RemoveDuplicates”的操作。
+任务“WriteLinesToFile”
+已完成执行任务“WriteLinesToFile”的操作。
+已完成在项目“VisionLite.csproj”中生成目标“IncrementalClean”的操作。
+由于条件的计算结果为 false，已跳过目标“PostBuildEvent”；('$(PostBuildEvent)' != '' and ('$(RunPostBuildEvent)' != 'OnOutputUpdated' or '$(_AssemblyTimestampBeforeCompile)' != '$(_AssemblyTimestampAfterCompile)'))的计算结果为('' != '' and ('' != 'OnOutputUpdated' or '' != ''))。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“CoreBuild”(目标“Build”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“CoreBuild”的操作。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“AfterBuild”(目标“Build”依赖于它):
+已完成在项目“VisionLite.csproj”中生成目标“AfterBuild”的操作。
+已跳过目标“_CheckForInvalidConfigurationAndPlatform”。以前的生成已成功。
+已跳过目标“_CheckForInvalidConfigurationAndPlatform”。以前的生成已成功。
+来自项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”的文件“C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets”中的目标“Build”(入口点):
+已完成在项目“VisionLite.csproj”中生成目标“Build”的操作。
+已完成生成项目“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”(默认目标)的操作。
+
+已成功生成。
+
+“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”(默认目标) (1) ->
+“E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj”(_CompileTemporaryAssembly 目标) (2) ->
+(CoreCompile 目标) -> 
+  E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(103,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(205,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\S7Communication.cs(234,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml.cs(1341,28): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml.cs(1522,28): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(44,24): warning CS0414: 字段“AdsCommunication._heartbeatVariable”已被赋值，但从未使用过它的值 [E:\mySoftware\VisionLite\VisionLite\VisionLite_pxuygva2_wpftmp.csproj]
+
+
+“E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj”(默认目标) (1) ->
+  E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(103,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(205,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\S7Communication.cs(234,33): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml.cs(1341,28): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\SimpleCommunicationWindow.xaml.cs(1522,28): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+  E:\mySoftware\VisionLite\VisionLite\Communication\AdsCommunication.cs(44,24): warning CS0414: 字段“AdsCommunication._heartbeatVariable”已被赋值，但从未使用过它的值 [E:\mySoftware\VisionLite\VisionLite\VisionLite.csproj]
+
+    12 个警告
+    0 个错误
+
+已用时间 00:00:02.49

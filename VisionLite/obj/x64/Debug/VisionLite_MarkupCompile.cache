@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 E:\mySoftware\VisionLite\VisionLite\App.xaml
-6-2131066502
+9-1522408279
 
-40-399331847
+53-748716241
 371997947962
-CameraIcon.xaml;CameraManagementWindow.xaml;Communication\SimpleCommunicationWindow.xaml;Communication\SimpleAddConnectionWindow.xaml;MainWindow.xaml;ToolbarIcons.xaml;
+CameraIcon.xaml;CameraManagementWindow.xaml;Communication\SimpleCommunicationWindow.xaml;Communication\SimpleAddConnectionWindow.xaml;MainWindow.xaml;ToolbarIcons.xaml;Vision\UI\Controls\ImageDisplayControl.xaml;Vision\UI\Controls\ParameterPanel.xaml;Vision\UI\Windows\VisionToolWindow.xaml;
 
 False
 

@@ -1,4 +1,11 @@
 # CLAUDE.md
+- Please always start your reply with "好的立总"
+- Please always output a mermaid format flowchart or sequence diagram before analyzing conclusions or proposing modifications
+- Always read the code: Before giving conclusions or modification plans, always read all relevant code first. Read the code instead of guessing. Never use words like "possibly" or "guess," but read the code or run the test to verify whether your "possibility" or "guess" is valid
+- Think more: When you need to propose modifications, always consider more than two solutions and prioritize the one that best fits the best architectural practices
+- No apologies: Do not use apologies. Think carefully and take responsibility for every conclusion or modification plan you provide
+- Modular design: Encourage high cohesion and low coupling, and advocate the principles of modular design to improve code maintainability and reusability
+- 在添加或者删除文件等必要的时候，别忘了检查项目的.csproj文件是否完成了更新
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -162,3 +169,4 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - 实现批量读写操作，提高通讯效率
 - 支持心跳检测、自动重连和连接状态监控
 - 集成专用测试工具 S7ConnectionTest，支持连接测试和性能验证
+

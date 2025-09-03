@@ -2430,6 +2430,26 @@ namespace VisionLite
             }
         }
 
+        #region 视觉算法工具管理
+        
+        /// <summary>
+        /// 视觉算法工具按钮点击事件
+        /// </summary>
+        private void VisionToolButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // 启动视觉算法工具窗口
+                VisionLite.Vision.VisionToolLauncher.Launch();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"启动视觉算法工具失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        
+        #endregion
+
         
     }
 }

@@ -175,6 +175,25 @@
     <Compile Include="Communication\S7Communication.cs" />
     <Compile Include="Communication\S7ConnectionConfig.cs" />
     <Compile Include="Communication\S7ConnectionTest.cs" />
+    <Compile Include="Vision\VisionToolLauncher.cs" />
+    <Compile Include="Vision\Core\Interfaces\IVisionProcessor.cs" />
+    <Compile Include="Vision\Core\Models\VisionImage.cs" />
+    <Compile Include="Vision\Core\Models\ProcessResult.cs" />
+    <Compile Include="Vision\Core\Models\ParameterInfo.cs" />
+    <Compile Include="Vision\Core\Models\GeometryElement.cs" />
+    <Compile Include="Vision\Core\Attributes\ParameterAttribute.cs" />
+    <Compile Include="Vision\Core\Base\VisionProcessorBase.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\GaussianFilterProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\MedianFilterProcessor.cs" />
+    <Compile Include="Vision\UI\Controls\ImageDisplayControl.xaml.cs">
+      <DependentUpon>ImageDisplayControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Vision\UI\Controls\ParameterPanel.xaml.cs">
+      <DependentUpon>ParameterPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Vision\UI\Windows\VisionToolWindow.xaml.cs">
+      <DependentUpon>VisionToolWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WindowRoiState.cs" />
     <Compile Include="WindowToolbarAdorner.cs" />
     <Compile Include="HalconCameraDevice.cs" />
@@ -215,6 +234,18 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="ToolbarIcons.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Vision\UI\Controls\ImageDisplayControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Vision\UI\Controls\ParameterPanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Vision\UI\Windows\VisionToolWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -1,9 +1,3 @@
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.AssemblyReference.cache
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.SuggestedBindingRedirects.cache
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.g.cs
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.g.cs
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite_MarkupCompile.cache
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite_MarkupCompile.lref
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\VisionLite.exe.config
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\VisionLite.exe
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\VisionLite.pdb
@@ -12,7 +6,16 @@ E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.DirectShow.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\halcondotnet.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\MvCameraControl.Net.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\NModbus4.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\S7.Net.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Buffers.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Memory.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Numerics.Vectors.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.dll
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.Reactive.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.Aero.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.Metro.dll
@@ -23,8 +26,17 @@ E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.xml
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.DirectShow.xml
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\halcondotnet.xml
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\MvCameraControl.Net.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\NModbus4.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\S7.Net.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Buffers.xml
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.pdb
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Memory.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Numerics.Vectors.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.xml
+E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.Reactive.xml
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\cs-CZ\Xceed.Wpf.AvalonDock.resources.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\de\Xceed.Wpf.AvalonDock.resources.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\es\Xceed.Wpf.AvalonDock.resources.dll
@@ -38,7 +50,29 @@ E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\ro\Xceed.Wpf.AvalonDock.resour
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\ru\Xceed.Wpf.AvalonDock.resources.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\sv\Xceed.Wpf.AvalonDock.resources.dll
 E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.AssemblyReference.cache
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.SuggestedBindingRedirects.cache
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraIcon.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ToolbarIcons.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ImageDisplayControl.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ParameterPanel.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ImageDisplayControl.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Controls\ParameterPanel.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Windows\VisionToolWindow.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\GeneratedInternalTypeHelper.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite_MarkupCompile.cache
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite_MarkupCompile.lref
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.baml
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\MainWindow.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\UI\Windows\VisionToolWindow.baml
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.g.resources
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.Properties.Resources.resources
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.GenerateResource.cache
@@ -46,96 +80,3 @@ E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CoreCompileI
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CopyComplete
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.exe
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.pdb
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraIcon.baml
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.g.cs
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.baml
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\ToolbarIcons.baml
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\App.baml
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.xml
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\GeneratedInternalTypeHelper.g.cs
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.baml
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.g.cs
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.g.cs
-E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.baml
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\NModbus4.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\NModbus4.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.AssemblyReference.cache
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.SuggestedBindingRedirects.cache
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\CameraIcon.baml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.baml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\ToolbarIcons.baml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.g.cs
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.g.cs
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleAddConnectionWindow.g.cs
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\MainWindow.g.cs
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\App.g.cs
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\GeneratedInternalTypeHelper.g.cs
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite_MarkupCompile.cache
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite_MarkupCompile.lref
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.exe
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.pdb
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\VisionLite.exe.config
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\VisionLite.exe
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\VisionLite.pdb
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\AForge.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.DirectShow.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\MvCameraControl.Net.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\NModbus4.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.Aero.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.Metro.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.AvalonDock.Themes.VS2010.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\Xceed.Wpf.Toolkit.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\AForge.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\AForge.Video.DirectShow.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\MvCameraControl.Net.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\Newtonsoft.Json.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\NModbus4.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.pdb
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\System.Drawing.Common.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\cs-CZ\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\de\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\es\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\fr\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\hu\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\it\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\ja-JP\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\nl-BE\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\pt-BR\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\ro\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\ru\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\sv\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\App.baml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\CameraManagementWindow.baml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\Communication\SimpleCommunicationWindow.baml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\MainWindow.baml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.g.resources
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.Properties.Resources.resources
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.GenerateResource.cache
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CoreCompileInputs.cache
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CopyComplete
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.Reactive.dll
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.Reactive.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.xml
-E:\mySoftware\#VisionLite历史版本\20250829 测试TCAds\VisionLite\VisionLite\obj\x64\Debug\VisionLite.exe.config
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\S7.Net.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Buffers.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Memory.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Numerics.Vectors.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.Reactive.dll
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\S7.Net.xml
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Buffers.xml
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Memory.xml
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Numerics.Vectors.xml
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\System.Runtime.CompilerServices.Unsafe.xml
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.xml
-E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\TwinCAT.Ads.Reactive.xml

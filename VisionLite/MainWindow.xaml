@@ -47,6 +47,7 @@
                 <Border Grid.Row="1" Background="#FF4F4F4F">
                     <StackPanel Orientation="Horizontal">
                         <Button Content="通讯设置" Width="100" Margin="5" Click="CommunicationButton_Click"/>
+                        <Button Content="视觉算法工具" Width="120" Margin="5" Click="VisionToolButton_Click"/>
                     </StackPanel>
                 </Border>
             </Grid>
