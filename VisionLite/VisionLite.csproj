@@ -185,6 +185,9 @@
     <Compile Include="Vision\Core\Base\VisionProcessorBase.cs" />
     <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\GaussianFilterProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\MedianFilterProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\MeanFilterProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\ThresholdProcessors\FixedThresholdProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\ThresholdProcessors\OTSUThresholdProcessor.cs" />
     <Compile Include="Vision\UI\Controls\ImageDisplayControl.xaml.cs">
       <DependentUpon>ImageDisplayControl.xaml</DependentUpon>
     </Compile>

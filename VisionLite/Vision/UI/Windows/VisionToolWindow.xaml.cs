@@ -8,6 +8,7 @@ using Microsoft.Win32;
 using VisionLite.Vision.Core.Interfaces;
 using VisionLite.Vision.Core.Models;
 using VisionLite.Vision.Processors.Preprocessing.FilterProcessors;
+using VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors;
 using VisionLite.Vision.UI.Controls;
 
 namespace VisionLite.Vision.UI.Windows
@@ -75,6 +76,42 @@ namespace VisionLite.Vision.UI.Windows
                 else
                 {
                     throw new InvalidOperationException("中值滤波器参数获取失败");
+                }
+                
+                // 注册均值滤波算法
+                var meanProcessor = new MeanFilterProcessor();
+                var meanParams = meanProcessor.GetParameters();
+                if (meanParams != null)
+                {
+                    _algorithmProcessors["MeanFilter"] = meanProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("均值滤波器参数获取失败");
+                }
+                
+                // 注册固定阈值二值化算法
+                var fixedThresholdProcessor = new FixedThresholdProcessor();
+                var fixedThresholdParams = fixedThresholdProcessor.GetParameters();
+                if (fixedThresholdParams != null)
+                {
+                    _algorithmProcessors["FixedThreshold"] = fixedThresholdProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("固定阈值二值化处理器参数获取失败");
+                }
+                
+                // 注册OTSU自动阈值二值化算法
+                var otsuThresholdProcessor = new OTSUThresholdProcessor();
+                var otsuThresholdParams = otsuThresholdProcessor.GetParameters();
+                if (otsuThresholdParams != null)
+                {
+                    _algorithmProcessors["OTSUThreshold"] = otsuThresholdProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("OTSU自动阈值二值化处理器参数获取失败");
                 }
                 
                 // 后续可以通过反射自动加载所有算法

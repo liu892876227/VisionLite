@@ -92,10 +92,15 @@
                         <TreeViewItem Header="中值滤波" 
                                       Tag="MedianFilter"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
-                        <TreeViewItem Header="阈值处理" 
-                                      Tag="Threshold"
-                                      Style="{StaticResource AlgorithmItemStyle}"
-                                      IsEnabled="False"/>
+                        <TreeViewItem Header="均值滤波" 
+                                      Tag="MeanFilter"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="固定阈值二值化" 
+                                      Tag="FixedThreshold"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="OTSU自动阈值二值化" 
+                                      Tag="OTSUThreshold"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
                     
                     <TreeViewItem Header="边缘检测">
