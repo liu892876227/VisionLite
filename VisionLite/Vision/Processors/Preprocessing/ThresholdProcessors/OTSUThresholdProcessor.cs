@@ -27,23 +27,22 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
         public override string Category => "图像预处理";
         
         /// <summary>
+        /// 提取模式
+        /// </summary>
+        [Parameter("提取模式", "选择提取亮区域还是暗区域", Group = "参数设置")]
+        public ExtractionMode LightDark { get; set; } = ExtractionMode.Light;
+        
+        /// <summary>
         /// 反转输出
         /// </summary>
-        [Parameter("反转输出", "是否反转二值化结果，true时黑白颠倒")]
+        [Parameter("反转输出", "是否反转二值化结果，true时黑白颠倒", Group = "其他设置")]
         public bool InvertOutput { get; set; } = false;
-        
         
         /// <summary>
         /// 是否保持图像类型
         /// </summary>
-        [Parameter("保持图像类型", "是否保持原图像数据类型", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("保持图像类型", "是否保持原图像数据类型", Group = "其他设置")]
         public bool PreserveImageType { get; set; } = true;
-        
-        /// <summary>
-        /// 提取模式
-        /// </summary>
-        [Parameter("提取模式", "选择提取亮区域还是暗区域", Group = "高级设置", IsAdvanced = true)]
-        public ExtractionMode LightDark { get; set; } = ExtractionMode.Light;
         
         #endregion
         

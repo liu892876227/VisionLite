@@ -31,32 +31,41 @@ namespace VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors
         /// <summary>
         /// 结构元素类型
         /// </summary>
-        [Parameter("结构元素类型", "选择圆形或矩形结构元素，影响闭运算的形状特征")]
+        [Parameter("结构元素类型", "选择圆形或矩形结构元素，影响闭运算的形状特征", Group = "参数设置")]
         public StructuringElementType ElementType { get; set; } = StructuringElementType.Circle;
         
         /// <summary>
         /// 半径
         /// </summary>
-        [Parameter("半径", "圆形结构元素的半径，值越大填充效果越强但形状变化越大", 0.5, 50.0, DecimalPlaces = 1)]
+        [Parameter("半径", "圆形结构元素的半径，值越大填充效果越强但形状变化越大", 0.5, 50.0, DecimalPlaces = 1, Group = "参数设置")]
         public double Radius { get; set; } = 3.5;
         
         /// <summary>
         /// 宽度
         /// </summary>
-        [Parameter("宽度", "矩形结构元素的宽度，必须为奇数", 1, 201, DecimalPlaces = 0)]
+        [Parameter("宽度", "矩形结构元素的宽度，必须为奇数", 1, 201, DecimalPlaces = 0, Group = "参数设置")]
         public int Width { get; set; } = 11;
         
         /// <summary>
         /// 高度
         /// </summary>
-        [Parameter("高度", "矩形结构元素的高度，必须为奇数", 1, 201, DecimalPlaces = 0)]
+        [Parameter("高度", "矩形结构元素的高度，必须为奇数", 1, 201, DecimalPlaces = 0, Group = "参数设置")]
         public int Height { get; set; } = 11;
         
         /// <summary>
         /// 反转输出
         /// </summary>
-        [Parameter("反转输出", "是否反转闭运算结果", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("反转输出", "是否反转闭运算结果", Group = "其他设置")]
         public bool InvertOutput { get; set; } = false;
+        
+        #endregion
+        
+        #region 私有字段
+        
+        /// <summary>
+        /// 当前使用的算法路径（用于测量结果显示）
+        /// </summary>
+        private string _usedAlgorithm = "";
         
         #endregion
         
@@ -76,8 +85,8 @@ namespace VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors
                 // 参数验证
                 ValidateInputs(inputImage);
                 
-                // 执行形态学闭运算
-                var outputImage = await Task.Run(() => ExecuteClosing(inputImage));
+                // 执行自适应形态学闭运算
+                var outputImage = await Task.Run(() => ExecuteAdaptiveClosing(inputImage));
                 
                 // 计算处理时间
                 var processingTime = DateTime.Now - startTime;
@@ -133,78 +142,56 @@ namespace VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors
         }
         
         /// <summary>
-        /// 执行形态学闭运算算法
+        /// 执行自适应形态学闭运算算法
+        /// 自动检测输入类型（区域或图像）并选择合适的Halcon算子
         /// </summary>
-        /// <param name="inputImage">输入图像</param>
-        /// <returns>闭运算后的图像</returns>
-        private VisionImage ExecuteClosing(VisionImage inputImage)
+        /// <param name="inputImage">输入图像或区域</param>
+        /// <returns>闭运算处理后的结果</returns>
+        private VisionImage ExecuteAdaptiveClosing(VisionImage inputImage)
         {
             HObject outputImage = null;
+            string usedAlgorithm = "";
             
             try
             {
-                // 检查输入图像是否有效
+                // 检查输入对象是否有效
                 if (inputImage.HImage == null)
-                    throw new ArgumentNullException("输入图像对象为空");
+                    throw new ArgumentNullException("输入对象为空");
                 
-                // 获取图像尺寸验证图像有效性
-                HOperatorSet.GetImageSize(inputImage.HImage, out HTuple width, out HTuple height);
-                if (width.I <= 0 || height.I <= 0)
-                    throw new ArgumentException($"输入图像尺寸无效: {width.I}×{height.I}");
+                // 使用GetObjClass检测输入对象类型
+                HOperatorSet.GetObjClass(inputImage.HImage, out HTuple objectClass);
+                string objType = objectClass.S;
                 
-                // 步骤1：将图像转换为区域（假设处理二值图像，阈值128-255）
-                HOperatorSet.Threshold(inputImage.HImage, out HObject regions, 128, 255);
-                
-                // 步骤2：根据结构元素类型对区域执行闭运算算法
-                HObject closedRegions = null;
-                switch (ElementType)
+                if (objType == "region")
                 {
-                    case StructuringElementType.Circle:
-                        // 使用圆形结构元素对区域进行闭运算
-                        HOperatorSet.ClosingCircle(regions, out closedRegions, Radius);
-                        break;
-                        
-                    case StructuringElementType.Rectangle:
-                        // 使用矩形结构元素对区域进行闭运算
-                        HOperatorSet.ClosingRectangle1(regions, out closedRegions, Width, Height);
-                        break;
-                        
-                    default:
-                        regions?.Dispose();
-                        throw new NotSupportedException($"不支持的结构元素类型: {ElementType}");
+                    // 处理区域输入：使用区域形态学算子
+                    usedAlgorithm = ProcessRegionInput(inputImage.HImage, out outputImage);
+                }
+                else if (objType == "image")
+                {
+                    // 处理图像输入：使用灰度形态学算子
+                    usedAlgorithm = ProcessImageInput(inputImage.HImage, out outputImage);
+                }
+                else
+                {
+                    throw new NotSupportedException($"不支持的HObject类型: {objType}");
                 }
                 
-                // 步骤3：将闭运算后的区域转换为二值图像
-                HOperatorSet.RegionToBin(closedRegions, out outputImage, 255, 0, width.I, height.I);
-                
-                // 清理中间对象
-                regions?.Dispose();
-                closedRegions?.Dispose();
-                
-                // 检查输出图像是否有效
+                // 检查输出是否有效
                 if (outputImage == null)
-                    throw new InvalidOperationException("形态学闭运算处理失败，输出图像为空");
+                    throw new InvalidOperationException("自适应形态学闭运算处理失败，输出对象为空");
                 
-                // 验证输出图像是否有效
-                try
-                {
-                    HOperatorSet.GetImageSize(outputImage, out HTuple outWidth, out HTuple outHeight);
-                    if (outWidth.I <= 0 || outHeight.I <= 0)
-                        throw new InvalidOperationException($"输出图像尺寸无效: {outWidth.I}×{outHeight.I}");
-                }
-                catch (HalconException halconEx)
-                {
-                    outputImage?.Dispose();
-                    throw new InvalidOperationException($"形态学闭运算算子执行异常: {halconEx.Message}", halconEx);
-                }
+                // 验证输出对象
+                ValidateOutput(outputImage);
                 
                 // 如果需要反转输出
                 if (InvertOutput)
                 {
-                    HOperatorSet.InvertImage(outputImage, out HObject invertedImage);
-                    outputImage?.Dispose();
-                    outputImage = invertedImage;
+                    ApplyInversion(ref outputImage);
                 }
+                
+                // 保存使用的算法信息供测量结果使用
+                _usedAlgorithm = usedAlgorithm;
                 
                 return new VisionImage(outputImage);
             }
@@ -212,7 +199,170 @@ namespace VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors
             {
                 // 清理资源
                 outputImage?.Dispose();
-                throw new InvalidOperationException($"Halcon形态学闭运算操作失败: {ex.Message}", ex);
+                throw new InvalidOperationException($"自适应形态学闭运算操作失败: {ex.Message}", ex);
+            }
+        }
+        
+        /// <summary>
+        /// 处理区域输入，使用区域形态学算子
+        /// </summary>
+        /// <param name="regions">输入区域</param>
+        /// <param name="outputImage">输出图像</param>
+        /// <returns>使用的算法描述</returns>
+        private string ProcessRegionInput(HObject regions, out HObject outputImage)
+        {
+            HObject closedRegions = null;
+            string algorithm;
+            
+            try
+            {
+                // 根据结构元素类型执行区域闭运算
+                switch (ElementType)
+                {
+                    case StructuringElementType.Circle:
+                        HOperatorSet.ClosingCircle(regions, out closedRegions, Radius);
+                        algorithm = $"区域闭运算-圆形(r={Radius})";
+                        break;
+                        
+                    case StructuringElementType.Rectangle:
+                        HOperatorSet.ClosingRectangle1(regions, out closedRegions, Width, Height);
+                        algorithm = $"区域闭运算-矩形({Width}×{Height})";
+                        break;
+                        
+                    default:
+                        throw new NotSupportedException($"不支持的结构元素类型: {ElementType}");
+                }
+                
+                // 获取输出图像尺寸（从输入区域推断）
+                HOperatorSet.SmallestRectangle1(regions, out HTuple row1, out HTuple col1, out HTuple row2, out HTuple col2);
+                int width = Math.Max(512, col2.I - col1.I + 50);
+                int height = Math.Max(512, row2.I - row1.I + 50);
+                
+                // 将闭运算后的区域转换为二值图像
+                HOperatorSet.RegionToBin(closedRegions, out outputImage, 255, 0, width, height);
+                
+                closedRegions?.Dispose();
+                return algorithm;
+            }
+            catch
+            {
+                closedRegions?.Dispose();
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// 处理图像输入，使用灰度形态学算子
+        /// </summary>
+        /// <param name="image">输入图像</param>
+        /// <param name="outputImage">输出图像</param>
+        /// <returns>使用的算法描述</returns>
+        private string ProcessImageInput(HObject image, out HObject outputImage)
+        {
+            string algorithm;
+            
+            // 根据结构元素类型执行灰度闭运算
+            switch (ElementType)
+            {
+                case StructuringElementType.Circle:
+                    // 灰度形态学算子要求圆形半径≥1.0
+                    double adjustedRadius = Math.Max(1.0, Radius);
+                    HOperatorSet.GrayClosingShape(image, out outputImage, adjustedRadius, adjustedRadius, "octagon");
+                    algorithm = adjustedRadius != Radius ? 
+                        $"灰度闭运算-圆形(r={adjustedRadius}，从{Radius}自动调整)" : 
+                        $"灰度闭运算-圆形(r={adjustedRadius})";
+                    break;
+                    
+                case StructuringElementType.Rectangle:
+                    // 矩形结构元素确保为奇数且≥1
+                    int adjustedWidth = Math.Max(1, Width);
+                    int adjustedHeight = Math.Max(1, Height);
+                    if (adjustedWidth % 2 == 0) adjustedWidth++;
+                    if (adjustedHeight % 2 == 0) adjustedHeight++;
+                    
+                    HOperatorSet.GrayClosingRect(image, out outputImage, adjustedWidth, adjustedHeight);
+                    algorithm = (adjustedWidth != Width || adjustedHeight != Height) ?
+                        $"灰度闭运算-矩形({adjustedWidth}×{adjustedHeight}，从{Width}×{Height}自动调整)" :
+                        $"灰度闭运算-矩形({adjustedWidth}×{adjustedHeight})";
+                    break;
+                    
+                default:
+                    throw new NotSupportedException($"不支持的结构元素类型: {ElementType}");
+            }
+            
+            return algorithm;
+        }
+        
+        /// <summary>
+        /// 验证输出对象有效性
+        /// </summary>
+        /// <param name="output">输出对象</param>
+        private void ValidateOutput(HObject output)
+        {
+            try
+            {
+                HOperatorSet.GetObjClass(output, out HTuple objClass);
+                string type = objClass.S;
+                
+                if (type == "image")
+                {
+                    HOperatorSet.GetImageSize(output, out HTuple width, out HTuple height);
+                    if (width.I <= 0 || height.I <= 0)
+                        throw new InvalidOperationException($"输出图像尺寸无效: {width.I}×{height.I}");
+                }
+                else if (type == "region")
+                {
+                    HOperatorSet.CountObj(output, out HTuple count);
+                    // 区域数量为0也是有效的（空区域）
+                }
+                else
+                {
+                    throw new InvalidOperationException($"不支持的输出对象类型: {type}");
+                }
+            }
+            catch (HalconException halconEx)
+            {
+                throw new InvalidOperationException($"形态学闭运算算子执行异常: {halconEx.Message}", halconEx);
+            }
+        }
+        
+        /// <summary>
+        /// 应用输出反转
+        /// </summary>
+        /// <param name="outputImage">要反转的图像</param>
+        private void ApplyInversion(ref HObject outputImage)
+        {
+            try
+            {
+                HOperatorSet.GetObjClass(outputImage, out HTuple objClass);
+                string type = objClass.S;
+                
+                if (type == "image")
+                {
+                    HOperatorSet.InvertImage(outputImage, out HObject invertedImage);
+                    outputImage?.Dispose();
+                    outputImage = invertedImage;
+                }
+                else if (type == "region")
+                {
+                    // 对于区域，需要先转换为图像，反转后再转回区域
+                    HOperatorSet.SmallestRectangle1(outputImage, out HTuple row1, out HTuple col1, out HTuple row2, out HTuple col2);
+                    int width = Math.Max(512, col2.I - col1.I + 50);
+                    int height = Math.Max(512, row2.I - row1.I + 50);
+                    
+                    HOperatorSet.RegionToBin(outputImage, out HObject tempImage, 255, 0, width, height);
+                    HOperatorSet.InvertImage(tempImage, out HObject invertedImage);
+                    HOperatorSet.Threshold(invertedImage, out HObject invertedRegion, 128, 255);
+                    
+                    outputImage?.Dispose();
+                    tempImage?.Dispose();
+                    invertedImage?.Dispose();
+                    outputImage = invertedRegion;
+                }
+            }
+            catch (HalconException halconEx)
+            {
+                throw new InvalidOperationException($"输出反转失败: {halconEx.Message}", halconEx);
             }
         }
         
@@ -234,8 +384,9 @@ namespace VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors
                     ["结构元素类型"] = ElementType.GetDisplayName(),
                     ["结构元素参数"] = GetStructuringElementInfo(),
                     ["反转输出"] = InvertOutput ? "是" : "否",
-                    ["算法类型"] = "形态学闭运算",
-                    ["算法特点"] = "先膨胀后腐蚀，填充孔洞并保持形状",
+                    ["算法类型"] = "自适应形态学闭运算",
+                    ["使用的算法"] = string.IsNullOrEmpty(_usedAlgorithm) ? "未知" : _usedAlgorithm,
+                    ["算法特点"] = "自动选择区域或灰度闭运算算子",
                     ["适用场景"] = "填充小孔洞、连接断开区域、平滑边界",
                     ["运算顺序"] = "膨胀 → 腐蚀",
                     ["处理时间(ms)"] = Math.Round(processingTime.TotalMilliseconds, 2)
@@ -265,7 +416,8 @@ namespace VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors
                     ["原始图像尺寸"] = $"{inputImage.Width} × {inputImage.Height}",
                     ["结构元素类型"] = ElementType.GetDisplayName(),
                     ["结构元素参数"] = GetStructuringElementInfo(),
-                    ["算法类型"] = "形态学闭运算",
+                    ["算法类型"] = "自适应形态学闭运算",
+                    ["使用的算法"] = string.IsNullOrEmpty(_usedAlgorithm) ? "未知" : _usedAlgorithm,
                     ["处理时间(ms)"] = Math.Round(processingTime.TotalMilliseconds, 2),
                     ["统计信息"] = $"统计失败: {ex.Message}"
                 };

@@ -29,44 +29,43 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
         /// <summary>
         /// 窗口大小
         /// </summary>
-        [Parameter("窗口大小", "局部统计计算的窗口大小，影响统计区域范围。较小窗口适应局部变化，较大窗口更稳定", 3, 99, DecimalPlaces = 0)]
+        [Parameter("窗口大小", "局部统计计算的窗口大小，影响统计区域范围。较小窗口适应局部变化，较大窗口更稳定", 3, 99, DecimalPlaces = 0, Group = "参数设置")]
         public int WindowSize { get; set; } = 15;
         
         /// <summary>
         /// 统计方法
         /// </summary>
-        [Parameter("统计方法", "局部统计的计算方法，影响阈值的计算基础")]
+        [Parameter("统计方法", "局部统计的计算方法，影响阈值的计算基础", Group = "参数设置")]
         public StatisticalMethod Method { get; set; } = StatisticalMethod.Mean;
         
         /// <summary>
         /// 阈值偏移
         /// </summary>
-        [Parameter("阈值偏移", "在局部统计值基础上的偏移量。正值提高阈值，负值降低阈值", -100, 100, DecimalPlaces = 0)]
+        [Parameter("阈值偏移", "在局部统计值基础上的偏移量。正值提高阈值，负值降低阈值", -100, 100, DecimalPlaces = 0, Group = "参数设置")]
         public int ThresholdOffset { get; set; } = 5;
         
         /// <summary>
         /// 提取模式
         /// </summary>
-        [Parameter("提取模式", "选择提取亮区域还是暗区域")]
+        [Parameter("提取模式", "选择提取亮区域还是暗区域", Group = "参数设置")]
         public ExtractionMode LightDark { get; set; } = ExtractionMode.Light;
         
         /// <summary>
         /// 边界处理
         /// </summary>
-        [Parameter("边界处理", "图像边界区域的处理方式", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("边界处理", "图像边界区域的处理方式", Group = "参数设置")]
         public BorderMode BorderHandling { get; set; } = BorderMode.Mirror;
-        
         
         /// <summary>
         /// 反转输出
         /// </summary>
-        [Parameter("反转输出", "是否反转二值化结果", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("反转输出", "是否反转二值化结果", Group = "其他设置")]
         public bool InvertOutput { get; set; } = false;
         
         /// <summary>
         /// 保持图像类型
         /// </summary>
-        [Parameter("保持图像类型", "是否保持与原图像相同的数据类型", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("保持图像类型", "是否保持与原图像相同的数据类型", Group = "其他设置")]
         public bool PreserveImageType { get; set; } = true;
         
         #endregion

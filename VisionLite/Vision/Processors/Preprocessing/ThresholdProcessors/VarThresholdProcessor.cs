@@ -29,43 +29,43 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
         /// <summary>
         /// 窗口宽度
         /// </summary>
-        [Parameter("窗口宽度", "局部统计计算的窗口宽度，影响水平方向的统计范围", 3, 99, DecimalPlaces = 0)]
+        [Parameter("窗口宽度", "局部统计计算的窗口宽度，影响水平方向的统计范围", 3, 99, DecimalPlaces = 0, Group = "参数设置")]
         public int MaskWidth { get; set; } = 15;
         
         /// <summary>
         /// 窗口高度
         /// </summary>
-        [Parameter("窗口高度", "局部统计计算的窗口高度，影响垂直方向的统计范围", 3, 99, DecimalPlaces = 0)]
+        [Parameter("窗口高度", "局部统计计算的窗口高度，影响垂直方向的统计范围", 3, 99, DecimalPlaces = 0, Group = "参数设置")]
         public int MaskHeight { get; set; } = 15;
         
         /// <summary>
         /// 标准差缩放系数
         /// </summary>
-        [Parameter("标准差缩放", "局部标准差的缩放系数，控制阈值的变化幅度", 0.1, 3.0, DecimalPlaces = 2)]
+        [Parameter("标准差缩放", "局部标准差的缩放系数，控制阈值的变化幅度", 0.1, 3.0, DecimalPlaces = 2, Group = "参数设置")]
         public double StdDevScale { get; set; } = 0.2;
         
         /// <summary>
         /// 绝对阈值下限
         /// </summary>
-        [Parameter("绝对阈值", "与均值的最小差值，防止在均匀区域产生错误分割", 2, 50, DecimalPlaces = 0)]
+        [Parameter("绝对阈值", "与均值的最小差值，防止在均匀区域产生错误分割", 2, 50, DecimalPlaces = 0, Group = "参数设置")]
         public int AbsThreshold { get; set; } = 5;
         
         /// <summary>
         /// 提取模式
         /// </summary>
-        [Parameter("提取模式", "选择提取亮区域还是暗区域", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("提取模式", "选择提取亮区域还是暗区域", Group = "参数设置")]
         public ExtractionMode LightDark { get; set; } = ExtractionMode.Light;
         
         /// <summary>
         /// 反转输出
         /// </summary>
-        [Parameter("反转输出", "是否反转二值化结果", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("反转输出", "是否反转二值化结果", Group = "其他设置")]
         public bool InvertOutput { get; set; } = false;
         
         /// <summary>
         /// 保持图像类型
         /// </summary>
-        [Parameter("保持图像类型", "是否保持与原图像相同的数据类型", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("保持图像类型", "是否保持与原图像相同的数据类型", Group = "其他设置")]
         public bool PreserveImageType { get; set; } = true;
         
         #endregion

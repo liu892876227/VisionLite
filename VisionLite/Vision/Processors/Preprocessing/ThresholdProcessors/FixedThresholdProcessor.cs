@@ -29,25 +29,25 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
         /// <summary>
         /// 最小灰度值
         /// </summary>
-        [Parameter("最小灰度值", "阈值范围的最小值，低于此值的像素将被设为0", 0, 255, DecimalPlaces = 0)]
+        [Parameter("最小灰度值", "阈值范围的最小值，低于此值的像素将被设为0", 0, 255, DecimalPlaces = 0, Group = "参数设置")]
         public int MinGrayValue { get; set; } = 128;
         
         /// <summary>
         /// 最大灰度值
         /// </summary>
-        [Parameter("最大灰度值", "阈值范围的最大值，高于此值的像素将被设为0", 0, 255, DecimalPlaces = 0)]
+        [Parameter("最大灰度值", "阈值范围的最大值，高于此值的像素将被设为0", 0, 255, DecimalPlaces = 0, Group = "参数设置")]
         public int MaxGrayValue { get; set; } = 255;
         
         /// <summary>
         /// 反转输出
         /// </summary>
-        [Parameter("反转输出", "是否反转二值化结果，true时黑白颠倒", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("反转输出", "是否反转二值化结果，true时黑白颠倒", Group = "其他设置")]
         public bool InvertOutput { get; set; } = false;
         
         /// <summary>
         /// 是否保持图像类型
         /// </summary>
-        [Parameter("保持图像类型", "是否保持原图像数据类型", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("保持图像类型", "是否保持原图像数据类型", Group = "其他设置")]
         public bool PreserveImageType { get; set; } = true;
         
         #endregion

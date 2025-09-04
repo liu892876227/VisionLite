@@ -29,14 +29,13 @@ namespace VisionLite.Vision.Processors.Preprocessing.FilterProcessors
         /// <summary>
         /// 滤波器大小（奇数）
         /// </summary>
-        [Parameter("滤波器大小", "均值滤波器窗口大小，值越大平滑效果越强", 3, 15, Step = 1, DecimalPlaces = 0)]
+        [Parameter("滤波器大小", "均值滤波器窗口大小，值越大平滑效果越强", 3, 15, Step = 1, DecimalPlaces = 0, Group = "参数设置")]
         public int FilterSize { get; set; } = 3;
-        
         
         /// <summary>
         /// 是否保持图像类型
         /// </summary>
-        [Parameter("保持图像类型", Group = "高级设置", IsAdvanced = true)]
+        [Parameter("保持图像类型", "是否保持与输入图像相同的数据类型", Group = "其他设置")]
         public bool PreserveImageType { get; set; } = true;
         
         #endregion
