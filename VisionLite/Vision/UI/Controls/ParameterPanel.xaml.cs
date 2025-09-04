@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using VisionLite.Vision.Core.Interfaces;
 using VisionLite.Vision.Core.Models;
 using VisionLite.Vision.Processors.Preprocessing.FilterProcessors;
@@ -260,14 +261,33 @@ namespace VisionLite.Vision.UI.Controls
                     Style = (Style)FindResource("ParameterSliderStyle")
                 };
                 
-                // 绑定事件
-                textBox.TextChanged += (s, e) =>
+                // 绑定事件 - 改为失焦和回车确认
+                Action<TextBox> applyTextBoxValue = (tb) =>
                 {
-                    if (ParseNumericValue(textBox.Text, parameter.ParameterType, out var value))
+                    if (ParseNumericValue(tb.Text, parameter.ParameterType, out var value))
                     {
+                        // 验证范围
+                        var doubleValue = Convert.ToDouble(value);
+                        if (doubleValue < parameter.MinValue || doubleValue > parameter.MaxValue)
+                        {
+                            doubleValue = Math.Max(parameter.MinValue, Math.Min(parameter.MaxValue, doubleValue));
+                            value = parameter.ParameterType == ParameterType.Integer ? (object)(int)doubleValue : doubleValue;
+                            tb.Text = FormatNumericValue(value, parameter.ParameterType, parameter.DecimalPlaces);
+                        }
+                        
                         parameter.Value = value;
                         slider.Value = Convert.ToDouble(value);
                         OnParameterChanged(parameter);
+                    }
+                };
+                
+                textBox.LostFocus += (s, e) => applyTextBoxValue(textBox);
+                textBox.KeyDown += (s, e) =>
+                {
+                    if (e.Key == Key.Enter)
+                    {
+                        applyTextBoxValue(textBox);
+                        e.Handled = true;
                     }
                 };
                 
@@ -304,12 +324,23 @@ namespace VisionLite.Vision.UI.Controls
                     Style = (Style)FindResource("ParameterTextBoxStyle")
                 };
                 
-                textBox.TextChanged += (s, e) =>
+                // 改为失焦和回车确认
+                Action<TextBox> applyTextBoxValue = (tb) =>
                 {
-                    if (ParseNumericValue(textBox.Text, parameter.ParameterType, out var value))
+                    if (ParseNumericValue(tb.Text, parameter.ParameterType, out var value))
                     {
                         parameter.Value = value;
                         OnParameterChanged(parameter);
+                    }
+                };
+                
+                textBox.LostFocus += (s, e) => applyTextBoxValue(textBox);
+                textBox.KeyDown += (s, e) =>
+                {
+                    if (e.Key == Key.Enter)
+                    {
+                        applyTextBoxValue(textBox);
+                        e.Handled = true;
                     }
                 };
                 
@@ -360,10 +391,21 @@ namespace VisionLite.Vision.UI.Controls
                 Style = (Style)FindResource("ParameterTextBoxStyle")
             };
             
-            textBox.TextChanged += (s, e) =>
+            // 改为失焦和回车确认
+            Action<TextBox> applyTextValue = (tb) =>
             {
-                parameter.Value = textBox.Text;
+                parameter.Value = tb.Text;
                 OnParameterChanged(parameter);
+            };
+            
+            textBox.LostFocus += (s, e) => applyTextValue(textBox);
+            textBox.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.Enter)
+                {
+                    applyTextValue(textBox);
+                    e.Handled = true;
+                }
             };
             
             return textBox;
@@ -432,6 +474,52 @@ namespace VisionLite.Vision.UI.Controls
                     var type = enumValue.GetType();
                     var extensionType = type.Assembly.GetTypes()
                         .FirstOrDefault(t => t.Name == "FilterShapeExtensions");
+                    if (extensionType != null)
+                    {
+                        var method = extensionType.GetMethod("GetDisplayName");
+                        if (method != null)
+                        {
+                            return method.Invoke(null, new[] { enumValue })?.ToString() ?? enumValue.ToString();
+                        }
+                    }
+                }
+                catch
+                {
+                    // 如果反射失败，返回默认值
+                }
+                return enumValue.ToString();
+            }
+            // 支持StatisticalMethod枚举的中文显示
+            else if (enumValue.GetType().Name == "StatisticalMethod")
+            {
+                try
+                {
+                    var type = enumValue.GetType();
+                    var extensionType = type.Assembly.GetTypes()
+                        .FirstOrDefault(t => t.Name == "StatisticalMethodExtensions");
+                    if (extensionType != null)
+                    {
+                        var method = extensionType.GetMethod("GetDisplayName");
+                        if (method != null)
+                        {
+                            return method.Invoke(null, new[] { enumValue })?.ToString() ?? enumValue.ToString();
+                        }
+                    }
+                }
+                catch
+                {
+                    // 如果反射失败，返回默认值
+                }
+                return enumValue.ToString();
+            }
+            // 支持BorderMode枚举的中文显示
+            else if (enumValue.GetType().Name == "BorderMode")
+            {
+                try
+                {
+                    var type = enumValue.GetType();
+                    var extensionType = type.Assembly.GetTypes()
+                        .FirstOrDefault(t => t.Name == "BorderModeExtensions");
                     if (extensionType != null)
                     {
                         var method = extensionType.GetMethod("GetDisplayName");

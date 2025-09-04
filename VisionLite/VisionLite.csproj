@@ -188,6 +188,12 @@
     <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\MeanFilterProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\ThresholdProcessors\FixedThresholdProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\ThresholdProcessors\OTSUThresholdProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\ThresholdProcessors\VarThresholdProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\ThresholdProcessors\DynThresholdProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\ErosionProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\DilationProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\OpeningProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\ClosingProcessor.cs" />
     <Compile Include="Vision\UI\Controls\ImageDisplayControl.xaml.cs">
       <DependentUpon>ImageDisplayControl.xaml</DependentUpon>
     </Compile>

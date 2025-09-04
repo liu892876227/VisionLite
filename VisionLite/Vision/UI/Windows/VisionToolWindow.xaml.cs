@@ -9,6 +9,7 @@ using VisionLite.Vision.Core.Interfaces;
 using VisionLite.Vision.Core.Models;
 using VisionLite.Vision.Processors.Preprocessing.FilterProcessors;
 using VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors;
+using VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors;
 using VisionLite.Vision.UI.Controls;
 
 namespace VisionLite.Vision.UI.Windows
@@ -112,6 +113,78 @@ namespace VisionLite.Vision.UI.Windows
                 else
                 {
                     throw new InvalidOperationException("OTSU自动阈值二值化处理器参数获取失败");
+                }
+                
+                // 注册基于局部方差的自适应阈值二值化算法
+                var varThresholdProcessor = new VarThresholdProcessor();
+                var varThresholdParams = varThresholdProcessor.GetParameters();
+                if (varThresholdParams != null)
+                {
+                    _algorithmProcessors["VarThreshold"] = varThresholdProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("基于局部方差的自适应阈值二值化处理器参数获取失败");
+                }
+                
+                // 注册基于局部统计的自适应阈值二值化算法
+                var dynThresholdProcessor = new DynThresholdProcessor();
+                var dynThresholdParams = dynThresholdProcessor.GetParameters();
+                if (dynThresholdParams != null)
+                {
+                    _algorithmProcessors["DynThreshold"] = dynThresholdProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("基于局部统计的自适应阈值二值化处理器参数获取失败");
+                }
+                
+                // 注册形态学腐蚀算法
+                var erosionProcessor = new ErosionProcessor();
+                var erosionParams = erosionProcessor.GetParameters();
+                if (erosionParams != null)
+                {
+                    _algorithmProcessors["MorphologyErosion"] = erosionProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("形态学腐蚀处理器参数获取失败");
+                }
+                
+                // 注册形态学膨胀算法
+                var dilationProcessor = new DilationProcessor();
+                var dilationParams = dilationProcessor.GetParameters();
+                if (dilationParams != null)
+                {
+                    _algorithmProcessors["MorphologyDilation"] = dilationProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("形态学膨胀处理器参数获取失败");
+                }
+                
+                // 注册形态学开运算算法
+                var openingProcessor = new OpeningProcessor();
+                var openingParams = openingProcessor.GetParameters();
+                if (openingParams != null)
+                {
+                    _algorithmProcessors["MorphologyOpening"] = openingProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("形态学开运算处理器参数获取失败");
+                }
+                
+                // 注册形态学闭运算算法
+                var closingProcessor = new ClosingProcessor();
+                var closingParams = closingProcessor.GetParameters();
+                if (closingParams != null)
+                {
+                    _algorithmProcessors["MorphologyClosing"] = closingProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("形态学闭运算处理器参数获取失败");
                 }
                 
                 // 后续可以通过反射自动加载所有算法

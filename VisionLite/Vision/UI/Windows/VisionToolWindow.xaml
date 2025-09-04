@@ -101,6 +101,24 @@
                         <TreeViewItem Header="OTSU自动阈值二值化" 
                                       Tag="OTSUThreshold"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="基于局部方差的自适应阈值二值化" 
+                                      Tag="VarThreshold"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="基于局部统计的自适应阈值二值化" 
+                                      Tag="DynThreshold"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="形态学腐蚀" 
+                                      Tag="MorphologyErosion"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="形态学膨胀" 
+                                      Tag="MorphologyDilation"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="形态学开运算" 
+                                      Tag="MorphologyOpening"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="形态学闭运算" 
+                                      Tag="MorphologyClosing"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
                     
                     <TreeViewItem Header="边缘检测">
