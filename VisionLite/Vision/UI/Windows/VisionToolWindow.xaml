@@ -119,6 +119,9 @@
                         <TreeViewItem Header="形态学闭运算" 
                                       Tag="MorphologyClosing"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="直方图均衡" 
+                                      Tag="HistogramEqualization"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
                     
                     <TreeViewItem Header="边缘检测">

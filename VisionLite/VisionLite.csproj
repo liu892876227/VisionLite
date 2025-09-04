@@ -194,6 +194,7 @@
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\DilationProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\OpeningProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\ClosingProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\EnhancementProcessors\HistogramEqualizationProcessor.cs" />
     <Compile Include="Vision\UI\Controls\ImageDisplayControl.xaml.cs">
       <DependentUpon>ImageDisplayControl.xaml</DependentUpon>
     </Compile>

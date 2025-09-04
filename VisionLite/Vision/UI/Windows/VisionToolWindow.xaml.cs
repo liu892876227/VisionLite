@@ -10,6 +10,7 @@ using VisionLite.Vision.Core.Models;
 using VisionLite.Vision.Processors.Preprocessing.FilterProcessors;
 using VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors;
 using VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors;
+using VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors;
 using VisionLite.Vision.UI.Controls;
 
 namespace VisionLite.Vision.UI.Windows
@@ -185,6 +186,18 @@ namespace VisionLite.Vision.UI.Windows
                 else
                 {
                     throw new InvalidOperationException("形态学闭运算处理器参数获取失败");
+                }
+                
+                // 注册直方图均衡算法
+                var histogramEqualizationProcessor = new HistogramEqualizationProcessor();
+                var histogramEqualizationParams = histogramEqualizationProcessor.GetParameters();
+                if (histogramEqualizationParams != null)
+                {
+                    _algorithmProcessors["HistogramEqualization"] = histogramEqualizationProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("直方图均衡处理器参数获取失败");
                 }
                 
                 // 后续可以通过反射自动加载所有算法
