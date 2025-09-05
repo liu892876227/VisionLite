@@ -1,7 +1,32 @@
 {
   "permissions": {
     "allow": [
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\EnhancementProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\MorphologyProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\ThresholdProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\ThresholdProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\ThresholdProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\ThresholdProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\ThresholdProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\ThresholdProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\MorphologyProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\MorphologyProcessors/**)",
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)"
     ],
     "deny": [],
     "ask": []

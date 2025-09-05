@@ -90,6 +90,26 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
         private double _interClassVariance = 0;
         
         /// <summary>
+        /// 原始图像类型（用于测量结果显示）
+        /// </summary>
+        private string _originalImageType = "";
+        
+        /// <summary>
+        /// RegionToBin处理后的实际图像类型
+        /// </summary>
+        private string _processedImageType = "";
+        
+        /// <summary>
+        /// 最终输出图像类型
+        /// </summary>
+        private string _finalImageType = "";
+        
+        /// <summary>
+        /// 是否执行了类型转换
+        /// </summary>
+        private bool _typeConversionExecuted = false;
+        
+        /// <summary>
         /// 验证输入参数
         /// </summary>
         /// <param name="inputImage">输入图像</param>
@@ -117,6 +137,10 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                 if (inputImage.HImage == null)
                     throw new ArgumentNullException("输入图像对象为空");
                 
+                // 获取原始图像类型
+                HOperatorSet.GetImageType(inputImage.HImage, out HTuple originalType);
+                _originalImageType = originalType.S;
+                
                 // 获取图像尺寸
                 HOperatorSet.GetImageSize(inputImage.HImage, out HTuple width, out HTuple height);
                 
@@ -135,6 +159,10 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                 // 清理临时区域
                 regions?.Dispose();
                 
+                // 获取RegionToBin处理后的实际图像类型
+                HOperatorSet.GetImageType(outputImage, out HTuple processedType);
+                _processedImageType = processedType.S;
+                
                 // 计算类间方差（评估阈值质量的指标）
                 _interClassVariance = CalculateInterClassVariance(inputImage.HImage, _calculatedThreshold);
                 
@@ -151,6 +179,13 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                 {
                     outputImage = PreserveOriginalImageType(inputImage.HImage, outputImage);
                 }
+                
+                // 获取最终输出图像类型
+                HOperatorSet.GetImageType(outputImage, out HTuple finalType);
+                _finalImageType = finalType.S;
+                
+                // 记录是否执行了类型转换
+                _typeConversionExecuted = _processedImageType != _finalImageType;
                 
                 // 检查输出图像是否有效
                 if (outputImage == null)
@@ -290,12 +325,37 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                     ["算法类型"] = "OTSU自动阈值二值化"
                 };
                 
+                // 添加真实的图像类型处理信息
+                measurements["原始图像类型"] = string.IsNullOrEmpty(_originalImageType) ? "未检测" : _originalImageType;
+                measurements["RegionToBin实际输出"] = string.IsNullOrEmpty(_processedImageType) ? "未检测" : _processedImageType;
+                measurements["最终输出类型"] = string.IsNullOrEmpty(_finalImageType) ? "未检测" : _finalImageType;
+                measurements["保持图像类型"] = PreserveImageType ? "已启用" : "已禁用";
+                measurements["类型转换执行"] = _typeConversionExecuted ? "已执行" : "未执行";
+                
+                // 添加转换状态详细信息
+                if (_typeConversionExecuted && PreserveImageType)
+                {
+                    measurements["转换状态"] = $"{_processedImageType} → {_finalImageType} 转换成功";
+                }
+                else if (PreserveImageType && !_typeConversionExecuted)
+                {
+                    measurements["转换状态"] = "无需转换（类型相同）";
+                }
+                else if (!PreserveImageType)
+                {
+                    measurements["转换状态"] = $"保持RegionToBin输出类型：{_processedImageType}";
+                }
+                else
+                {
+                    measurements["转换状态"] = "转换状态未知";
+                }
+                
                 return measurements;
             }
             catch (Exception ex)
             {
                 // 如果统计失败，返回基础信息
-                return new Dictionary<string, object>
+                var fallbackMeasurements = new Dictionary<string, object>
                 {
                     ["原始图像尺寸"] = $"{inputImage.Width} × {inputImage.Height}",
                     ["OTSU自动阈值"] = Math.Round(_calculatedThreshold, 1),
@@ -304,6 +364,13 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                     ["算法类型"] = "OTSU自动阈值二值化",
                     ["统计信息"] = $"统计失败: {ex.Message}"
                 };
+                
+                // 添加图像类型信息（即使统计失败也能显示）
+                fallbackMeasurements["原始图像类型"] = string.IsNullOrEmpty(_originalImageType) ? "未检测" : _originalImageType;
+                fallbackMeasurements["RegionToBin实际输出"] = string.IsNullOrEmpty(_processedImageType) ? "未检测" : _processedImageType;
+                fallbackMeasurements["最终输出类型"] = string.IsNullOrEmpty(_finalImageType) ? "未检测" : _finalImageType;
+                
+                return fallbackMeasurements;
             }
         }
         

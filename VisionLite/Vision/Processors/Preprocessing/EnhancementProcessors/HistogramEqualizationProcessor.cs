@@ -34,6 +34,30 @@ namespace VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors
         
         #endregion
         
+        #region 私有字段
+        
+        /// <summary>
+        /// 原始图像类型（用于测量结果显示）
+        /// </summary>
+        private string _originalImageType = "";
+        
+        /// <summary>
+        /// EquHistoImage处理后的实际图像类型
+        /// </summary>
+        private string _processedImageType = "";
+        
+        /// <summary>
+        /// 最终输出图像类型
+        /// </summary>
+        private string _finalImageType = "";
+        
+        /// <summary>
+        /// 是否执行了类型转换
+        /// </summary>
+        private bool _typeConversionExecuted = false;
+        
+        #endregion
+        
         #region 主要方法
         
         /// <summary>
@@ -105,14 +129,29 @@ namespace VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors
                 if (inputImage.HImage == null)
                     throw new ArgumentNullException("输入图像对象为空");
                 
+                // 获取原始图像类型
+                HOperatorSet.GetImageType(inputImage.HImage, out HTuple originalType);
+                _originalImageType = originalType.S;
+                
                 // 使用Halcon官方EquHistoImage算子进行全局直方图均衡
                 HOperatorSet.EquHistoImage(inputImage.HImage, out outputImage);
+                
+                // 获取EquHistoImage处理后的实际图像类型
+                HOperatorSet.GetImageType(outputImage, out HTuple processedType);
+                _processedImageType = processedType.S;
                 
                 // 如果需要保持图像类型，进行类型转换
                 if (PreserveImageType)
                 {
                     outputImage = PreserveOriginalImageType(inputImage.HImage, outputImage);
                 }
+                
+                // 获取最终输出图像类型
+                HOperatorSet.GetImageType(outputImage, out HTuple finalType);
+                _finalImageType = finalType.S;
+                
+                // 记录是否执行了类型转换
+                _typeConversionExecuted = _processedImageType != _finalImageType;
                 
                 // 检查输出图像是否有效
                 if (outputImage == null)
@@ -183,23 +222,32 @@ namespace VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors
                 ["处理时间(ms)"] = Math.Round(processingTime.TotalMilliseconds, 2),
                 ["算法类型"] = "直方图均衡",
                 ["算法特点"] = "全局直方图线性化，增强整体对比度",
-                ["适用场景"] = "整体亮度分布不均的灰度图像",
-                ["保持图像类型"] = PreserveImageType ? "已启用" : "已禁用"
+                ["适用场景"] = "整体亮度分布不均的灰度图像"
             };
             
-            // 添加图像类型验证信息
-            try
+            // 添加真实的图像类型处理信息
+            measurements["原始图像类型"] = string.IsNullOrEmpty(_originalImageType) ? "未检测" : _originalImageType;
+            measurements["EquHistoImage实际输出"] = string.IsNullOrEmpty(_processedImageType) ? "未检测" : _processedImageType;
+            measurements["最终输出类型"] = string.IsNullOrEmpty(_finalImageType) ? "未检测" : _finalImageType;
+            measurements["保持图像类型"] = PreserveImageType ? "已启用" : "已禁用";
+            measurements["类型转换执行"] = _typeConversionExecuted ? "已执行" : "未执行";
+            
+            // 添加转换状态详细信息
+            if (_typeConversionExecuted && PreserveImageType)
             {
-                HOperatorSet.GetImageType(inputImage.HImage, out HTuple originalType);
-                measurements["原始图像类型"] = originalType.S;
-                
-                // 模拟EquHistoImage输出（通常是byte类型）
-                measurements["EquHistoImage默认输出"] = "byte (0-255)";
-                measurements["类型保持状态"] = PreserveImageType ? $"强制转换回 {originalType.S}" : "保持处理后类型";
+                measurements["转换状态"] = $"{_processedImageType} → {_finalImageType} 转换成功";
             }
-            catch
+            else if (PreserveImageType && !_typeConversionExecuted)
             {
-                measurements["图像类型检测"] = "检测失败";
+                measurements["转换状态"] = "无需转换（类型相同）";
+            }
+            else if (!PreserveImageType)
+            {
+                measurements["转换状态"] = $"保持EquHistoImage输出类型：{_processedImageType}";
+            }
+            else
+            {
+                measurements["转换状态"] = "转换状态未知";
             }
             
             return measurements;

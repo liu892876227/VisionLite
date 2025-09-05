@@ -14,6 +14,29 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
     /// </summary>
     public class DynThresholdProcessor : VisionProcessorBase
     {
+        #region 图像类型跟踪字段
+        
+        /// <summary>
+        /// 原始图像类型
+        /// </summary>
+        private string _originalImageType = "";
+        
+        /// <summary>
+        /// 处理后图像类型
+        /// </summary>
+        private string _processedImageType = "";
+        
+        /// <summary>
+        /// 最终图像类型
+        /// </summary>
+        private string _finalImageType = "";
+        
+        /// <summary>
+        /// 类型转换是否已执行
+        /// </summary>
+        private bool _typeConversionExecuted = false;
+        
+        #endregion
         #region 属性
         
         /// <summary>
@@ -155,6 +178,10 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                 if (inputImage.HImage == null)
                     throw new ArgumentNullException("输入图像对象为空");
                 
+                // 获取原始图像类型
+                HOperatorSet.GetImageType(inputImage.HImage, out HTuple originalType);
+                _originalImageType = originalType.S;
+                
                 // 获取图像尺寸
                 HOperatorSet.GetImageSize(inputImage.HImage, out HTuple width, out HTuple height);
                 
@@ -192,6 +219,10 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                 HOperatorSet.RegionToBin(regions, out outputImage, 
                     255, 0, width.I, height.I);
                 
+                // 获取处理后的图像类型
+                HOperatorSet.GetImageType(outputImage, out HTuple processedType);
+                _processedImageType = processedType.S;
+                
                 // 清理临时资源
                 regions?.Dispose();
                 regions = null;
@@ -209,6 +240,13 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                 {
                     outputImage = PreserveOriginalImageType(inputImage.HImage, outputImage);
                 }
+                
+                // 获取最终输出图像类型
+                HOperatorSet.GetImageType(outputImage, out HTuple finalType);
+                _finalImageType = finalType.S;
+                
+                // 记录是否执行了类型转换
+                _typeConversionExecuted = _processedImageType != _finalImageType;
                 
                 // 检查输出图像是否有效
                 if (outputImage == null)
@@ -328,6 +366,12 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                     ["提取模式"] = LightDark.GetDisplayName(),
                     ["边界处理"] = BorderHandling.GetDisplayName(),
                     ["反转输出"] = InvertOutput ? "是" : "否",
+                    ["保持图像类型"] = PreserveImageType ? "是" : "否",
+                    ["原始图像类型"] = _originalImageType,
+                    ["DynThreshold处理后类型"] = _processedImageType,
+                    ["最终输出类型"] = _finalImageType,
+                    ["类型转换执行状态"] = _typeConversionExecuted ? "已执行" : "未执行",
+                    ["类型转换详情"] = GetTypeConversionDetails(),
                     ["检测到的区域数"] = regionCount,
                     ["总面积(像素)"] = totalArea,
                     ["面积占比(%)"] = Math.Round(areaRatio, 2),
@@ -350,6 +394,11 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                     ["统计方法"] = Method.GetDisplayName(),
                     ["阈值偏移"] = ThresholdOffset,
                     ["提取模式"] = LightDark.GetDisplayName(),
+                    ["保持图像类型"] = PreserveImageType ? "是" : "否",
+                    ["原始图像类型"] = _originalImageType,
+                    ["DynThreshold处理后类型"] = _processedImageType,
+                    ["最终输出类型"] = _finalImageType,
+                    ["类型转换执行状态"] = _typeConversionExecuted ? "已执行" : "未执行",
                     ["处理时间(ms)"] = Math.Round(processingTime.TotalMilliseconds, 2),
                     ["算法类型"] = "基于局部统计的自适应阈值二值化",
                     ["统计信息"] = $"统计失败: {ex.Message}"
@@ -411,6 +460,27 @@ namespace VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors
                 StatisticalMethod.Gauss => $"sigma={Math.Round(Math.Max(0.5, WindowSize / 6.0), 2)}",
                 _ => $"窗口 {WindowSize}×{WindowSize}"
             };
+        }
+        
+        /// <summary>
+        /// 获取类型转换详细信息
+        /// </summary>
+        /// <returns>类型转换详情字符串</returns>
+        private string GetTypeConversionDetails()
+        {
+            if (!_typeConversionExecuted)
+            {
+                return $"未转换，保持{_processedImageType}类型";
+            }
+            
+            if (_originalImageType == _finalImageType)
+            {
+                return $"成功转换，从{_processedImageType}恢复为{_originalImageType}";
+            }
+            else
+            {
+                return $"转换异常，期望{_originalImageType}实际{_finalImageType}";
+            }
         }
         
         #endregion
