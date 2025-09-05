@@ -11,6 +11,8 @@ using VisionLite.Vision.Processors.Preprocessing.FilterProcessors;
 using VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors;
 using VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors;
 using VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors;
+using VisionLite.Vision.Processors.Preprocessing.FrequencyProcessors.Transform;
+using VisionLite.Vision.Processors.Preprocessing.FrequencyProcessors.Filters;
 using VisionLite.Vision.UI.Controls;
 
 namespace VisionLite.Vision.UI.Windows
@@ -198,6 +200,66 @@ namespace VisionLite.Vision.UI.Windows
                 else
                 {
                     throw new InvalidOperationException("直方图均衡处理器参数获取失败");
+                }
+                
+                // 注册FFT变换算法
+                var fftProcessor = new FFTProcessor();
+                var fftParams = fftProcessor.GetParameters();
+                if (fftParams != null)
+                {
+                    _algorithmProcessors["FrequencyFFT"] = fftProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("FFT变换处理器参数获取失败");
+                }
+                
+                // 注册IFFT变换算法
+                var ifftProcessor = new IFFTProcessor();
+                var ifftParams = ifftProcessor.GetParameters();
+                if (ifftParams != null)
+                {
+                    _algorithmProcessors["FrequencyIFFT"] = ifftProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("IFFT变换处理器参数获取失败");
+                }
+                
+                // 注册功率谱分析算法
+                var powerSpectrumProcessor = new PowerSpectrumProcessor();
+                var powerSpectrumParams = powerSpectrumProcessor.GetParameters();
+                if (powerSpectrumParams != null)
+                {
+                    _algorithmProcessors["FrequencyPowerSpectrum"] = powerSpectrumProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("功率谱分析处理器参数获取失败");
+                }
+                
+                // 注册低通滤波算法
+                var lowPassProcessor = new LowPassFilterProcessor();
+                var lowPassParams = lowPassProcessor.GetParameters();
+                if (lowPassParams != null)
+                {
+                    _algorithmProcessors["FrequencyLowPass"] = lowPassProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("低通滤波处理器参数获取失败");
+                }
+                
+                // 注册高通滤波算法
+                var highPassProcessor = new HighPassFilterProcessor();
+                var highPassParams = highPassProcessor.GetParameters();
+                if (highPassParams != null)
+                {
+                    _algorithmProcessors["FrequencyHighPass"] = highPassProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("高通滤波处理器参数获取失败");
                 }
                 
                 // 后续可以通过反射自动加载所有算法

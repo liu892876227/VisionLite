@@ -195,6 +195,16 @@
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\OpeningProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\ClosingProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\EnhancementProcessors\HistogramEqualizationProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Base\FrequencyProcessResult.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Base\IFrequencyFilter.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Base\FrequencyProcessorBase.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Base\FrequencyFilterFactory.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Base\FrequencyProcessingUtils.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Transform\FFTProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Transform\IFFTProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Transform\PowerSpectrumProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Filters\LowPassFilterProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\FrequencyProcessors\Filters\HighPassFilterProcessor.cs" />
     <Compile Include="Vision\UI\Controls\ImageDisplayControl.xaml.cs">
       <DependentUpon>ImageDisplayControl.xaml</DependentUpon>
     </Compile>

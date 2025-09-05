@@ -124,6 +124,24 @@
                                       Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
                     
+                    <TreeViewItem Header="频域处理" IsExpanded="True">
+                        <TreeViewItem Header="快速傅里叶变换 (FFT)" 
+                                      Tag="FrequencyFFT"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="逆快速傅里叶变换 (IFFT)" 
+                                      Tag="FrequencyIFFT"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="功率谱分析" 
+                                      Tag="FrequencyPowerSpectrum"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="频域低通滤波" 
+                                      Tag="FrequencyLowPass"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="频域高通滤波" 
+                                      Tag="FrequencyHighPass"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                    </TreeViewItem>
+                    
                     <TreeViewItem Header="边缘检测">
                         <TreeViewItem Header="Canny边缘检测" 
                                       Tag="CannyEdge"

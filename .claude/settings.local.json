@@ -26,7 +26,8 @@
       "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\ThresholdProcessors/**)",
       "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\MorphologyProcessors/**)",
       "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\MorphologyProcessors/**)",
-      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)"
+      "Read(/E:\\mySoftware\\VisionLite\\VisionLite\\Vision\\Processors\\Preprocessing\\FilterProcessors/**)",
+      "Bash(\"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\" VisionLite.csproj -p:Configuration=Debug -p:Platform=x64 -verbosity:minimal)"
     ],
     "deny": [],
     "ask": []
