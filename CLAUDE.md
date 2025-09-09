@@ -1,4 +1,8 @@
 # CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 开发指导原则
 - Please always start your reply with "好的立总"
 - Please always output a mermaid format flowchart or sequence diagram before analyzing conclusions or proposing modifications
 - Always read the code: Before giving conclusions or modification plans, always read all relevant code first. Read the code instead of guessing. Never use words like "possibly" or "guess," but read the code or run the test to verify whether your "possibility" or "guess" is valid
@@ -6,8 +10,6 @@
 - No apologies: Do not use apologies. Think carefully and take responsibility for every conclusion or modification plan you provide
 - Modular design: Encourage high cohesion and low coupling, and advocate the principles of modular design to improve code maintainability and reusability
 - 在添加或者删除文件等必要的时候，别忘了检查项目的.csproj文件是否完成了更新
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 项目概述
 VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Framework 4.7.2 开发。系统集成了多家相机厂商的 SDK，提供图像采集、ROI 管理、通讯模块等功能。
@@ -113,9 +115,33 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
 - `VisionLite/packages.config`: NuGet 包配置
 - `VisionLite/Properties/AssemblyInfo.cs`: 程序集信息
 
+### 视觉处理框架 (Vision Processing Framework)
+VisionLite 包含了完整的视觉处理框架，支持各类图像处理算法：
+
+#### 核心组件
+- **IVisionProcessor**: 所有视觉处理器的统一接口
+- **VisionProcessorBase**: 处理器基类，提供参数管理和反射功能
+- **VisionImage**: 图像封装类，基于Halcon HObject
+- **ProcessResult**: 处理结果容器，包含输出图像和测量数据
+- **ParameterInfo**: 参数信息描述，支持UI自动生成
+
+#### 处理器分类
+- **FilterProcessors**: 滤波处理器（高斯、中值、均值滤波）
+- **ThresholdProcessors**: 阈值处理器（固定阈值、OTSU、局部方差、局部统计）
+- **MorphologyProcessors**: 形态学处理器（腐蚀、膨胀、开运算、闭运算）  
+- **EnhancementProcessors**: 增强处理器（直方图均衡化）
+
+#### 处理器开发规范
+- 继承 `VisionProcessorBase` 基类
+- 使用 `ParameterAttribute` 标记可配置参数
+- 重写 `ProcessAsync` 方法实现具体算法
+- 使用 `CreateSuccessResult` 或 `CreateFailureResult` 返回结果
+- 确保线程安全，支持异步处理
+
 ### 外部 SDK 依赖
-- Halcon SDK 路径: `C:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\`
-- 海康威视 SDK 路径: `C:\Study\MVS\Development\DotNet\win64\`
+- **Halcon SDK**: `C:\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll`
+- **海康威视 SDK**: `C:\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll`
+- **倍福 ADS**: `testdll\倍福引用包\TwinCAT.Ads.dll`
 - 确保开发环境已安装对应 SDK
 
 ### 调试配置
@@ -131,11 +157,35 @@ VisionLite 是一个基于 WPF 的工业机器视觉系统，使用 C# .NET Fram
   cd VisionLite && "C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" VisionLite.csproj -p:Configuration=Release -p:Platform=x64 -verbosity:minimal
   ```
 
+### 项目结构说明
+```
+VisionLite/
+├── Communication/                    # 通讯模块
+│   ├── ICommunication.cs            # 通讯接口
+│   ├── TcpCommunication.cs         # TCP客户端
+│   ├── ModbusTcpClient.cs          # Modbus TCP客户端
+│   ├── AdsCommunication.cs         # 倍福ADS通讯
+│   └── S7Communication.cs          # 西门子S7通讯
+├── Vision/                          # 视觉处理模块
+│   ├── Core/                       # 核心框架
+│   │   ├── Interfaces/             # 接口定义
+│   │   ├── Models/                 # 数据模型
+│   │   ├── Base/                   # 基类实现
+│   │   └── Attributes/             # 特性标记
+│   ├── Processors/                 # 算法处理器
+│   │   └── Preprocessing/          # 预处理算法
+│   └── UI/                         # 视觉工具UI
+├── MainWindow.xaml(.cs)            # 主窗口
+├── CameraManagementWindow.xaml(.cs) # 相机管理
+└── VisionLite.csproj               # 项目配置
+```
+
 ### 测试和验证
 - 目前项目暂无自动化测试框架
 - 通讯模块测试主要通过 `SimpleCommunicationWindow` 进行手动验证
-- ADS 通讯可通过 `AdsConnectionTest` 工具验证连接和变量读写
+- ADS 通讯可通过 `AdsConnectionTest` 工具验证连接和变量读写  
 - 相机功能通过 `CameraManagementWindow` 进行设备枚举和连接测试
+- 视觉处理器通过 `VisionToolWindow` 进行算法测试和参数调试
 
 ## 通讯协议支持
 

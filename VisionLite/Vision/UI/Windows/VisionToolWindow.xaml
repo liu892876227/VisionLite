@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:VisionLite.Vision.UI.Controls"
+        xmlns:halcon="clr-namespace:HalconDotNet;assembly=halcondotnet"
         mc:Ignorable="d"
         Title="VisionLite - 视觉算法工具" 
         Height="800" Width="1200" 
@@ -146,6 +147,22 @@
                                       IsEnabled="False"/>
                     </TreeViewItem>
                     
+                    <TreeViewItem Header="卡尺工具" IsExpanded="True">
+                        <TreeViewItem Header="边缘查找" 
+                                      Tag="EdgeCaliper"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="直线查找" 
+                                      Tag="LineCaliper"
+                                      Style="{StaticResource AlgorithmItemStyle}"
+                                      IsEnabled="False"/>
+                        <TreeViewItem Header="圆查找" 
+                                      Tag="CircleCaliper"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="一维卡尺圆查找" 
+                                      Tag="OneDbCaliperCircle"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                    </TreeViewItem>
+                    
                 </TreeView>
             </GroupBox>
             
@@ -159,19 +176,24 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 
-                <!-- 图像选择标签 -->
-                <TabControl x:Name="ImageTabControl" Grid.Row="1">
-                    <TabItem Header="原始图像">
-                        <controls:ImageDisplayControl x:Name="OriginalImageDisplay"
-                                                      AutoFitToWindow="True"
-                                                      ShowImageInfo="True"/>
-                    </TabItem>
-                    <TabItem Header="处理结果">
-                        <controls:ImageDisplayControl x:Name="ResultImageDisplay"
-                                                      AutoFitToWindow="True"
-                                                      ShowImageInfo="True"/>
-                    </TabItem>
-                </TabControl>
+                <!-- 显示模式选择 -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
+                    <RadioButton x:Name="OriginalImageMode" Content="原始图像" IsChecked="True" Margin="5" 
+                                 Checked="DisplayMode_Changed"/>
+                    <RadioButton x:Name="ResultImageMode" Content="处理结果" Margin="5" 
+                                 Checked="DisplayMode_Changed"/>
+                    <Button x:Name="FitImageButton" Content="适应窗口" Margin="10,0,0,0" Padding="5"
+                            Click="FitImageButton_Click"/>
+                </StackPanel>
+                
+                <!-- Halcon显示控件 -->
+                <Border Grid.Row="1" BorderBrush="#FFCCCCCC" BorderThickness="1" Background="Black">
+                    <halcon:HSmartWindowControlWPF x:Name="HalconDisplay" 
+                                                   Background="Black"/>
+                </Border>
+                
+                <!-- ROI信息显示覆盖层 -->
+                <Canvas x:Name="OverlayCanvas" Grid.Row="1" Background="Transparent" IsHitTestVisible="False"/>
             </Grid>
             
             <!-- 右侧分隔器 -->

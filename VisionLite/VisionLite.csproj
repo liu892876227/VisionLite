@@ -181,6 +181,9 @@
     <Compile Include="Vision\Core\Models\ProcessResult.cs" />
     <Compile Include="Vision\Core\Models\ParameterInfo.cs" />
     <Compile Include="Vision\Core\Models\GeometryElement.cs" />
+    <Compile Include="Vision\Core\Models\CaliperData.cs" />
+    <Compile Include="Vision\Core\Models\HalconDisplayContours.cs" />
+    <Compile Include="Vision\Core\Enums\CaliperEnums.cs" />
     <Compile Include="Vision\Core\Attributes\ParameterAttribute.cs" />
     <Compile Include="Vision\Core\Base\VisionProcessorBase.cs" />
     <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\GaussianFilterProcessor.cs" />
@@ -195,6 +198,9 @@
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\OpeningProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\ClosingProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\EnhancementProcessors\HistogramEqualizationProcessor.cs" />
+    <Compile Include="Vision\Processors\Measurement\CaliperProcessors\EdgeCaliperProcessor.cs" />
+    <Compile Include="Vision\Processors\Measurement\CaliperProcessors\CircleCaliperProcessor.cs" />
+    <Compile Include="Vision\Processors\Measurement\CaliperProcessors\OneDbCaliperCircleFinder.cs" />
     <Compile Include="Vision\UI\Controls\ImageDisplayControl.xaml.cs">
       <DependentUpon>ImageDisplayControl.xaml</DependentUpon>
     </Compile>
