@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -147,7 +148,8 @@ namespace VisionLite.Vision.Core.Base
                 foreach (var enumValue in enumValues)
                 {
                     parameterInfo.EnumValues.Add(enumValue);
-                    parameterInfo.EnumDisplayNames.Add(enumValue.ToString());
+                    var displayName = GetEnumDescription(enumValue) ?? enumValue.ToString();
+                    parameterInfo.EnumDisplayNames.Add(displayName);
                 }
             }
             
@@ -237,6 +239,22 @@ namespace VisionLite.Vision.Core.Base
             var result = ProcessResult.CreateFailure(errorMessage, exception);
             result.ProcessorName = ProcessorName;
             return result;
+        }
+        
+        /// <summary>
+        /// 获取枚举值的Description属性
+        /// </summary>
+        /// <param name="enumValue">枚举值</param>
+        /// <returns>Description属性值，如果没有则返回null</returns>
+        private static string GetEnumDescription(object enumValue)
+        {
+            if (enumValue == null) return null;
+            
+            var fieldInfo = enumValue.GetType().GetField(enumValue.ToString());
+            if (fieldInfo == null) return null;
+            
+            var descriptionAttribute = fieldInfo.GetCustomAttribute<DescriptionAttribute>();
+            return descriptionAttribute?.Description;
         }
     }
 }

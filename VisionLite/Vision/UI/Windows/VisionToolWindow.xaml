@@ -158,9 +158,6 @@
                         <TreeViewItem Header="圆查找" 
                                       Tag="CircleCaliper"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
-                        <TreeViewItem Header="一维卡尺圆查找" 
-                                      Tag="OneDbCaliperCircle"
-                                      Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
                     
                 </TreeView>

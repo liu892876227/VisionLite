@@ -111,6 +111,161 @@ namespace VisionLite.Vision.UI.Controls
             }
         }
         
+        /// <summary>
+        /// 更新参数值并刷新UI控件
+        /// </summary>
+        /// <param name="parameterName">参数名称</param>
+        /// <param name="newValue">新值</param>
+        public void UpdateParameterValue(string parameterName, object newValue)
+        {
+            if (_currentParameters == null || string.IsNullOrEmpty(parameterName))
+                return;
+                
+            try
+            {
+                // 更新参数值
+                var parameter = _currentParameters.FirstOrDefault(p => p.Name == parameterName);
+                if (parameter != null)
+                {
+                    parameter.Value = newValue;
+                    
+                    // 更新UI控件显示
+                    if (_parameterControls.TryGetValue(parameterName, out var control))
+                    {
+                        UpdateControlValue(control, parameter, newValue);
+                    }
+                    
+                    // 同步到处理器
+                    if (_currentProcessor != null)
+                    {
+                        _currentProcessor.SetParameter(parameterName, newValue);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"更新参数失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 静默更新参数值并刷新UI控件（不触发事件）
+        /// </summary>
+        /// <param name="parameterName">参数名称</param>
+        /// <param name="newValue">新值</param>
+        public void UpdateParameterValueSilently(string parameterName, object newValue)
+        {
+            if (_currentParameters == null || string.IsNullOrEmpty(parameterName))
+                return;
+                
+            try
+            {
+                // 更新参数值
+                var parameter = _currentParameters.FirstOrDefault(p => p.Name == parameterName);
+                if (parameter != null)
+                {
+                    parameter.Value = newValue;
+                    
+                    // 更新UI控件显示（但不同步到处理器，避免事件循环）
+                    if (_parameterControls.TryGetValue(parameterName, out var control))
+                    {
+                        UpdateControlValue(control, parameter, newValue);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"静默更新参数失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 更新控件显示值
+        /// </summary>
+        private void UpdateControlValue(FrameworkElement control, ParameterInfo parameter, object newValue)
+        {
+            try
+            {
+                if (control is StackPanel stackPanel)
+                {
+                    // 处理数值控件（StackPanel包含TextBox和Slider）
+                    foreach (var child in stackPanel.Children)
+                    {
+                        if (child is StackPanel childStackPanel && childStackPanel.Orientation == Orientation.Horizontal)
+                        {
+                            // 查承数值控件的横向面板（含有TextBox和Slider）
+                            foreach (var grandChild in childStackPanel.Children)
+                            {
+                                if (grandChild is TextBox textBox)
+                                {
+                                    textBox.Text = FormatNumericValue(newValue, parameter.ParameterType, parameter.DecimalPlaces);
+                                }
+                                else if (grandChild is Slider slider)
+                                {
+                                    // 同时更新滑块值
+                                    slider.Value = Convert.ToDouble(newValue);
+                                }
+                            }
+                        }
+                        else if (child is TextBox directTextBox)
+                        {
+                            // 处理直接的TextBox（没有范围限制的情况）
+                            directTextBox.Text = FormatNumericValue(newValue, parameter.ParameterType, parameter.DecimalPlaces);
+                        }
+                        else if (child is CheckBox checkBox)
+                        {
+                            // 处理布尔控件
+                            checkBox.IsChecked = Convert.ToBoolean(newValue);
+                        }
+                        else if (child is ComboBox comboBox && parameter.ParameterType == ParameterType.Enum)
+                        {
+                            // 处理枚举控件
+                            for (int i = 0; i < parameter.EnumValues.Count; i++)
+                            {
+                                if (parameter.EnumValues[i].Equals(newValue))
+                                {
+                                    if (i < parameter.EnumDisplayNames.Count)
+                                    {
+                                        comboBox.SelectedItem = parameter.EnumDisplayNames[i];
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (control is TextBox textBox)
+                {
+                    // 直接的TextBox
+                    textBox.Text = FormatNumericValue(newValue, parameter.ParameterType, parameter.DecimalPlaces);
+                }
+                else if (control is ComboBox comboBox && parameter.ParameterType == ParameterType.Enum)
+                {
+                    // 直接的ComboBox
+                    for (int i = 0; i < parameter.EnumValues.Count; i++)
+                    {
+                        if (parameter.EnumValues[i].Equals(newValue))
+                        {
+                            if (i < parameter.EnumDisplayNames.Count)
+                            {
+                                comboBox.SelectedItem = parameter.EnumDisplayNames[i];
+                            }
+                            break;
+                        }
+                    }
+                }
+                else if (control is CheckBox directCheckBox)
+                {
+                    // 直接的CheckBox
+                    directCheckBox.IsChecked = Convert.ToBoolean(newValue);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"更新控件值失败: {ex.Message}");
+            }
+        }
+        
         #endregion
         
         #region 私有方法
@@ -426,10 +581,23 @@ namespace VisionLite.Vision.UI.Controls
             // 创建映射字典，用于中文显示名称和枚举值的对应
             var displayNameMap = new Dictionary<string, object>();
             
-            // 添加枚举选项
-            foreach (var enumValue in parameter.EnumValues)
+            // 添加枚举选项（优先使用EnumDisplayNames）
+            for (int i = 0; i < parameter.EnumValues.Count; i++)
             {
-                string displayName = GetEnumDisplayName(enumValue);
+                var enumValue = parameter.EnumValues[i];
+                string displayName;
+                
+                // 优先使用ParameterInfo中的EnumDisplayNames
+                if (i < parameter.EnumDisplayNames.Count && !string.IsNullOrEmpty(parameter.EnumDisplayNames[i]))
+                {
+                    displayName = parameter.EnumDisplayNames[i];
+                }
+                else
+                {
+                    // 备用方案：使用原有的GetEnumDisplayName方法
+                    displayName = GetEnumDisplayName(enumValue);
+                }
+                
                 comboBox.Items.Add(displayName);
                 displayNameMap[displayName] = enumValue;
             }
@@ -437,8 +605,22 @@ namespace VisionLite.Vision.UI.Controls
             // 设置当前选中项
             if (parameter.Value != null)
             {
-                string currentDisplayName = GetEnumDisplayName(parameter.Value);
-                comboBox.SelectedItem = currentDisplayName;
+                // 查找当前值对应的显示名称
+                for (int i = 0; i < parameter.EnumValues.Count; i++)
+                {
+                    if (parameter.EnumValues[i].Equals(parameter.Value))
+                    {
+                        if (i < parameter.EnumDisplayNames.Count)
+                        {
+                            comboBox.SelectedItem = parameter.EnumDisplayNames[i];
+                        }
+                        else
+                        {
+                            comboBox.SelectedItem = GetEnumDisplayName(parameter.Value);
+                        }
+                        break;
+                    }
+                }
             }
             
             comboBox.SelectionChanged += (s, e) =>
