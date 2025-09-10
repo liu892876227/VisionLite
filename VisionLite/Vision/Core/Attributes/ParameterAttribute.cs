@@ -55,6 +55,13 @@ namespace VisionLite.Vision.Core.Attributes
         public int Order { get; set; } = 0;
         
         /// <summary>
+        /// 是否支持实时预览
+        /// 标记为true的参数在变化时会触发防抖的算法重新执行
+        /// 默认为true，提供统一的用户体验
+        /// </summary>
+        public bool IsRealtime { get; set; } = true;
+        
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="displayName">显示名称</param>

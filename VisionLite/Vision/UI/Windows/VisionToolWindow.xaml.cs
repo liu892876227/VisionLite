@@ -18,6 +18,7 @@ using VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors;
 using VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors;
 using VisionLite.Vision.Processors.Measurement.CaliperProcessors;
 using VisionLite.Vision.UI.Controls;
+using VisionLite.Vision.Core.Utils;
 
 namespace VisionLite.Vision.UI.Windows
 {
@@ -380,62 +381,24 @@ namespace VisionLite.Vision.UI.Windows
                     _currentProcessor.SetParameter(e.ParameterName, e.NewValue);
                 }
                 
-                // 定义需要实时预览的参数列表
-                var realtimeParameters = new string[]
-                {
-                    // ROI参数
-                    "CenterRow", "CenterCol", "ExpectedRadius",
-                    // 卡尺参数
-                    "CaliperCount", "CaliperLength", "CaliperWidth", 
-                    // 检测参数
-                    "EdgeThreshold", "EdgeTransition", "CaliperProjection", 
-                    "Sigma", "EdgeSelection",
-                    // 高级参数
-                    "MinFitPoints", "FittingAlgorithm", "ClippingFactor",
-                    // 显示选项
-                    "ShowCalipers", "ShowEdgePoints", "ShowFittedCircle"
-                };
+                // 动态获取当前处理器的实时参数列表
+                var realtimeParameters = GetCurrentProcessorRealtimeParameters();
                 
                 // 如果是圆查找算法，处理参数更新
                 if (_currentProcessor is CircleCaliperProcessor)
                 {
                     // ROI参数需要同步更新HDrawingObject
-                    if (_interactiveCaliper != null && 
-                        (e.ParameterName == "CenterRow" || e.ParameterName == "CenterCol" || e.ParameterName == "ExpectedRadius"))
+                    if (_interactiveCaliper != null && IsROIParameter(e.ParameterName))
                     {
                         UpdateInteractiveCaliper();
                     }
                     
-                    // 关键参数需要实时预览算法结果，使用防抖机制
-                    if (realtimeParameters.Contains(e.ParameterName) && _originalImage != null)
-                    {
-                        // 如果定时器已存在，停止并重置
-                        if (_realtimePreviewTimer != null)
-                        {
-                            _realtimePreviewTimer.Stop();
-                        }
-                        else
-                        {
-                            // 初始化防抖定时器
-                            _realtimePreviewTimer = new System.Windows.Threading.DispatcherTimer();
-                            _realtimePreviewTimer.Interval = TimeSpan.FromMilliseconds(50); // 50ms延迟
-                            _realtimePreviewTimer.Tick += async (s, args) =>
-                            {
-                                _realtimePreviewTimer.Stop();
-                                try
-                                {
-                                    await ExecuteCurrentAlgorithm();
-                                }
-                                catch (Exception ex)
-                                {
-                                    UpdateStatus($"实时预览失败: {ex.Message}", true);
-                                }
-                            };
-                        }
-                        
-                        // 启动防抖定时器
-                        _realtimePreviewTimer.Start();
-                    }
+                }
+                
+                // 实时预览触发（适用于所有处理器，受用户配置控制）
+                if (ShouldTriggerRealtimePreview(e.ParameterName, realtimeParameters) && _originalImage != null)
+                {
+                    TriggerRealtimePreview(e.ParameterName);
                 }
             }
             catch (Exception ex)
@@ -452,6 +415,271 @@ namespace VisionLite.Vision.UI.Windows
         
         // 实时预览处理标志，独立于手动执行的处理标志
         private bool _isRealtimeProcessing = false;
+        
+        // 实时预览级别控制
+        private RealtimePreviewLevel _realtimePreviewLevel = RealtimePreviewLevel.All;
+        
+        #region 实时参数处理辅助方法
+        
+        /// <summary>
+        /// 获取当前处理器的实时参数列表
+        /// </summary>
+        /// <returns>实时参数名称数组</returns>
+        private string[] GetCurrentProcessorRealtimeParameters()
+        {
+            if (_currentProcessor == null) 
+                return new string[0];
+                
+            try
+            {
+                return ReflectionCache.GetRealtimeParameters(_currentProcessor.GetType());
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断流程，返回空数组作为降级方案
+                System.Diagnostics.Debug.WriteLine($"获取实时参数失败: {ex.Message}");
+                return new string[0];
+            }
+        }
+        
+        /// <summary>
+        /// 检查是否为ROI参数
+        /// </summary>
+        /// <param name="parameterName">参数名称</param>
+        /// <returns>是否为ROI参数</returns>
+        private bool IsROIParameter(string parameterName)
+        {
+            return parameterName == "CenterRow" || 
+                   parameterName == "CenterCol" || 
+                   parameterName == "ExpectedRadius";
+        }
+        
+        /// <summary>
+        /// 触发实时预览（使用智能防抖机制）
+        /// </summary>
+        /// <param name="changedParameter">发生变化的参数名称</param>
+        private void TriggerRealtimePreview(string changedParameter = null)
+        {
+            // 根据处理器类型计算最优防抖延迟
+            var debounceDelay = CalculateOptimalDebounceDelay();
+            
+            // 如果定时器已存在，停止并更新延迟
+            if (_realtimePreviewTimer != null)
+            {
+                _realtimePreviewTimer.Stop();
+                _realtimePreviewTimer.Interval = TimeSpan.FromMilliseconds(debounceDelay);
+            }
+            else
+            {
+                // 初始化智能防抖定时器
+                _realtimePreviewTimer = new System.Windows.Threading.DispatcherTimer();
+                _realtimePreviewTimer.Interval = TimeSpan.FromMilliseconds(debounceDelay);
+                _realtimePreviewTimer.Tick += async (s, args) =>
+                {
+                    _realtimePreviewTimer.Stop();
+                    try
+                    {
+                        // 使用轻量级预览模式（如果适用）
+                        await ExecuteRealtimePreview(changedParameter);
+                    }
+                    catch (Exception ex)
+                    {
+                        UpdateStatus($"实时预览失败: {ex.Message}", true);
+                    }
+                };
+            }
+            
+            // 启动防抖定时器
+            _realtimePreviewTimer.Start();
+        }
+        
+        /// <summary>
+        /// 执行实时预览（支持轻量级模式）
+        /// </summary>
+        /// <param name="changedParameter">发生变化的参数名称</param>
+        private async Task ExecuteRealtimePreview(string changedParameter)
+        {
+            // 检查是否为显示相关的参数（轻量级预览）
+            if (IsVisualizationParameter(changedParameter))
+            {
+                // 显示参数：仅更新可视化，不重新计算
+                await UpdateVisualizationOnly();
+            }
+            else
+            {
+                // 算法参数：完整重新执行
+                await ExecuteCurrentAlgorithm();
+            }
+        }
+        
+        /// <summary>
+        /// 检查是否为可视化参数（仅影响显示，不影响计算）
+        /// </summary>
+        /// <param name="parameterName">参数名称</param>
+        /// <returns>是否为可视化参数</returns>
+        private bool IsVisualizationParameter(string parameterName)
+        {
+            if (string.IsNullOrEmpty(parameterName))
+                return false;
+                
+            // 显示选项参数，只需更新显示，不需重新计算
+            var visualizationParams = new string[]
+            {
+                "ShowCalipers", "ShowEdgePoints", "ShowFittedCircle",
+                "ShowContours", "ShowResults", "ShowMeasurements"
+            };
+            
+            return visualizationParams.Contains(parameterName);
+        }
+        
+        /// <summary>
+        /// 仅更新可视化显示（轻量级预览）
+        /// </summary>
+        private async Task UpdateVisualizationOnly()
+        {
+            try
+            {
+                // 如果有上次的处理结果，重新显示轮廓
+                if (_lastProcessResult != null && _lastProcessResult.Success)
+                {
+                    await Task.Run(() =>
+                    {
+                        // 在UI线程中更新显示
+                        Dispatcher.Invoke(() =>
+                        {
+                            DisplayHalconContours(_lastProcessResult);
+                        });
+                    });
+                    
+                    UpdateStatus($"显示已更新", false);
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"更新显示失败: {ex.Message}", true);
+            }
+        }
+        
+        /// <summary>
+        /// 根据处理器类型计算最优防抖延迟
+        /// </summary>
+        /// <returns>防抖延迟时间(毫秒)</returns>
+        private int CalculateOptimalDebounceDelay()
+        {
+            if (_currentProcessor == null)
+                return 100; // 默认延迟
+                
+            // 根据处理器复杂度调整防抖延迟
+            switch (_currentProcessor)
+            {
+                case CircleCaliperProcessor _:
+                    return 50;   // 圆卡尺：快速预览，用户交互频繁
+                    
+                // 其他处理器可以根据计算复杂度调整
+                // case ComplexProcessor _:
+                //     return 150;  // 复杂算法：较长延迟
+                    
+                default:
+                    return 75;   // 适中的默认延迟
+            }
+        }
+        
+        /// <summary>
+        /// 判断是否应该触发实时预览
+        /// </summary>
+        /// <param name="parameterName">参数名称</param>
+        /// <param name="realtimeParameters">实时参数列表</param>
+        /// <returns>是否应该触发实时预览</returns>
+        private bool ShouldTriggerRealtimePreview(string parameterName, string[] realtimeParameters)
+        {
+            // 检查用户设置的实时预览级别
+            switch (_realtimePreviewLevel)
+            {
+                case RealtimePreviewLevel.Disabled:
+                    return false; // 禁用所有实时预览
+                    
+                case RealtimePreviewLevel.Essential:
+                    // 仅关键参数：ROI参数和显示参数
+                    return IsEssentialParameter(parameterName);
+                    
+                case RealtimePreviewLevel.All:
+                default:
+                    // 所有标记为实时的参数
+                    return realtimeParameters.Contains(parameterName);
+            }
+        }
+        
+        /// <summary>
+        /// 检查是否为关键参数（Essential级别时使用）
+        /// </summary>
+        /// <param name="parameterName">参数名称</param>
+        /// <returns>是否为关键参数</returns>
+        private bool IsEssentialParameter(string parameterName)
+        {
+            if (string.IsNullOrEmpty(parameterName))
+                return false;
+                
+            // 关键参数：ROI参数和显示参数
+            var essentialParams = new string[]
+            {
+                // ROI相关参数（用户交互频繁）
+                "CenterRow", "CenterCol", "ExpectedRadius",
+                "Width", "Height", "X", "Y", "Angle",
+                
+                // 显示选项（即时视觉反馈重要）
+                "ShowCalipers", "ShowEdgePoints", "ShowFittedCircle",
+                "ShowContours", "ShowResults", "ShowMeasurements"
+            };
+            
+            return essentialParams.Contains(parameterName);
+        }
+        
+        /// <summary>
+        /// 设置实时预览级别
+        /// </summary>
+        /// <param name="level">预览级别</param>
+        public void SetRealtimePreviewLevel(RealtimePreviewLevel level)
+        {
+            _realtimePreviewLevel = level;
+            
+            // 记录设置变化
+            var levelDescription = level switch
+            {
+                RealtimePreviewLevel.Disabled => "禁用",
+                RealtimePreviewLevel.Essential => "仅关键参数",
+                RealtimePreviewLevel.All => "所有参数",
+                _ => "未知"
+            };
+            
+            UpdateStatus($"实时预览级别已设置为: {levelDescription}");
+            
+            // 如果当前有处理器，记录实时参数信息
+            LogRealtimeParameterInfo();
+        }
+        
+        /// <summary>
+        /// 获取当前实时预览级别
+        /// </summary>
+        /// <returns>当前预览级别</returns>
+        public RealtimePreviewLevel GetRealtimePreviewLevel()
+        {
+            return _realtimePreviewLevel;
+        }
+        
+        /// <summary>
+        /// 记录实时参数信息（用于调试）
+        /// </summary>
+        private void LogRealtimeParameterInfo()
+        {
+            if (_currentProcessor != null)
+            {
+                var cacheInfo = ReflectionCache.GetCacheInfo(_currentProcessor.GetType());
+                var levelInfo = $"当前级别: {_realtimePreviewLevel}";
+                System.Diagnostics.Debug.WriteLine($"实时参数信息: {cacheInfo}, {levelInfo}");
+            }
+        }
+        
+        #endregion
         
         /// <summary>
         /// 更新交互式卡尺ROI

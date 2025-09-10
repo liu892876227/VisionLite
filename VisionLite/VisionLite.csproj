@@ -184,7 +184,9 @@
     <Compile Include="Vision\Core\Models\CaliperData.cs" />
     <Compile Include="Vision\Core\Models\HalconDisplayContours.cs" />
     <Compile Include="Vision\Core\Enums\CaliperEnums.cs" />
+    <Compile Include="Vision\Core\Enums\RealtimePreviewEnums.cs" />
     <Compile Include="Vision\Core\Attributes\ParameterAttribute.cs" />
+    <Compile Include="Vision\Core\Utils\ReflectionCache.cs" />
     <Compile Include="Vision\Core\Base\VisionProcessorBase.cs" />
     <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\GaussianFilterProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\MedianFilterProcessor.cs" />
