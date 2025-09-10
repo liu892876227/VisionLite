@@ -8,23 +8,15 @@ namespace VisionLite.Vision.Core.Enums
     /// </summary>
     public enum EdgeTransition
     {
-        /// <summary>正向边缘（从暗到亮）</summary>
-        [Description("正向边缘")]
+        /// <summary>从暗到亮边缘（检测白色/亮色目标）</summary>
+        [Description("从暗到亮")]
         Positive,
         
-        /// <summary>从正值到负值的边缘</summary>
-        [Description("正值到负值")]
-        PositiveToNegative,
-        
-        /// <summary>从负值到正值的边缘</summary>
-        [Description("负值到正值")]
-        NegativeToPositive,
-        
-        /// <summary>负向边缘（从亮到暗）</summary>
-        [Description("负向边缘")]
+        /// <summary>从亮到暗边缘（检测黑色/暗色目标）</summary>
+        [Description("从亮到暗")]
         Negative,
         
-        /// <summary>所有边缘（正向和负向）</summary>
+        /// <summary>所有边缘（通用检测）</summary>
         [Description("所有边缘")]
         All
     }
@@ -48,11 +40,7 @@ namespace VisionLite.Vision.Core.Enums
         
         /// <summary>选择最强的边缘</summary>
         [Description("最强边缘")]
-        Strongest,
-        
-        /// <summary>选择最大的边缘</summary>
-        [Description("最大边缘")]
-        Largest
+        Strongest
     }
     
     /// <summary>
@@ -118,21 +106,25 @@ namespace VisionLite.Vision.Core.Enums
         [Description("代数拟合")]
         Algebraic,
         
-        /// <summary>最小二乘法</summary>
-        [Description("最小二乘法")]
-        LeastSquares,
-        
-        /// <summary>回归拟合</summary>
-        [Description("回归拟合")]
-        Regression,
-        
         /// <summary>几何拟合（精度高）</summary>
         [Description("几何拟合")]
         Geometric,
         
-        /// <summary>鲁棒拟合（抗干扰强）</summary>
-        [Description("鲁棒拟合")]
-        Tukey
+        /// <summary>自适应Huber拟合（抗噪声）</summary>
+        [Description("自适应Huber")]
+        AHuber,
+        
+        /// <summary>自适应Tukey拟合（抗异常点）</summary>
+        [Description("自适应Tukey")]
+        ATukey,
+        
+        /// <summary>几何Huber拟合（精度+抗噪声）</summary>
+        [Description("几何Huber")]
+        GeoHuber,
+        
+        /// <summary>几何Tukey拟合（精度+抗异常点）</summary>
+        [Description("几何Tukey")]
+        GeoTukey
     }
     
     /// <summary>

@@ -385,11 +385,13 @@ namespace VisionLite.Vision.UI.Windows
                 {
                     // ROI参数
                     "CenterRow", "CenterCol", "ExpectedRadius",
-                    // 核心算法参数
+                    // 卡尺参数
                     "CaliperCount", "CaliperLength", "CaliperWidth", 
-                    "EdgeThreshold", "EdgeTransition", "CaliperProjection",
+                    // 检测参数
+                    "EdgeThreshold", "EdgeTransition", "CaliperProjection", 
+                    "Sigma", "EdgeSelection",
                     // 高级参数
-                    "MinFitPoints",
+                    "MinFitPoints", "FittingAlgorithm", "ClippingFactor",
                     // 显示选项
                     "ShowCalipers", "ShowEdgePoints", "ShowFittedCircle"
                 };
@@ -1733,10 +1735,10 @@ namespace VisionLite.Vision.UI.Windows
                     contoursObj is HalconDisplayContours displayContours)
                 {
                     
-                    // 先显示测量轮廓（绿色卡尺线）
+                    // 先显示测量轮廓（蓝色卡尺线）
                     if (displayContours.MeasureContours != null)
                     {
-                        HalconDisplay.HalconWindow.SetColor("green");
+                        HalconDisplay.HalconWindow.SetColor("blue");
                         HalconDisplay.HalconWindow.SetLineWidth(1);
                         HalconDisplay.HalconWindow.DispObj(displayContours.MeasureContours);
                     }

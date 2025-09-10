@@ -96,21 +96,33 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         public int MinFitPoints { get; set; } = 3;
 
         /// <summary>
+        /// 拟合算法
+        /// </summary>
+        [Parameter("拟合算法", "圆拟合使用的算法类型", Order = 12, Group = "高级参数", IsAdvanced = true)]
+        public FittingAlgorithm FittingAlgorithm { get; set; } = FittingAlgorithm.GeoHuber;
+
+        /// <summary>
+        /// 异常点抑制因子
+        /// </summary>
+        [Parameter("异常点抑制因子", "Huber/Tukey算法的异常点检测敏感度，值越小检测越严格", Order = 13, Group = "高级参数", MinValue = 0.5, MaxValue = 5.0, IsAdvanced = true)]
+        public double ClippingFactor { get; set; } = 2.0;
+
+        /// <summary>
         /// 显示卡尺
         /// </summary>
-        [Parameter("显示卡尺", "是否显示卡尺矩形", Order = 12, Group = "显示选项")]
+        [Parameter("显示卡尺", "是否显示卡尺矩形", Order = 14, Group = "显示选项")]
         public bool ShowCalipers { get; set; } = true;
 
         /// <summary>
         /// 显示边缘点
         /// </summary>
-        [Parameter("显示边缘点", "是否显示检测到的边缘点", Order = 13, Group = "显示选项")]
+        [Parameter("显示边缘点", "是否显示检测到的边缘点", Order = 15, Group = "显示选项")]
         public bool ShowEdgePoints { get; set; } = true;
 
         /// <summary>
         /// 显示拟合圆
         /// </summary>
-        [Parameter("显示拟合圆", "是否显示拟合的圆", Order = 14, Group = "显示选项")]
+        [Parameter("显示拟合圆", "是否显示拟合的圆", Order = 16, Group = "显示选项")]
         public bool ShowFittedCircle { get; set; } = true;
 
         #endregion
@@ -663,12 +675,12 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                 // 步骤3：拟合圆
                 HOperatorSet.FitCircleContourXld(
                     contour,                    // 输入轮廓
-                    "algebraic",                // 拟合算法（"algebraic" 或 "geometric"）
+                    GetFittingAlgorithmString(),// 拟合算法
                     -1,                         // 最大迭代次数（-1表示自动）
                     0,                          // 随机采样点数（0表示使用所有点）
                     0,                          // 随机种子
-                    3,                          // 最小点数
-                    2,                          // 最大异常点比例
+                    MinFitPoints,               // 最小点数
+                    ClippingFactor,             // 异常点抑制因子
                     out HTuple centerRow,       // 拟合圆心行坐标
                     out HTuple centerCol,       // 拟合圆心列坐标
                     out HTuple radius,          // 拟合半径
@@ -953,7 +965,24 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                 EdgeSelection.First => "first",
                 EdgeSelection.Last => "last",
                 EdgeSelection.All => "all",
-                _ => "first"
+                EdgeSelection.Strongest => "all" // Halcon中先获取所有边缘，后处理选择最强的
+            };
+        }
+
+        /// <summary>
+        /// 获取拟合算法字符串
+        /// </summary>
+        /// <returns>Halcon拟合算法参数</returns>
+        private string GetFittingAlgorithmString()
+        {
+            return FittingAlgorithm switch
+            {
+                FittingAlgorithm.Algebraic => "algebraic",
+                FittingAlgorithm.Geometric => "geometric",
+                FittingAlgorithm.AHuber => "ahuber",
+                FittingAlgorithm.ATukey => "atukey",
+                FittingAlgorithm.GeoHuber => "geohuber",
+                FittingAlgorithm.GeoTukey => "geotukey"
             };
         }
 
