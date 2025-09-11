@@ -59,6 +59,7 @@ namespace VisionLite.Vision.UI.Windows
             _algorithmProcessors = new Dictionary<string, IVisionProcessor>();
             InitializeAlgorithms();
             
+            
             // 设置窗口加载事件
             this.Loaded += VisionToolWindow_Loaded;
         }
@@ -218,18 +219,6 @@ namespace VisionLite.Vision.UI.Windows
                     throw new InvalidOperationException("直方图均衡处理器参数获取失败");
                 }
                 
-                // 注册边缘卡尺算法
-                var edgeCaliperProcessor = new EdgeCaliperProcessor();
-                var edgeCaliperParams = edgeCaliperProcessor.GetParameters();
-                if (edgeCaliperParams != null)
-                {
-                    _algorithmProcessors["EdgeCaliper"] = edgeCaliperProcessor;
-                }
-                else
-                {
-                    throw new InvalidOperationException("边缘卡尺处理器参数获取失败");
-                }
-                
                 // 注册圆形卡尺算法
                 var circleCaliperProcessor = new CircleCaliperProcessor();
                 var circleCaliperParams = circleCaliperProcessor.GetParameters();
@@ -240,6 +229,18 @@ namespace VisionLite.Vision.UI.Windows
                 else
                 {
                     throw new InvalidOperationException("圆形卡尺处理器参数获取失败");
+                }
+                
+                // 注册直线卡尺算法
+                var lineCaliperProcessor = new LineCaliperProcessor();
+                var lineCaliperParams = lineCaliperProcessor.GetParameters();
+                if (lineCaliperParams != null)
+                {
+                    _algorithmProcessors["LineCaliper"] = lineCaliperProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("直线卡尺处理器参数获取失败");
                 }
                 
                 
@@ -347,17 +348,18 @@ namespace VisionLite.Vision.UI.Windows
         {
             if (sender is TreeViewItem item && item.Tag is string algorithmKey)
             {
+                
                 SelectAlgorithm(algorithmKey);
                 
-                // 对于边缘查找算法，初始化交互式卡尺
-                if (algorithmKey == "EdgeCaliper")
-                {
-                    InitializeInteractiveEdgeCaliper();
-                }
                 // 对于圆查找算法，初始化交互式圆形卡尺
-                else if (algorithmKey == "CircleCaliper")
+                if (algorithmKey == "CircleCaliper")
                 {
                     InitializeInteractiveCircleCaliper();
+                }
+                // 对于直线查找算法，初始化交互式直线卡尺
+                else if (algorithmKey == "LineCaliper")
+                {
+                    InitializeInteractiveLineCaliper();
                 }
             }
         }
@@ -393,6 +395,11 @@ namespace VisionLite.Vision.UI.Windows
                         UpdateInteractiveCaliper();
                     }
                     
+                    // 立即显示卡尺工具的实时预览（参数面板修改）
+                    if (IsROIParameter(e.ParameterName) && _hImage != null)
+                    {
+                        ShowRealtimeCaliperPreview();
+                    }
                 }
                 
                 // 实时预览触发（适用于所有处理器，受用户配置控制）
@@ -434,10 +441,9 @@ namespace VisionLite.Vision.UI.Windows
             {
                 return ReflectionCache.GetRealtimeParameters(_currentProcessor.GetType());
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 记录错误但不中断流程，返回空数组作为降级方案
-                System.Diagnostics.Debug.WriteLine($"获取实时参数失败: {ex.Message}");
                 return new string[0];
             }
         }
@@ -451,7 +457,11 @@ namespace VisionLite.Vision.UI.Windows
         {
             return parameterName == "CenterRow" || 
                    parameterName == "CenterCol" || 
-                   parameterName == "ExpectedRadius";
+                   parameterName == "ExpectedRadius" ||
+                   parameterName == "StartRow" ||
+                   parameterName == "StartCol" ||
+                   parameterName == "EndRow" ||
+                   parameterName == "EndCol";
         }
         
         /// <summary>
@@ -463,30 +473,33 @@ namespace VisionLite.Vision.UI.Windows
             // 根据处理器类型计算最优防抖延迟
             var debounceDelay = CalculateOptimalDebounceDelay();
             
-            // 如果定时器已存在，停止并更新延迟
-            if (_realtimePreviewTimer != null)
+            // 标准防抖机制：重用定时器对象
+            if (_realtimePreviewTimer == null)
             {
-                _realtimePreviewTimer.Stop();
-                _realtimePreviewTimer.Interval = TimeSpan.FromMilliseconds(debounceDelay);
+                // 仅第一次创建定时器，使用构造函数一次性设置所有参数
+                _realtimePreviewTimer = new System.Windows.Threading.DispatcherTimer(
+                    TimeSpan.FromMilliseconds(debounceDelay),
+                    System.Windows.Threading.DispatcherPriority.Normal,
+                    async (s, args) =>
+                    {
+                        _realtimePreviewTimer.Stop();
+                        try
+                        {
+                            // 使用轻量级预览模式（如果适用）
+                            await ExecuteRealtimePreview(changedParameter);
+                        }
+                        catch (Exception ex)
+                        {
+                            UpdateStatus($"实时预览失败: {ex.Message}", true);
+                        }
+                    },
+                    Dispatcher);
             }
             else
             {
-                // 初始化智能防抖定时器
-                _realtimePreviewTimer = new System.Windows.Threading.DispatcherTimer();
+                // 重用现有定时器，只需停止并更新延迟
+                _realtimePreviewTimer.Stop();
                 _realtimePreviewTimer.Interval = TimeSpan.FromMilliseconds(debounceDelay);
-                _realtimePreviewTimer.Tick += async (s, args) =>
-                {
-                    _realtimePreviewTimer.Stop();
-                    try
-                    {
-                        // 使用轻量级预览模式（如果适用）
-                        await ExecuteRealtimePreview(changedParameter);
-                    }
-                    catch (Exception ex)
-                    {
-                        UpdateStatus($"实时预览失败: {ex.Message}", true);
-                    }
-                };
             }
             
             // 启动防抖定时器
@@ -525,7 +538,7 @@ namespace VisionLite.Vision.UI.Windows
             // 显示选项参数，只需更新显示，不需重新计算
             var visualizationParams = new string[]
             {
-                "ShowCalipers", "ShowEdgePoints", "ShowFittedCircle",
+                "ShowCalipers", "ShowFittedCircle",
                 "ShowContours", "ShowResults", "ShowMeasurements"
             };
             
@@ -627,7 +640,7 @@ namespace VisionLite.Vision.UI.Windows
                 "Width", "Height", "X", "Y", "Angle",
                 
                 // 显示选项（即时视觉反馈重要）
-                "ShowCalipers", "ShowEdgePoints", "ShowFittedCircle",
+                "ShowCalipers", "ShowFittedCircle",
                 "ShowContours", "ShowResults", "ShowMeasurements"
             };
             
@@ -675,7 +688,6 @@ namespace VisionLite.Vision.UI.Windows
             {
                 var cacheInfo = ReflectionCache.GetCacheInfo(_currentProcessor.GetType());
                 var levelInfo = $"当前级别: {_realtimePreviewLevel}";
-                System.Diagnostics.Debug.WriteLine($"实时参数信息: {cacheInfo}, {levelInfo}");
             }
         }
         
@@ -698,24 +710,12 @@ namespace VisionLite.Vision.UI.Windows
                     var centerCol = processor.CenterCol;
                     var radius = processor.ExpectedRadius;
                     
-                    // 清理之前的显示，避免出现重叠的ROI
-                    if (_hImage != null)
-                    {
-                        HalconDisplay.HalconWindow.ClearWindow();
-                        HalconDisplay.HalconWindow.DispObj(_hImage);
-                    }
-                    
-                    // 更新HDrawingObject参数
+                    // 只更新HDrawingObject参数，不重绘整个窗口（优化性能）
                     _interactiveCaliper.SetDrawingObjectParams("row", centerRow);
                     _interactiveCaliper.SetDrawingObjectParams("column", centerCol);
                     _interactiveCaliper.SetDrawingObjectParams("radius", radius);
                     
-                    // 验证更新是否成功
-                    HTuple newRow = _interactiveCaliper.GetDrawingObjectParams("row");
-                    HTuple newCol = _interactiveCaliper.GetDrawingObjectParams("column");
-                    HTuple newRadius = _interactiveCaliper.GetDrawingObjectParams("radius");
-                    
-                    UpdateStatus($"ROI已更新: 圆心({newRow.D:F1}, {newCol.D:F1}) 半径:{newRadius.D:F1}");
+                    UpdateStatus($"ROI已更新: 圆心({centerRow:F1}, {centerCol:F1}) 半径:{radius:F1}");
                 }
             }
             catch (Exception ex)
@@ -757,11 +757,19 @@ namespace VisionLite.Vision.UI.Windows
         {
             try
             {
-                // 清理防抖定时器
+                // 清理防抖定时器（标准防抖清理流程）
                 if (_realtimePreviewTimer != null)
                 {
                     _realtimePreviewTimer.Stop();
+                    // 不需要显式取消事件订阅，因为使用构造函数设置的回调会随对象一起释放
                     _realtimePreviewTimer = null;
+                }
+                
+                // 清理ROI防抖定时器
+                if (_roiDebounceTimer != null)
+                {
+                    _roiDebounceTimer.Stop();
+                    _roiDebounceTimer = null;
                 }
                 
                 // 释放图像资源
@@ -837,13 +845,16 @@ namespace VisionLite.Vision.UI.Windows
         {
             try
             {
+                
                 if (_algorithmProcessors.TryGetValue(algorithmKey, out var processor))
                 {
+                    
                     // 算法切换时自动清理之前的状态
                     ResetToInitialState();
                     
                     _currentProcessor = processor;
                     CurrentAlgorithmText.Text = processor.ProcessorName;
+                    
                     
                     // 设置参数面板
                     if (AlgorithmParameterPanel != null)
@@ -889,43 +900,8 @@ namespace VisionLite.Vision.UI.Windows
                 // 应用参数面板的设置到处理器
                 AlgorithmParameterPanel.ApplyParametersToProcessor();
                 
-                // 对于边缘查找算法，从HDrawingObject获取参数
-                if (_currentProcessor is EdgeCaliperProcessor edgeProcessor && _interactiveCaliper != null)
-                {
-                    try
-                    {
-                        // 从HDrawingObject获取参数
-                        HTuple param = _interactiveCaliper.GetDrawingObjectParams("row");
-                        double row = param.D;
-                        
-                        param = _interactiveCaliper.GetDrawingObjectParams("column");
-                        double col = param.D;
-                        
-                        param = _interactiveCaliper.GetDrawingObjectParams("phi");
-                        double phi = param.D;
-                        
-                        param = _interactiveCaliper.GetDrawingObjectParams("length1");
-                        double len1 = param.D;
-                        
-                        param = _interactiveCaliper.GetDrawingObjectParams("length2");
-                        double len2 = param.D;
-                        
-                        // 设置EdgeCaliperProcessor的参数
-                        edgeProcessor.SetParameter("CenterRow", row);
-                        edgeProcessor.SetParameter("CenterCol", col);
-                        edgeProcessor.SetParameter("Phi", phi * 180.0 / Math.PI); // 转换为度数
-                        edgeProcessor.SetParameter("Length1", len1);
-                        edgeProcessor.SetParameter("Length2", len2);
-                        
-                        UpdateStatus($"卡尺参数: 中心({row:F1},{col:F1}) 角度:{phi * 180.0 / Math.PI:F1}° 长度:{len1:F1}x{len2:F1}");
-                    }
-                    catch (Exception ex)
-                    {
-                        UpdateStatus($"获取卡尺参数失败: {ex.Message}");
-                    }
-                }
                 // 对于圆形查找算法，从HDrawingObject获取参数
-                else if (_currentProcessor is CircleCaliperProcessor circleProcessor && _interactiveCaliper != null)
+                if (_currentProcessor is CircleCaliperProcessor circleProcessor && _interactiveCaliper != null)
                 {
                     try
                     {
@@ -949,6 +925,38 @@ namespace VisionLite.Vision.UI.Windows
                     catch (Exception ex)
                     {
                         UpdateStatus($"获取圆形参数失败: {ex.Message}");
+                    }
+                }
+                
+                // 对于直线查找算法，从HDrawingObject获取参数
+                if (_currentProcessor is LineCaliperProcessor lineProcessor && _interactiveCaliper != null)
+                {
+                    try
+                    {
+                        // 从HDrawingObject获取直线参数
+                        HTuple param = _interactiveCaliper.GetDrawingObjectParams("row1");
+                        double row1 = param.D;
+                        
+                        param = _interactiveCaliper.GetDrawingObjectParams("column1");
+                        double col1 = param.D;
+                        
+                        param = _interactiveCaliper.GetDrawingObjectParams("row2");
+                        double row2 = param.D;
+                        
+                        param = _interactiveCaliper.GetDrawingObjectParams("column2");
+                        double col2 = param.D;
+                        
+                        // 设置LineCaliperProcessor的参数
+                        lineProcessor.SetParameter("StartRow", row1);
+                        lineProcessor.SetParameter("StartCol", col1);
+                        lineProcessor.SetParameter("EndRow", row2);
+                        lineProcessor.SetParameter("EndCol", col2);
+                        
+                        UpdateStatus($"直线参数: 起点({row1:F1},{col1:F1}) 终点({row2:F1},{col2:F1})");
+                    }
+                    catch (Exception ex)
+                    {
+                        UpdateStatus($"获取直线参数失败: {ex.Message}");
                     }
                 }
                 
@@ -1040,6 +1048,7 @@ namespace VisionLite.Vision.UI.Windows
             _hResultImage?.Dispose();
             _resultImage = null;
             _hResultImage = null;
+            _lastProcessResult = null; // 确保清除上一次结果
             
             ClearResultInfo();
             
@@ -1152,22 +1161,30 @@ namespace VisionLite.Vision.UI.Windows
             // 几何元素
             if (result.GeometryElements != null && result.GeometryElements.Count > 0)
             {
-                var geometryHeader = new TextBlock
+                // 【关键修改】在显示之前，从列表中过滤掉所有的 PointElement
+                var elementsToReport = result.GeometryElements.Where(elem => !(elem is PointElement)).ToList();
+
+                // 只在有需要报告的元素时，才显示标题和内容
+                if (elementsToReport.Any())
                 {
-                    Text = $"检测到的几何元素 ({result.GeometryElements.Count}个):",
-                    FontWeight = FontWeights.Bold,
-                    Margin = new Thickness(0, 10, 0, 5)
-                };
-                ResultInfoPanel.Children.Add(geometryHeader);
-                
-                foreach (var element in result.GeometryElements)
-                {
-                    var elementText = new TextBlock
+                    var geometryHeader = new TextBlock
                     {
-                        Text = $"  • {element}",
-                        Margin = new Thickness(10, 0, 0, 2)
+                        Text = $"检测到的几何元素 ({elementsToReport.Count}个):",
+                        FontWeight = FontWeights.Bold,
+                        Margin = new Thickness(0, 10, 0, 5)
                     };
-                    ResultInfoPanel.Children.Add(elementText);
+                    ResultInfoPanel.Children.Add(geometryHeader);
+
+                    // 遍历过滤后的列表
+                    foreach (var element in elementsToReport)
+                    {
+                        var elementText = new TextBlock
+                        {
+                            Text = $"  • {element}",
+                            Margin = new Thickness(10, 0, 0, 2)
+                        };
+                        ResultInfoPanel.Children.Add(elementText);
+                    }
                 }
             }
         }
@@ -1339,21 +1356,26 @@ namespace VisionLite.Vision.UI.Windows
         /// <summary>
         /// 执行实时算法预览（轻量级版本，不阻塞手动执行）
         /// </summary>
-        private async Task ExecuteRealtimeAlgorithm()
+        private async Task ExecuteRealtimeAlgorithm(int timerId = 0)
         {
             if (_currentProcessor == null || _originalImage == null)
                 return;
                 
             try
             {
+                var algorithmStartTime = DateTime.Now;
+                
                 // 应用参数面板的设置到处理器
+                var applyStartTime = DateTime.Now;
                 AlgorithmParameterPanel.ApplyParametersToProcessor();
+                var applyTime = (DateTime.Now - applyStartTime).TotalMilliseconds;
                 
                 // 对于圆形查找算法，从HDrawingObject获取参数
                 if (_currentProcessor is CircleCaliperProcessor circleProcessor && _interactiveCaliper != null)
                 {
                     try
                     {
+                        var roiParamStartTime = DateTime.Now;
                         // 从HDrawingObject获取参数
                         HTuple param = _interactiveCaliper.GetDrawingObjectParams("row");
                         double row = param.D;
@@ -1368,18 +1390,53 @@ namespace VisionLite.Vision.UI.Windows
                         circleProcessor.SetParameter("CenterRow", row);
                         circleProcessor.SetParameter("CenterCol", col);
                         circleProcessor.SetParameter("ExpectedRadius", radius);
+                        
+                        var roiParamTime = (DateTime.Now - roiParamStartTime).TotalMilliseconds;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        UpdateStatus($"获取圆形参数失败: {ex.Message}");
+                    }
+                }
+                
+                // 对于直线查找算法，从HDrawingObject获取参数
+                if (_currentProcessor is LineCaliperProcessor lineProcessor && _interactiveCaliper != null)
+                {
+                    try
+                    {
+                        // 从HDrawingObject获取直线参数
+                        HTuple param = _interactiveCaliper.GetDrawingObjectParams("row1");
+                        double row1 = param.D;
+                        
+                        param = _interactiveCaliper.GetDrawingObjectParams("column1");
+                        double col1 = param.D;
+                        
+                        param = _interactiveCaliper.GetDrawingObjectParams("row2");
+                        double row2 = param.D;
+                        
+                        param = _interactiveCaliper.GetDrawingObjectParams("column2");
+                        double col2 = param.D;
+                        
+                        // 设置LineCaliperProcessor的参数
+                        lineProcessor.SetParameter("StartRow", row1);
+                        lineProcessor.SetParameter("StartCol", col1);
+                        lineProcessor.SetParameter("EndRow", row2);
+                        lineProcessor.SetParameter("EndCol", col2);
+                    }
+                    catch (Exception)
+                    {
+                        // 忽略参数获取异常
                     }
                 }
                 
                 // 执行算法
+                var processStartTime = DateTime.Now;
                 ProcessResult result = await _currentProcessor.ProcessAsync(_originalImage);
+                var processTime = (DateTime.Now - processStartTime).TotalMilliseconds;
                 
                 if (result.Success)
                 {
+                    var displayStartTime = DateTime.Now;
+                    
                     // 保存处理结果用于重新显示轮廓
                     _lastProcessResult = result;
                     
@@ -1389,45 +1446,50 @@ namespace VisionLite.Vision.UI.Windows
                     _resultImage = result.OutputImage;
                     _hResultImage = _resultImage.HImage.Clone();
                     
+                    var imageSetupTime = (DateTime.Now - displayStartTime).TotalMilliseconds;
+                    
                     // 无论什么模式，都要先清除之前的显示内容，防止重叠
+                    var clearStartTime = DateTime.Now;
                     HalconDisplay.HalconWindow.ClearWindow();
+                    var clearTime = (DateTime.Now - clearStartTime).TotalMilliseconds;
                     
                     // 显示结果图像
+                    var dispStartTime = DateTime.Now;
                     if (ResultImageMode.IsChecked == true)
                     {
                         // 显示处理后的图像
                         HalconDisplay.HalconWindow.DispObj(_hResultImage);
-                        // 不调用SetPart，保持用户设置的显示区域
-                        
-                        // 显示Halcon原生轮廓（如果是圆形卡尺结果）
-                        DisplayHalconContours(result);
-                        
-                        // 绘制几何元素（用于其他算法的兼容）
-                        DrawGeometryElements(result.GeometryElements);
                     }
                     else
                     {
                         // 显示原始图像
                         HalconDisplay.HalconWindow.DispObj(_hImage);
-                        // 不调用SetPart，保持用户设置的显示区域
-                        
-                        // 显示Halcon原生轮廓（如果是圆形卡尺结果）
-                        DisplayHalconContours(result);
-                        
-                        // 绘制几何元素（用于其他算法的兼容）
-                        DrawGeometryElements(result.GeometryElements);
                     }
+                    var dispTime = (DateTime.Now - dispStartTime).TotalMilliseconds;
+                    
+                    // 显示Halcon原生轮廓（如果是圆形卡尺结果）
+                    var contourStartTime = DateTime.Now;
+                    DisplayHalconContours(result);
+                    var contourTime = (DateTime.Now - contourStartTime).TotalMilliseconds;
+                    
+                    // 绘制几何元素（用于其他算法的兼容）
+                    DrawGeometryElements(result.GeometryElements);
+                    
                     
                     // 显示结果信息
                     DisplayResultInfo(result);
                     
                     // 切换到结果显示模式
                     ResultImageMode.IsChecked = true;
+                    
+                    var totalAlgorithmTime = (DateTime.Now - algorithmStartTime).TotalMilliseconds;
+                }
+                else
+                {
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                UpdateStatus($"实时预览失败: {ex.Message}", true);
             }
         }
         
@@ -1460,8 +1522,7 @@ namespace VisionLite.Vision.UI.Windows
                     _interactiveCaliper = null;
                 }
                 
-                // 3. 清除显示内容并切换到原始图像模式
-                HalconDisplay.HalconWindow.ClearWindow();
+                // 3. 切换到原始图像模式
                 OriginalImageMode.IsChecked = true;
                 if (_hImage != null)
                 {
@@ -1515,49 +1576,6 @@ namespace VisionLite.Vision.UI.Windows
         
         #region HDrawingObject交互系统
         
-        /// <summary>
-        /// 初始化交互式边缘卡尺工具
-        /// </summary>
-        private void InitializeInteractiveEdgeCaliper()
-        {
-            if (_hImage == null) return;
-
-            // 清理之前的交互对象
-            CleanupInteractiveCaliper();
-
-            try
-            {
-                // 获取图像尺寸设定初始参数
-                HOperatorSet.GetImageSize(_hImage, out HTuple imageWidth, out HTuple imageHeight);
-                double centerRow = imageHeight[0].D / 2.0;
-                double centerCol = imageWidth[0].D / 2.0;
-                double initialLength1 = Math.Min(imageHeight[0].D, imageWidth[0].D) * 0.1;
-                double initialLength2 = Math.Min(imageHeight[0].D, imageWidth[0].D) * 0.05;
-
-                // 创建HDrawingObject
-                _interactiveCaliper = HDrawingObject.CreateDrawingObject(
-                    HDrawingObject.HDrawingObjectType.RECTANGLE2,
-                    centerRow, centerCol, 0, initialLength1, initialLength2);
-
-                // 设置样式 - 设为很细的白色线条，尽量不干扰显示
-                _interactiveCaliper.SetDrawingObjectParams("color", "white");
-                _interactiveCaliper.SetDrawingObjectParams("line_width", 1);
-
-                // 附加到窗口
-                HalconDisplay.HalconWindow.AttachDrawingObjectToWindow(_interactiveCaliper);
-
-                // 订阅事件
-                _interactiveCaliper.OnDrag(OnCaliperUpdate);
-                _interactiveCaliper.OnResize(OnCaliperUpdate);
-                _interactiveCaliper.OnSelect(OnCaliperUpdate);
-
-                UpdateStatus("交互式卡尺已激活，请拖动调整卡尺位置和大小");
-            }
-            catch (Exception ex)
-            {
-                UpdateStatus($"初始化交互式卡尺失败: {ex.Message}", true);
-            }
-        }
 
         /// <summary>
         /// 初始化交互式圆形卡尺
@@ -1598,20 +1616,88 @@ namespace VisionLite.Vision.UI.Windows
                 // 设置样式 - 绿色圆圈，便于识别
                 _interactiveCaliper.SetDrawingObjectParams("color", "green");
                 _interactiveCaliper.SetDrawingObjectParams("line_width", 2);
+                _interactiveCaliper.SetDrawingObjectParams("marker_size", 15);
 
                 // 附加到窗口
                 HalconDisplay.HalconWindow.AttachDrawingObjectToWindow(_interactiveCaliper);
 
-                // 订阅事件
-                _interactiveCaliper.OnDrag(OnCircleCaliperUpdate);
-                _interactiveCaliper.OnResize(OnCircleCaliperUpdate);
-                _interactiveCaliper.OnSelect(OnCircleCaliperUpdate);
+                // 订阅HDrawingObject事件
+                _interactiveCaliper.OnDrag(OnCircleCaliperDragging);      // 拖动中：只更新参数
+                _interactiveCaliper.OnResize(OnCircleCaliperDragging);    // 大小调整中：只更新参数
 
                 UpdateStatus($"交互式圆形卡尺已激活: 中心({centerRow:F1},{centerCol:F1}) 半径:{initialRadius:F1}");
             }
             catch (Exception ex)
             {
                 UpdateStatus($"初始化交互式圆形卡尺失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 初始化交互式直线卡尺
+        /// </summary>
+        private void InitializeInteractiveLineCaliper()
+        {
+            if (_hImage == null) return;
+
+            // 清理之前的交互对象
+            CleanupInteractiveCaliper();
+
+            try
+            {
+                // 获取图像尺寸设定初始参数
+                HOperatorSet.GetImageSize(_hImage, out HTuple imageWidth, out HTuple imageHeight);
+                double centerRow = imageHeight[0].D / 2.0;
+                double centerCol = imageWidth[0].D / 2.0;
+                double lineLength = Math.Min(imageHeight[0].D, imageWidth[0].D) * 0.3;
+
+                // 计算默认直线的起点和终点（水平方向）
+                double startRow = centerRow;
+                double startCol = centerCol - lineLength / 2;
+                double endRow = centerRow;
+                double endCol = centerCol + lineLength / 2;
+
+                // 同步动态计算的参数到处理器
+                if (_currentProcessor is LineCaliperProcessor processor)
+                {
+                    processor.StartRow = startRow;
+                    processor.StartCol = startCol;
+                    processor.EndRow = endRow;
+                    processor.EndCol = endCol;
+                }
+
+                // 同步动态计算的参数到参数面板(静默更新，不触发事件)
+                AlgorithmParameterPanel.UpdateParameterValueSilently("起点Row", startRow);
+                AlgorithmParameterPanel.UpdateParameterValueSilently("起点Col", startCol);
+                AlgorithmParameterPanel.UpdateParameterValueSilently("终点Row", endRow);
+                AlgorithmParameterPanel.UpdateParameterValueSilently("终点Col", endCol);
+
+                // 创建直线HDrawingObject
+                _interactiveCaliper = HDrawingObject.CreateDrawingObject(
+                    HDrawingObject.HDrawingObjectType.LINE,
+                    startRow, startCol, endRow, endCol);
+
+                // 设置样式 - 绿色直线，便于识别
+                _interactiveCaliper.SetDrawingObjectParams("color", "green");
+                _interactiveCaliper.SetDrawingObjectParams("line_width", 2);
+                _interactiveCaliper.SetDrawingObjectParams("marker_size", 15);
+
+                // 附加到窗口
+                HalconDisplay.HalconWindow.AttachDrawingObjectToWindow(_interactiveCaliper);
+
+                // 订阅HDrawingObject事件
+                _interactiveCaliper.OnDrag(OnLineCaliperDragging);      // 拖动中：只更新参数
+                _interactiveCaliper.OnResize(OnLineCaliperDragging);    // 大小调整中：只更新参数
+                _interactiveCaliper.OnSelect(OnLineCaliperUpdate);      // 拖动结束：执行算法
+
+                // 初始显示卡尺预览
+                ShowRealtimeLineCaliperPreview();
+
+                UpdateStatus($"交互式直线卡尺已激活: 起点({startRow:F1},{startCol:F1}) 终点({endRow:F1},{endCol:F1})");
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus($"初始化交互式直线卡尺失败: {ex.Message}", true);
             }
         }
 
@@ -1631,8 +1717,7 @@ namespace VisionLite.Vision.UI.Windows
                     HTuple len1 = _interactiveCaliper.GetDrawingObjectParams("length1");
                     HTuple len2 = _interactiveCaliper.GetDrawingObjectParams("length2");
 
-                    // 实时预览
-                    RunRealtimeEdgePreview(row.D, col.D, phi.D, len1.D, len2.D);
+                    // 实时预览已移除边缘检测功能
                 }
                 catch (Exception ex)
                 {
@@ -1641,10 +1726,141 @@ namespace VisionLite.Vision.UI.Windows
             });
         }
 
+        // 调试信息：ROI更新计数器
+        private int _roiUpdateCount = 0;
+        private DateTime _lastRoiUpdateTime = DateTime.MinValue;
+        
+        
+        
+
+        // ROI防抖机制
+        private System.Windows.Threading.DispatcherTimer _roiDebounceTimer;
+        private const int DEBOUNCE_DELAY_MS = 50;
+        
         /// <summary>
-        /// 圆形卡尺更新回调
+        /// 圆形卡尺拖动回调（标准防抖机制）
         /// </summary>
-        private void OnCircleCaliperUpdate(HDrawingObject dobj, HWindow hwin, string type)
+        private void OnCircleCaliperDragging(HDrawingObject dobj, HWindow hwin, string type)
+        {
+            // 防止递归更新
+            if (_isUpdatingFromROI) return;
+            
+            
+            Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    // 立即更新ROI参数
+                    UpdateCircleCaliperParameters(dobj);
+                    
+                    // 立即显示卡尺工具的实时预览（只显示卡尺位置，不执行算法）
+                    ShowRealtimeCaliperPreview();
+                    
+                    // 重置防抖定时器（只对算法执行进行防抖）
+                    ResetDebounceTimer();
+                    
+                }
+                catch (Exception)
+                {
+                }
+            });
+        }
+        
+        /// <summary>
+        /// 更新圆形卡尺参数
+        /// </summary>
+        private void UpdateCircleCaliperParameters(HDrawingObject dobj)
+        {
+            // 获取当前圆形参数
+            HTuple row = dobj.GetDrawingObjectParams("row");
+            HTuple col = dobj.GetDrawingObjectParams("column");
+            HTuple radius = dobj.GetDrawingObjectParams("radius");
+
+            // 更新处理器参数
+            if (_currentProcessor is CircleCaliperProcessor processor)
+            {
+                processor.CenterRow = row.D;
+                processor.CenterCol = col.D;
+                processor.ExpectedRadius = radius.D;
+            }
+
+            // 同步更新参数面板显示（不触发事件）
+            AlgorithmParameterPanel.UpdateParameterValueSilently("CenterRow", row.D);
+            AlgorithmParameterPanel.UpdateParameterValueSilently("CenterCol", col.D);
+            AlgorithmParameterPanel.UpdateParameterValueSilently("ExpectedRadius", radius.D);
+        }
+        
+        /// <summary>
+        /// 显示实时卡尺工具预览（不执行算法，只显示卡尺位置）
+        /// </summary>
+        private void ShowRealtimeCaliperPreview()
+        {
+            if (_hImage == null || !(_currentProcessor is CircleCaliperProcessor processor)) return;
+            
+            try
+            {
+                // 显示原始图像
+                HalconDisplay.HalconWindow.DispObj(_hImage);
+                
+                // 获取当前ROI参数
+                var centerRow = processor.CenterRow;
+                var centerCol = processor.CenterCol;
+                var radius = processor.ExpectedRadius;
+                
+                // 调用CircleCaliperProcessor的卡尺位置计算方法
+                var calipers = InvokeCalculateCaliperPositions(centerRow, centerCol, radius);
+                
+                // 显示卡尺工具（蓝色线条）
+                if (calipers != null && calipers.Count > 0)
+                {
+                    foreach (var caliper in calipers)
+                    {
+                        // 绘制每个卡尺的中心线（从startRow,startCol 到 endRow,endCol）
+                        HalconDisplay.HalconWindow.SetColor("blue");
+                        HalconDisplay.HalconWindow.SetLineWidth(1);
+                        HalconDisplay.HalconWindow.DispLine(caliper.StartRow, caliper.StartCol, caliper.EndRow, caliper.EndCol);
+                    }
+                }
+                
+            }
+            catch (Exception)
+            {
+            }
+        }
+        
+        
+        
+        /// <summary>
+        /// 通过反射调用CircleCaliperProcessor的CalculateCaliperPositions方法
+        /// </summary>
+        private List<dynamic> InvokeCalculateCaliperPositions(double centerRow, double centerCol, double radius)
+        {
+            try
+            {
+                if (!(_currentProcessor is CircleCaliperProcessor processor)) return null;
+                
+                // 通过反射调用私有方法
+                var method = processor.GetType().GetMethod("CalculateCaliperPositions", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    
+                if (method != null)
+                {
+                    var result = method.Invoke(processor, new object[] { centerRow, centerCol, radius });
+                    return result as List<dynamic>;
+                }
+                
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// 直线卡尺拖拽回调（实时更新参数和预览）
+        /// </summary>
+        private void OnLineCaliperDragging(HDrawingObject dobj, HWindow hwin, string type)
         {
             // 防止递归更新
             if (_isUpdatingFromROI) return;
@@ -1653,18 +1869,258 @@ namespace VisionLite.Vision.UI.Windows
             {
                 try
                 {
+                    // 立即更新ROI参数
+                    UpdateLineCaliperParameters(dobj);
+                    
+                    // 立即显示卡尺工具的实时预览（只显示卡尺位置，不执行算法）
+                    ShowRealtimeLineCaliperPreview();
+                    
+                    // 重置防抖定时器（只对算法执行进行防抖）
+                    ResetDebounceTimer();
+                }
+                catch (Exception)
+                {
+                    // 忽略拖拽过程中的异常
+                }
+            });
+        }
+        
+        /// <summary>
+        /// 直线卡尺更新回调（拖拽完成后）
+        /// </summary>
+        private void OnLineCaliperUpdate(HDrawingObject dobj, HWindow hwin, string type)
+        {
+            // 防止递归更新
+            if (_isUpdatingFromROI) return;
+            
+            Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    // 更新直线参数
+                    UpdateLineCaliperParameters(dobj);
+                    
+                    // 立即显示卡尺预览
+                    ShowRealtimeLineCaliperPreview();
+                    
+                    // 重置防抖定时器（50ms后执行完整算法）
+                    ResetDebounceTimer();
+                }
+                catch (Exception)
+                {
+                    // 忽略更新过程中的异常
+                }
+            });
+        }
+        
+        /// <summary>
+        /// 更新直线卡尺参数
+        /// </summary>
+        private void UpdateLineCaliperParameters(HDrawingObject dobj)
+        {
+            try
+            {
+                // 获取当前直线参数
+                HTuple row1 = dobj.GetDrawingObjectParams("row1");
+                HTuple col1 = dobj.GetDrawingObjectParams("column1");
+                HTuple row2 = dobj.GetDrawingObjectParams("row2");
+                HTuple col2 = dobj.GetDrawingObjectParams("column2");
+
+                // 更新处理器参数
+                if (_currentProcessor is LineCaliperProcessor processor)
+                {
+                    processor.StartRow = row1.D;
+                    processor.StartCol = col1.D;
+                    processor.EndRow = row2.D;
+                    processor.EndCol = col2.D;
+                }
+
+                // 同步更新参数面板显示（不触发事件）
+                AlgorithmParameterPanel.UpdateParameterValueSilently("StartRow", row1.D);
+                AlgorithmParameterPanel.UpdateParameterValueSilently("StartCol", col1.D);
+                AlgorithmParameterPanel.UpdateParameterValueSilently("EndRow", row2.D);
+                AlgorithmParameterPanel.UpdateParameterValueSilently("EndCol", col2.D);
+            }
+            catch (Exception)
+            {
+                // 忽略参数更新异常
+            }
+        }
+        
+        /// <summary>
+        /// 显示实时直线卡尺预览（不执行算法，只显示卡尺位置）
+        /// </summary>
+        private void ShowRealtimeLineCaliperPreview()
+        {
+            if (_hImage == null || !(_currentProcessor is LineCaliperProcessor processor)) 
+            {
+                return;
+            }
+            
+            try
+            {
+                // 检查图像对象状态
+                if (_hImage.IsInitialized() == false)
+                {
+                    if (_originalImage != null && _originalImage.HImage != null)
+                    {
+                        _hImage?.Dispose();
+                        _hImage = _originalImage.HImage.Clone();
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
+                // 清除旧内容并显示背景图像
+                HalconDisplay.HalconWindow.ClearWindow();
+                HalconDisplay.HalconWindow.DispObj(_hImage);
+
+                // 获取当前直线参数
+                var startRow = processor.StartRow;
+                var startCol = processor.StartCol;
+                var endRow = processor.EndRow;
+                var endCol = processor.EndCol;
+                
+                // 创建ROI几何对象
+                var roiGeometry = new VisionLite.Vision.Core.Models.CaliperData.ROIGeometry
+                {
+                    RoiType = "line",
+                    Parameters = new Dictionary<string, double>
+                    {
+                        ["row1"] = startRow,
+                        ["column1"] = startCol,
+                        ["row2"] = endRow,
+                        ["column2"] = endCol
+                    }
+                };
+
+                // 1. 计算理想的原始卡尺位置
+                var originalCalipers = processor.CalculateCaliperPositions(_originalImage, roiGeometry);
+
+                // 2. 调用公开的裁剪方法，获取处理结果
+                var processingResult = processor.ProcessCalipersWithBoundaryClipping(originalCalipers, _originalImage.Width, _originalImage.Height);
+
+                // 3. 只使用裁剪后的有效卡尺进行绘制
+                var calipersToDraw = processingResult.ValidCalipers;
+
+                // 显示卡尺工具（蓝色矩形）
+                if (calipersToDraw != null && calipersToDraw.Count > 0)
+                {
+                    HalconDisplay.HalconWindow.SetColor("blue");
+                    HalconDisplay.HalconWindow.SetLineWidth(1);
+
+                    foreach (var caliper in calipersToDraw)
+                    {
+                        HOperatorSet.GenRectangle2ContourXld(out HObject caliperContour,
+                            caliper.CenterRow,
+                            caliper.CenterCol,
+                            caliper.Phi,
+                            caliper.Length / 2.0,
+                            caliper.Width / 2.0);
+
+                        HalconDisplay.HalconWindow.DispObj(caliperContour);
+                        caliperContour.Dispose();
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // 忽略预览显示异常
+            }
+        }
+        
+        /// <summary>
+        /// 重置防抖定时器（优化版本，重用定时器对象）
+        /// </summary>
+        private void ResetDebounceTimer()
+        {
+            // 创建定时器（仅第一次）
+            if (_roiDebounceTimer == null)
+            {
+                _roiDebounceTimer = new System.Windows.Threading.DispatcherTimer(
+                    TimeSpan.FromMilliseconds(DEBOUNCE_DELAY_MS),
+                    System.Windows.Threading.DispatcherPriority.Normal,  // 明确指定优先级
+                    OnDebounceTimeout,
+                    Dispatcher);
+                    
+            }
+            else
+            {
+                // 重用现有定时器，只需停止并重启
+                _roiDebounceTimer.Stop();
+            }
+            
+            _roiDebounceTimer.Start();
+        }
+        
+        /// <summary>
+        /// 防抖定时器超时回调（执行算法）
+        /// </summary>
+        private async void OnDebounceTimeout(object sender, EventArgs e)
+        {
+            var timeoutTime = DateTime.Now;
+            _roiDebounceTimer?.Stop();
+            
+            
+            if (!_isRealtimeProcessing)
+            {
+                _isRealtimeProcessing = true;
+                try
+                {
+                    await ExecuteRealtimeAlgorithm();
+                }
+                finally
+                {
+                    _isRealtimeProcessing = false;
+                }
+            }
+            else
+            {
+            }
+        }
+
+
+        /// <summary>
+        /// 圆形卡尺更新回调（旧版本，保留用于兼容）
+        /// </summary>
+        private void OnCircleCaliperUpdate(HDrawingObject dobj, HWindow hwin, string type)
+        {
+            var updateStartTime = DateTime.Now;
+            var currentUpdateId = ++_roiUpdateCount;
+            
+            // 调试信息
+            var timeSinceLastUpdate = _lastRoiUpdateTime == DateTime.MinValue ? 0 : (updateStartTime - _lastRoiUpdateTime).TotalMilliseconds;
+            _lastRoiUpdateTime = updateStartTime;
+            
+            // 防止递归更新
+            if (_isUpdatingFromROI) 
+            {
+                return;
+            }
+            
+            Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    var dispatcherStartTime = DateTime.Now;
+                    var dispatcherDelay = (dispatcherStartTime - updateStartTime).TotalMilliseconds;
+                    
                     // 立即清除旧的算法结果显示，只保留原始图像和ROI
                     if (_hImage != null)
                     {
-                        HalconDisplay.HalconWindow.ClearWindow();
+                        var clearStartTime = DateTime.Now;
                         HalconDisplay.HalconWindow.DispObj(_hImage);
-                        // 不调用SetPart，保持用户设置的显示区域
+                        var clearTime = (DateTime.Now - clearStartTime).TotalMilliseconds;
                     }
 
                     // 获取当前圆形参数
+                    var paramStartTime = DateTime.Now;
                     HTuple row = dobj.GetDrawingObjectParams("row");
                     HTuple col = dobj.GetDrawingObjectParams("column");
                     HTuple radius = dobj.GetDrawingObjectParams("radius");
+                    var paramTime = (DateTime.Now - paramStartTime).TotalMilliseconds;
 
                     // 直接更新处理器参数（避免触发事件循环）
                     if (_currentProcessor is CircleCaliperProcessor processor)
@@ -1675,29 +2131,39 @@ namespace VisionLite.Vision.UI.Windows
                     }
 
                     // 同步更新参数面板显示（不触发事件）
+                    var panelStartTime = DateTime.Now;
                     AlgorithmParameterPanel.UpdateParameterValueSilently("CenterRow", row.D);
                     AlgorithmParameterPanel.UpdateParameterValueSilently("CenterCol", col.D);
                     AlgorithmParameterPanel.UpdateParameterValueSilently("ExpectedRadius", radius.D);
+                    var panelTime = (DateTime.Now - panelStartTime).TotalMilliseconds;
 
+                    var totalCallbackTime = (DateTime.Now - updateStartTime).TotalMilliseconds;
+                    
                     // 实时预览圆检测（50ms后显示新的卡尺和拟合圆）
-                    RunRealtimeCirclePreview(row.D, col.D, radius.D);
+                    RunRealtimeCirclePreview(row.D, col.D, radius.D, currentUpdateId);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    UpdateStatus($"更新圆形卡尺失败: {ex.Message}", true);
                 }
             });
         }
 
+        // 调试信息：定时器状态跟踪
+        private int _timerStartCount = 0;
+        private int _timerExecuteCount = 0;
+        private DateTime _lastTimerStartTime = DateTime.MinValue;
+
         /// <summary>
         /// 实时圆检测预览
         /// </summary>
-        private void RunRealtimeCirclePreview(double centerRow, double centerCol, double radius)
+        private void RunRealtimeCirclePreview(double centerRow, double centerCol, double radius, int updateId = 0)
         {
             if (_originalImage == null) return;
 
             try
             {
+                var previewStartTime = DateTime.Now;
+                
                 // 更新处理器参数
                 var processor = _currentProcessor as CircleCaliperProcessor;
                 if (processor != null)
@@ -1715,217 +2181,62 @@ namespace VisionLite.Vision.UI.Windows
                 }
                 else
                 {
-                    // 初始化防抖定时器
-                    _realtimePreviewTimer = new System.Windows.Threading.DispatcherTimer();
-                    _realtimePreviewTimer.Interval = TimeSpan.FromMilliseconds(50); // 50ms延迟
-                    _realtimePreviewTimer.Tick += async (s, args) =>
-                    {
-                        _realtimePreviewTimer.Stop();
-                        
-                        // 如果正在实时处理，跳过本次执行
-                        if (_isRealtimeProcessing)
-                        {
-                            return;
-                        }
-                        
-                        var debounceEnd = DateTime.Now;
-                        try
-                        {
-                            _isRealtimeProcessing = true;
-                            await ExecuteRealtimeAlgorithm();
-                            var algorithmEnd = DateTime.Now;
-                            var totalDelay = (algorithmEnd - debounceEnd).TotalMilliseconds;
-                            if (totalDelay > 100) // 只在延迟超过100ms时提示
-                            {
-                                UpdateStatus($"算法执行耗时: {totalDelay:F0}ms", false);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            UpdateStatus($"实时预览失败: {ex.Message}", true);
-                        }
-                        finally
-                        {
-                            _isRealtimeProcessing = false;
-                        }
-                    };
+                    // 标准防抖机制：仅创建一次，构造函数一次性设置所有参数
+                    _realtimePreviewTimer = new System.Windows.Threading.DispatcherTimer(
+                        TimeSpan.FromMilliseconds(200), // 200ms延迟
+                        System.Windows.Threading.DispatcherPriority.Normal,
+                        RealtimePreviewTimer_Tick,
+                        Dispatcher);
                 }
                 
                 // 启动防抖定时器
+                var timerStartId = ++_timerStartCount;
+                _lastTimerStartTime = DateTime.Now;
                 _realtimePreviewTimer.Start();
+                var setupTime = (DateTime.Now - previewStartTime).TotalMilliseconds;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                UpdateStatus($"圆检测预览失败: {ex.Message}", true);
             }
         }
 
         /// <summary>
-        /// 实时边缘预览
+        /// 防抖定时器触发事件处理
         /// </summary>
-        private void RunRealtimeEdgePreview(double row, double col, double phi, double len1, double len2)
+        private async void RealtimePreviewTimer_Tick(object sender, EventArgs e)
         {
-            if (_hImage == null) return;
-
-            HTuple measureHandle = null;
-            HObject foundEdges = null;
-
+            var timerExecuteId = ++_timerExecuteCount;
+            var timerExecuteStartTime = DateTime.Now;
+            var delayFromStart = _lastTimerStartTime == DateTime.MinValue ? 0 : (timerExecuteStartTime - _lastTimerStartTime).TotalMilliseconds;
+            
+            
+            // 停止定时器
+            _realtimePreviewTimer?.Stop();
+            
+            // 如果正在实时处理，跳过本次执行
+            if (_isRealtimeProcessing)
+            {
+                return;
+            }
+            
+            var debounceEnd = DateTime.Now;
             try
             {
-                // 获取图像尺寸
-                HOperatorSet.GetImageSize(_hImage, out HTuple width, out HTuple height);
-
-                // 创建测量句柄
-                HOperatorSet.GenMeasureRectangle2(row, col, phi, len1, len2,
-                    width, height, "nearest_neighbor", out measureHandle);
-
-                // 获取处理器参数
-                var processor = _currentProcessor as EdgeCaliperProcessor;
-                double sigma = processor?.Sigma ?? 1.0;
-                double threshold = processor?.EdgeThreshold ?? 20;
-
-                // 执行测量
-                HOperatorSet.MeasurePos(_hImage, measureHandle, sigma, threshold, "all", "all",
-                    out HTuple edgeRows, out HTuple edgeCols, out HTuple amplitudes, out HTuple distances);
-
-                // 显示结果
-                HalconDisplay.HalconWindow.ClearWindow();
-                HalconDisplay.HalconWindow.DispObj(_hImage);
-
-                // 绘制蓝色检测线（卡尺内部的测量线条）
-                DrawMeasureLines(row, col, phi, len1, len2);
-
-                // 显示找到的边缘点和拟合直线
-                if (edgeRows.Length > 0)
-                {
-                    // 显示红色边缘点（可选，或者不显示）
-                    // HOperatorSet.GenCrossContourXld(out foundEdges, edgeRows, edgeCols, 6, 0.785398);
-                    // HalconDisplay.HalconWindow.SetColor("red");
-                    // HalconDisplay.HalconWindow.DispObj(foundEdges);
-                    
-                    // 如果有足够的边缘点，拟合直线
-                    if (edgeRows.Length >= 2)
-                    {
-                        try
-                        {
-                            // 拟合直线
-                            HOperatorSet.FitLineContourXld(foundEdges, "tukey", -1, 0, 5, 2, 
-                                out HTuple rowBegin, out HTuple colBegin, out HTuple rowEnd, out HTuple colEnd,
-                                out HTuple nr, out HTuple nc, out HTuple dist);
-                            
-                            if (rowBegin.Length > 0)
-                            {
-                                // 生成直线轮廓
-                                HOperatorSet.GenContourPolygonXld(out HObject lineContour, 
-                                    new HTuple(new double[] { rowBegin.D, rowEnd.D }),
-                                    new HTuple(new double[] { colBegin.D, colEnd.D }));
-                                
-                                // 用绿色绘制拟合的直线
-                                HalconDisplay.HalconWindow.SetColor("green");
-                                HalconDisplay.HalconWindow.SetLineWidth(3);
-                                HalconDisplay.HalconWindow.DispObj(lineContour);
-                                HalconDisplay.HalconWindow.SetLineWidth(1); // 恢复默认线宽
-                                
-                                lineContour?.Dispose();
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            // 如果拟合失败，使用简单的连线方式
-                            if (edgeRows.Length >= 2)
-                            {
-                                HOperatorSet.GenContourPolygonXld(out HObject simpleLineContour,
-                                    new HTuple(new double[] { edgeRows[0].D, edgeRows[edgeRows.Length - 1].D }),
-                                    new HTuple(new double[] { edgeCols[0].D, edgeCols[edgeCols.Length - 1].D }));
-                                
-                                HalconDisplay.HalconWindow.SetColor("green");
-                                HalconDisplay.HalconWindow.SetLineWidth(2);
-                                HalconDisplay.HalconWindow.DispObj(simpleLineContour);
-                                HalconDisplay.HalconWindow.SetLineWidth(1);
-                                
-                                simpleLineContour?.Dispose();
-                            }
-                            UpdateStatus("直线拟合失败，使用简单连线", true);
-                        }
-                    }
-                }
-
-                // 更新状态
-                UpdateStatus($"找到 {edgeRows.Length} 个边缘点");
+                _isRealtimeProcessing = true;
+                await ExecuteRealtimeAlgorithm(timerExecuteId);
+                var algorithmEnd = DateTime.Now;
+                var totalDelay = (algorithmEnd - debounceEnd).TotalMilliseconds;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                UpdateStatus($"实时预览失败: {ex.Message}", true);
             }
             finally
             {
-                measureHandle?.Dispose();
-                foundEdges?.Dispose();
+                _isRealtimeProcessing = false;
             }
         }
 
-        /// <summary>
-        /// 绘制蓝色检测线（卡尺内部的测量线条）
-        /// </summary>
-        private void DrawMeasureLines(double row, double col, double phi, double len1, double len2)
-        {
-            try
-            {
-                // 计算矩形的四个角点
-                double cosA = Math.Cos(phi);
-                double sinA = Math.Sin(phi);
-                
-                // 矩形的四个角点
-                double r1 = row - len1 * cosA - len2 * sinA;
-                double c1 = col - len1 * sinA + len2 * cosA;
-                double r2 = row + len1 * cosA - len2 * sinA;
-                double c2 = col + len1 * sinA + len2 * cosA;
-                double r3 = row + len1 * cosA + len2 * sinA;
-                double c3 = col + len1 * sinA - len2 * cosA;
-                double r4 = row - len1 * cosA + len2 * sinA;
-                double c4 = col - len1 * sinA - len2 * cosA;
 
-                // 绘制矩形框（蓝色）
-                HalconDisplay.HalconWindow.SetColor("blue");
-                HalconDisplay.HalconWindow.SetLineWidth(2);
-                
-                // 绘制四条边
-                HOperatorSet.GenContourPolygonXld(out HObject rectContour,
-                    new HTuple(new double[] { r1, r2, r3, r4, r1 }),
-                    new HTuple(new double[] { c1, c2, c3, c4, c1 }));
-                
-                HalconDisplay.HalconWindow.DispObj(rectContour);
-
-                // 绘制内部检测线条（从图片看是多条平行线）
-                int numLines = 20; // 检测线数量
-                for (int i = 0; i < numLines; i++)
-                {
-                    double t = -1.0 + 2.0 * i / (numLines - 1); // -1 到 1
-                    double lineRow = row + t * len1 * cosA;
-                    double lineCol = col + t * len1 * sinA;
-                    
-                    // 每条检测线的起点和终点
-                    double startRow = lineRow - len2 * sinA;
-                    double startCol = lineCol + len2 * cosA;
-                    double endRow = lineRow + len2 * sinA;
-                    double endCol = lineCol - len2 * cosA;
-                    
-                    HOperatorSet.GenContourPolygonXld(out HObject lineContour,
-                        new HTuple(new double[] { startRow, endRow }),
-                        new HTuple(new double[] { startCol, endCol }));
-                    
-                    HalconDisplay.HalconWindow.DispObj(lineContour);
-                    lineContour?.Dispose();
-                }
-                
-                rectContour?.Dispose();
-                HalconDisplay.HalconWindow.SetLineWidth(1); // 恢复默认线宽
-            }
-            catch (Exception ex)
-            {
-                UpdateStatus($"绘制检测线失败: {ex.Message}", true);
-            }
-        }
 
         /// <summary>
         /// 清理交互式卡尺
@@ -1966,9 +2277,19 @@ namespace VisionLite.Vision.UI.Windows
                     // 先显示测量轮廓（蓝色卡尺线）
                     if (displayContours.MeasureContours != null)
                     {
-                        HalconDisplay.HalconWindow.SetColor("blue");
-                        HalconDisplay.HalconWindow.SetLineWidth(1);
-                        HalconDisplay.HalconWindow.DispObj(displayContours.MeasureContours);
+                        try
+                        {
+                            // 检查HALCON对象是否有效
+                            if (displayContours.MeasureContours.IsInitialized() && displayContours.MeasureContours.CountObj() > 0)
+                            {
+                                HalconDisplay.HalconWindow.SetColor("blue");
+                                HalconDisplay.HalconWindow.SetLineWidth(1);
+                                HalconDisplay.HalconWindow.DispObj(displayContours.MeasureContours);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
                     else
                     {
@@ -1977,9 +2298,19 @@ namespace VisionLite.Vision.UI.Windows
                     // 后显示模型轮廓（红色圆圈，更醒目）
                     if (displayContours.ModelContour != null)
                     {
-                        HalconDisplay.HalconWindow.SetColor("red");
-                        HalconDisplay.HalconWindow.SetLineWidth(3);
-                        HalconDisplay.HalconWindow.DispObj(displayContours.ModelContour);
+                        try
+                        {
+                            // 检查HALCON对象是否有效
+                            if (displayContours.ModelContour.IsInitialized() && displayContours.ModelContour.CountObj() > 0)
+                            {
+                                HalconDisplay.HalconWindow.SetColor("red");
+                                HalconDisplay.HalconWindow.SetLineWidth(3);
+                                HalconDisplay.HalconWindow.DispObj(displayContours.ModelContour);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
                     else
                     {
@@ -2148,6 +2479,7 @@ namespace VisionLite.Vision.UI.Windows
             // 默认返回红色
             return "red";
         }
+        
         
         #endregion
         

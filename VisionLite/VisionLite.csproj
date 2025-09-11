@@ -200,8 +200,8 @@
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\OpeningProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\MorphologyProcessors\ClosingProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\EnhancementProcessors\HistogramEqualizationProcessor.cs" />
-    <Compile Include="Vision\Processors\Measurement\CaliperProcessors\EdgeCaliperProcessor.cs" />
     <Compile Include="Vision\Processors\Measurement\CaliperProcessors\CircleCaliperProcessor.cs" />
+    <Compile Include="Vision\Processors\Measurement\CaliperProcessors\LineCaliperProcessor.cs" />
     <Compile Include="Vision\UI\Controls\ImageDisplayControl.xaml.cs">
       <DependentUpon>ImageDisplayControl.xaml</DependentUpon>
     </Compile>

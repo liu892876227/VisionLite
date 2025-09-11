@@ -965,7 +965,8 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                 EdgeSelection.First => "first",
                 EdgeSelection.Last => "last",
                 EdgeSelection.All => "all",
-                EdgeSelection.Strongest => "all" // Halcon中先获取所有边缘，后处理选择最强的
+                EdgeSelection.Strongest => "all", // Halcon中先获取所有边缘，后处理选择最强的
+                _ => "all" // 默认值
             };
         }
 
@@ -982,7 +983,8 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                 FittingAlgorithm.AHuber => "ahuber",
                 FittingAlgorithm.ATukey => "atukey",
                 FittingAlgorithm.GeoHuber => "geohuber",
-                FittingAlgorithm.GeoTukey => "geotukey"
+                FittingAlgorithm.GeoTukey => "geotukey",
+                _ => "algebraic" // 默认值
             };
         }
 

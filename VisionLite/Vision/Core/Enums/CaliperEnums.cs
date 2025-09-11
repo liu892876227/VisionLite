@@ -99,8 +99,67 @@ namespace VisionLite.Vision.Core.Enums
     
     /// <summary>
     /// 拟合算法类型枚举
+    /// 适用于圆形拟合和直线拟合（向后兼容）
     /// </summary>
     public enum FittingAlgorithm
+    {
+        /// <summary>代数拟合（速度快）</summary>
+        [Description("代数拟合")]
+        Algebraic,
+        
+        /// <summary>几何拟合（精度高）</summary>
+        [Description("几何拟合")]
+        Geometric,
+        
+        /// <summary>自适应Huber拟合（抗噪声）</summary>
+        [Description("自适应Huber")]
+        AHuber,
+        
+        /// <summary>自适应Tukey拟合（抗异常点）</summary>
+        [Description("自适应Tukey")]
+        ATukey,
+        
+        /// <summary>几何Huber拟合（精度+抗噪声）</summary>
+        [Description("几何Huber")]
+        GeoHuber,
+        
+        /// <summary>几何Tukey拟合（精度+抗异常点）</summary>
+        [Description("几何Tukey")]
+        GeoTukey
+    }
+    
+    /// <summary>
+    /// 直线拟合算法枚举
+    /// 专用于FitLineContourXld算子
+    /// </summary>
+    public enum LineFittingAlgorithm
+    {
+        /// <summary>标准回归（最小二乘法）</summary>
+        [Description("标准回归")]
+        Regression,
+        
+        /// <summary>高斯加权拟合</summary>
+        [Description("高斯拟合")]
+        Gauss,
+        
+        /// <summary>Huber加权拟合（抗噪声）</summary>
+        [Description("Huber拟合")]
+        Huber,
+        
+        /// <summary>Tukey加权拟合（抗异常点）</summary>
+        [Description("Tukey拟合")]
+        Tukey,
+        
+        /// <summary>忽略离群点的拟合</summary>
+        [Description("抗离群点")]
+        Drop
+    }
+    
+    /// <summary>
+    /// 圆拟合算法枚举
+    /// 专用于FitCircleContourXld算子
+    /// </summary>
+    public enum CircleFittingAlgorithm
     {
         /// <summary>代数拟合（速度快）</summary>
         [Description("代数拟合")]

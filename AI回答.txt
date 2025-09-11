@@ -1,0 +1,140 @@
+好的，我分析了你遇到的新问题和截图。
+
+这个错误 HALCON error #4056: Image data management: object-ID is NULL (0) in operator get_image_size 是一个非常典型的Halcon错误，它明确地告诉你：你正在尝试对一个已经被销毁或从未被初始化的图像对象（HObject）执行操作。
+
+结合你的操作（移动ROI两次后崩溃）和代码，我已经定位到了问题的根源。
+
+问题根源
+
+问题的核心在于 LineCaliperProcessor.cs 中 ProcessAsync 方法对输入图像和输出图像的处理方式，这导致了输入图像的句柄（handle）被意外地提前释放。
+
+让我们梳理一下导致崩溃的事件链：
+
+LineCaliperProcessor 的ProcessAsync 方法存在一个致命缺陷：它创建的输出图像 outputImage 并没有克隆（Copy）输入的 HObject，而是直接复用了同一个 HObject 句柄。
+
+code
+C#
+download
+content_copy
+expand_less
+
+// LineCaliperProcessor.cs -> ProcessAsync
+// 【错误点】这里只是创建了一个新的C#包装类，但内部的HObject句柄是同一个
+var outputImage = new VisionImage(image.HImage); 
+var result = CreateSuccessResult(outputImage, TimeSpan.Zero, measurements);
+
+第一次移动ROI并执行 (ExecuteRealtimeAlgorithm):
+
+_currentProcessor.ProcessAsync(_originalImage) 被调用。
+
+ProcessAsync 返回一个 ProcessResult，其 OutputImage 属性（我们称之为 result.OutputImage）包含的 HObject 与 _originalImage.HImage 指向的是同一个Halcon内存对象。
+
+然后，你的UI代码执行 _resultImage = result.OutputImage;。现在，_resultImage 和 _originalImage 这两个 VisionImage 对象都引用着同一个 HObject。
+
+第二次移动ROI并执行 (ExecuteRealtimeAlgorithm):
+
+方法开始时，会执行清理上一轮结果的代码：
+
+code
+C#
+download
+content_copy
+expand_less
+IGNORE_WHEN_COPYING_START
+IGNORE_WHEN_COPYING_END
+// VisionToolWindow.xaml.cs -> ExecuteRealtimeAlgorithm
+_resultImage?.Dispose(); // 【！！！致命操作！！！】
+_hResultImage?.Dispose();
+
+因为 _resultImage 引用着与 _originalImage 相同的 HObject，所以 _resultImage.Dispose() 实际上销毁了 _originalImage 正在使用的那个图像句柄！
+
+代码继续往下执行，调用 ProcessResult result = await _currentProcessor.ProcessAsync(_originalImage);。
+
+此时，你传递给 ProcessAsync 的 _originalImage 对象，其内部的 HImage 句柄已经是一个无效的、被释放的句柄了。
+
+崩溃发生:
+
+LineCaliperProcessor 接收到这个带有无效句柄的 VisionImage 对象。
+
+在 DetectEdgesWithCalipers 方法中，第一行代码就是 HOperatorSet.GetImageSize(image, ...)。
+
+Halcon尝试对这个无效的（NULL）句柄执行 get_image_size 操作，于是立即抛出 #4056 错误。
+
+解决方案
+
+解决方案是在 LineCaliperProcessor 中，确保输出图像是输入图像的一个独立副本（克隆）。幸运的是，你的 VisionImage 类中已经有了一个完美的 Clone() 方法。
+
+文件: LineCaliperProcessor.cs
+
+修改 ProcessAsync 方法中创建 outputImage 的那一行。
+
+修改前:
+
+code
+C#
+download
+content_copy
+expand_less
+IGNORE_WHEN_COPYING_START
+IGNORE_WHEN_COPYING_END
+// ... 在 ProcessAsync 方法内 ...
+// 创建输出图像
+var outputImage = new VisionImage(image.HImage);
+// ...
+
+修改后:
+
+code
+C#
+download
+content_copy
+expand_less
+IGNORE_WHEN_COPYING_START
+IGNORE_WHEN_COPYING_END
+// ... 在 ProcessAsync 方法内 ...
+// 创建输出图像
+var outputImage = image.Clone(); // 使用Clone()方法创建一个独立的图像副本
+// ...
+修改后的 LineCaliperProcessor.ProcessAsync 关键部分
+code
+C#
+download
+content_copy
+expand_less
+IGNORE_WHEN_COPYING_START
+IGNORE_WHEN_COPYING_END
+// VisionLite.Vision.Processors.Measurement.CaliperProcessors.LineCaliperProcessor
+public override async Task<ProcessResult> ProcessAsync(VisionImage image)
+{
+    return await Task.Run(() =>
+    {
+        try
+        {
+            // ... (前面的代码不变) ...
+
+            // 创建测量数据...
+            var measurements = new Dictionary<string, object>
+            {
+                // ...
+            };
+
+            // 【关键修改点】
+            // 创建输出图像，确保它是输入的克隆，而不是引用
+            var outputImage = image.Clone();
+
+            // 创建成功结果
+            var result = CreateSuccessResult(outputImage, TimeSpan.Zero, measurements);
+
+            // ... (添加元数据的代码不变) ...
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return CreateFailureResult($"处理失败: {ex.Message}");
+        }
+    });
+}
+总结
+
+通过将 new VisionImage(image.HImage) 替换为 image.Clone()，你保证了 LineCaliperProcessor 返回的结果图像拥有一个全新的、独立的 HObject 句柄。这样一来，当UI代码在下一轮执行前 Dispose() 旧的 _resultImage 时，它只会销毁结果图像的句柄，而不会影响到原始的 _originalImage，从而彻底解决了这个问题。

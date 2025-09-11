@@ -319,102 +319,6 @@ namespace VisionLite.Vision.Core.Models
             public abstract List<GeometryElement> ToGeometryElements();
         }
         
-        /// <summary>
-        /// 直线拟合结果
-        /// </summary>
-        public class LineFitResult : FitResult
-        {
-            /// <summary>直线起点行坐标</summary>
-            public double StartRow { get; set; }
-            
-            /// <summary>直线起点列坐标</summary>
-            public double StartColumn { get; set; }
-            
-            /// <summary>直线终点行坐标</summary>
-            public double EndRow { get; set; }
-            
-            /// <summary>直线终点列坐标</summary>
-            public double EndColumn { get; set; }
-            
-            // 添加兼容属性
-            /// <summary>直线起点列坐标（兼容属性）</summary>
-            public double StartCol { get => StartColumn; set => StartColumn = value; }
-            
-            /// <summary>直线终点列坐标（兼容属性）</summary>
-            public double EndCol { get => EndColumn; set => EndColumn = value; }
-            
-            /// <summary>直线方向角（弧度）</summary>
-            public double Direction { get => Angle; set { /* 只读属性 */ } }
-            
-            /// <summary>直线长度</summary>
-            public double Length { get; set; }
-            
-            /// <summary>计算的直线长度</summary>
-            public double CalculatedLength => Math.Sqrt(Math.Pow(EndRow - StartRow, 2) + Math.Pow(EndColumn - StartColumn, 2));
-            
-            /// <summary>直线角度（弧度）</summary>
-            public double Angle => Math.Atan2(EndRow - StartRow, EndColumn - StartColumn);
-            
-            /// <summary>直线角度（度）</summary>
-            public double AngleDegrees => Angle * 180.0 / Math.PI;
-            
-            /// <summary>
-            /// 转换为几何元素
-            /// </summary>
-            public override List<GeometryElement> ToGeometryElements()
-            {
-                var elements = new List<GeometryElement>();
-                
-                // 添加拟合直线
-                elements.Add(new LineElement(StartRow, StartColumn, EndRow, EndColumn)
-                {
-                    Name = "拟合直线",
-                    Description = $"长度: {Length:F2}, 角度: {AngleDegrees:F1}°, 质量: {Score:F1}%",
-                    Color = Success ? System.Windows.Media.Colors.Green : System.Windows.Media.Colors.Orange,
-                    LineWidth = 2.0
-                });
-                
-                // 添加端点标记
-                elements.Add(new PointElement(StartRow, StartColumn)
-                {
-                    Name = "直线起点",
-                    Color = System.Windows.Media.Colors.Blue,
-                    Size = 3.0
-                });
-                
-                elements.Add(new PointElement(EndRow, EndColumn)
-                {
-                    Name = "直线终点",
-                    Color = System.Windows.Media.Colors.Blue,
-                    Size = 3.0
-                });
-                
-                return elements;
-            }
-            
-            /// <summary>
-            /// 计算点到直线的距离
-            /// </summary>
-            /// <param name="row">点的行坐标</param>
-            /// <param name="column">点的列坐标</param>
-            /// <returns>距离</returns>
-            public double DistanceToPoint(double row, double column)
-            {
-                double A = EndRow - StartRow;
-                double B = StartColumn - EndColumn;
-                double C = EndColumn * StartRow - StartColumn * EndRow;
-                
-                return Math.Abs(A * column + B * row + C) / Math.Sqrt(A * A + B * B);
-            }
-            
-            /// <summary>
-            /// 获取字符串表示
-            /// </summary>
-            public override string ToString()
-            {
-                return $"直线拟合 起点:({StartColumn:F2},{StartRow:F2}) 终点:({EndColumn:F2},{EndRow:F2}) 长度:{Length:F2} 角度:{AngleDegrees:F1}° 质量:{Score:F1}%";
-            }
-        }
         
         /// <summary>
         /// 圆形拟合结果
@@ -544,6 +448,132 @@ namespace VisionLite.Vision.Core.Models
             public override string ToString()
             {
                 return $"圆形拟合 圆心:({CenterColumn:F2},{CenterRow:F2}) 半径:{Radius:F2} 弧长:{ArcLength:F2} 质量:{Score:F1}%";
+            }
+        }
+        
+        /// <summary>
+        /// 直线拟合结果
+        /// </summary>
+        public class LineFitResult : FitResult
+        {
+            /// <summary>直线起点行坐标</summary>
+            public double StartRow { get; set; }
+            
+            /// <summary>直线起点列坐标</summary>
+            public double StartColumn { get; set; }
+            
+            /// <summary>直线终点行坐标</summary>
+            public double EndRow { get; set; }
+            
+            /// <summary>直线终点列坐标</summary>
+            public double EndColumn { get; set; }
+            
+            // 添加兼容属性
+            /// <summary>直线起点列坐标（兼容属性）</summary>
+            public double StartCol { get => StartColumn; set => StartColumn = value; }
+            
+            /// <summary>直线终点列坐标（兼容属性）</summary>
+            public double EndCol { get => EndColumn; set => EndColumn = value; }
+            
+            /// <summary>直线长度</summary>
+            public double Length
+            {
+                get
+                {
+                    return Math.Sqrt(Math.Pow(EndRow - StartRow, 2) + Math.Pow(EndColumn - StartColumn, 2));
+                }
+            }
+            
+            /// <summary>直线角度（弧度）</summary>
+            public double Angle
+            {
+                get
+                {
+                    return Math.Atan2(EndRow - StartRow, EndColumn - StartColumn);
+                }
+            }
+            
+            /// <summary>直线角度（度）</summary>
+            public double AngleDegrees
+            {
+                get
+                {
+                    return Angle * 180.0 / Math.PI;
+                }
+            }
+            
+            /// <summary>直线斜率</summary>
+            public double Slope
+            {
+                get
+                {
+                    double deltaCol = EndColumn - StartColumn;
+                    if (Math.Abs(deltaCol) < 1e-10)
+                        return double.PositiveInfinity; // 垂直线
+                    return (EndRow - StartRow) / deltaCol;
+                }
+            }
+            
+            /// <summary>
+            /// 计算点到直线的距离
+            /// </summary>
+            /// <param name="row">点的行坐标</param>
+            /// <param name="column">点的列坐标</param>
+            /// <returns>距离</returns>
+            public double DistanceToPoint(double row, double column)
+            {
+                // 使用点到直线距离公式: |ax + by + c| / sqrt(a² + b²)
+                // 直线方程: (y2-y1)x - (x2-x1)y + x2*y1 - x1*y2 = 0
+                double a = EndRow - StartRow;           // y2 - y1
+                double b = StartColumn - EndColumn;     // x1 - x2  
+                double c = EndColumn * StartRow - StartColumn * EndRow;  // x2*y1 - x1*y2
+                
+                return Math.Abs(a * column + b * row + c) / Math.Sqrt(a * a + b * b);
+            }
+            
+            /// <summary>
+            /// 转换为几何元素用于显示
+            /// </summary>
+            public override List<GeometryElement> ToGeometryElements()
+            {
+                var elements = new List<GeometryElement>();
+                
+                // 添加拟合直线
+                elements.Add(new LineElement(StartRow, StartColumn, EndRow, EndColumn)
+                {
+                    Name = "拟合直线",
+                    Description = $"长度: {Length:F2}, 角度: {AngleDegrees:F1}°, 质量: {Score:F1}%",
+                    Color = Success ? System.Windows.Media.Colors.Green : System.Windows.Media.Colors.Orange,
+                    LineWidth = 2.0
+                });
+                
+                // 添加起点标记
+                elements.Add(new PointElement(StartRow, StartColumn)
+                {
+                    Name = "起点",
+                    Description = $"起点 ({StartColumn:F2},{StartRow:F2})",
+                    Color = System.Windows.Media.Colors.Blue,
+                    Size = 3.0
+                });
+                
+                // 添加终点标记
+                elements.Add(new PointElement(EndRow, EndColumn)
+                {
+                    Name = "终点", 
+                    Description = $"终点 ({EndColumn:F2},{EndRow:F2})",
+                    Color = System.Windows.Media.Colors.Red,
+                    Size = 3.0
+                });
+                
+                return elements;
+            }
+            
+            /// <summary>
+            /// 获取字符串表示
+            /// </summary>
+            public override string ToString()
+            {
+                return $"直线拟合 起点:({StartColumn:F2},{StartRow:F2}) 终点:({EndColumn:F2},{EndRow:F2}) 长度:{Length:F2} 角度:{AngleDegrees:F1}° 质量:{Score:F1}%";
             }
         }
         

@@ -148,15 +148,11 @@
                     </TreeViewItem>
                     
                     <TreeViewItem Header="卡尺工具" IsExpanded="True">
-                        <TreeViewItem Header="边缘查找" 
-                                      Tag="EdgeCaliper"
+                        <TreeViewItem Header="圆查找" 
+                                      Tag="CircleCaliper"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
                         <TreeViewItem Header="直线查找" 
                                       Tag="LineCaliper"
-                                      Style="{StaticResource AlgorithmItemStyle}"
-                                      IsEnabled="False"/>
-                        <TreeViewItem Header="圆查找" 
-                                      Tag="CircleCaliper"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
                     
