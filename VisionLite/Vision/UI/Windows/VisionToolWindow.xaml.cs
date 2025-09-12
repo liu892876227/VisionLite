@@ -2131,14 +2131,6 @@ namespace VisionLite.Vision.UI.Windows
             });
         }
 
-        // 旧的调试变量已删除，使用统一防抖机制不需要这些调试变量
-
-        // RunRealtimeCirclePreview 方法已删除，使用统一防抖机制 TriggerUnifiedDebounce
-
-        // RealtimePreviewTimer_Tick 方法已删除，逻辑合并到 ExecuteUnifiedDebounceCallback
-
-
-
         /// <summary>
         /// 清理交互式卡尺
         /// </summary>

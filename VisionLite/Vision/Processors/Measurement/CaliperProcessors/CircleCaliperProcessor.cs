@@ -52,7 +52,7 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// 卡尺数量
         /// </summary>
         [Parameter("卡尺数量", "圆周上的卡尺数量", Order = 4, Group = "卡尺参数", MinValue = 3, MaxValue = 100)]
-        public int CaliperCount { get; set; } = 20;
+        public int CaliperCount { get; set; } = 10;
 
         /// <summary>
         /// 卡尺长度
@@ -982,7 +982,6 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                 EdgeSelection.First => "first",
                 EdgeSelection.Last => "last",
                 EdgeSelection.All => "all",
-                EdgeSelection.Strongest => "all", // Halcon中先获取所有边缘，后处理选择最强的
                 _ => "all" // 默认值
             };
         }

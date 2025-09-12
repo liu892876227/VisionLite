@@ -58,19 +58,19 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// 卡尺数量
         /// </summary>
         [Parameter("卡尺数量", "直线上的卡尺数量", Order = 5, Group = "卡尺参数", MinValue = 3, MaxValue = 100)]
-        public int CaliperCount { get; set; } = 5;
+        public int CaliperCount { get; set; } = 10;
 
         /// <summary>
         /// 卡尺长度
         /// </summary>
         [Parameter("卡尺长度", "每个卡尺的长度（垂直于直线方向）", Order = 6, Group = "卡尺参数", MinValue = 5, MaxValue = 500)]
-        public double CaliperLength { get; set; } = 50.0;   // 改为50，更合理
+        public double CaliperLength { get; set; } = 100.0;  
 
         /// <summary>
         /// 卡尺宽度
         /// </summary>
         [Parameter("卡尺宽度", "每个卡尺的宽度（平行于直线方向）", Order = 7, Group = "卡尺参数", MinValue = 1, MaxValue = 100)]
-        public double CaliperWidth { get; set; } = 10.0;    // 改为10，更合理
+        public double CaliperWidth { get; set; } = 20.0;   
 
         /// <summary>
         /// 边缘阈值
@@ -370,11 +370,6 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                 {
                     EdgeSelection.First => 0,
                     EdgeSelection.Last => Math.Max(0, amplitudes.Length - 1),
-                    EdgeSelection.Strongest => amplitudes.DArr != null && amplitudes.DArr.Length > 0
-                        ? amplitudes.DArr.Select((v, i) => new { Value = v, Index = i })
-                                         .OrderByDescending(x => x.Value)
-                                         .FirstOrDefault()?.Index ?? 0
-                        : 0,
                     _ => 0
                 };
             }
@@ -929,7 +924,6 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                 EdgeSelection.First => "first",
                 EdgeSelection.Last => "last",
                 EdgeSelection.All => "all",
-                EdgeSelection.Strongest => "all", // Halcon中先获取所有边缘，后处理选择最强的
                 _ => "all"
             };
         }

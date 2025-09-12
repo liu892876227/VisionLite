@@ -36,11 +36,7 @@ namespace VisionLite.Vision.Core.Enums
         
         /// <summary>选择最后一个边缘</summary>
         [Description("最后一个边缘")]
-        Last,
-        
-        /// <summary>选择最强的边缘</summary>
-        [Description("最强边缘")]
-        Strongest
+        Last
     }
     
     /// <summary>
