@@ -1,0 +1,116 @@
+[调试] 09:52:54.150 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:52:54.151 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:52:54.156 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:54.158 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:54.159 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:54.161 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:54.162 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:54.163 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:54.164 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:54.165 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:54.186 - VisionToolWindow.ExecuteRealtimeAlgorithm: 算法执行完成 - 耗时=35.2ms, 成功=True
+[调试] 09:52:55.053 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:52:55.054 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:52:55.055 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:55.055 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:55.056 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:55.056 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:55.148 - VisionToolWindow.ExecuteRealtimeAlgorithm: 发生异常 - 文件“E:\mySoftware\VisionLite\debug.txt”正由另一进程使用，因此该进程无法访问此文件。
+[调试] 09:52:55.363 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:52:55.363 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:52:55.364 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:55.364 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:55.364 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:55.365 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:55.365 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:55.365 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:55.366 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:55.366 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:55.378 - VisionToolWindow.ExecuteRealtimeAlgorithm: 算法执行完成 - 耗时=15.6ms, 成功=True
+[调试] 09:52:56.742 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:52:56.743 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:52:56.743 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:56.744 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:56.744 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:56.744 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:56.745 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:56.745 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:56.745 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:56.746 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:56.757 - VisionToolWindow.ExecuteRealtimeAlgorithm: 算法执行完成 - 耗时=14.3ms, 成功=True
+[调试] 09:52:56.999 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:52:57.000 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:52:57.001 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:57.001 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:57.001 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:57.002 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:57.002 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:57.002 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:57.002 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:57.003 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:57.015 - VisionToolWindow.ExecuteRealtimeAlgorithm: 算法执行完成 - 耗时=14.7ms, 成功=True
+[调试] 09:52:57.990 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:52:57.991 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:52:57.992 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:57.992 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:57.992 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:52:57.993 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:57.993 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:52:57.993 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:52:57.994 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:52:58.053 - VisionToolWindow.ExecuteRealtimeAlgorithm: 算法执行完成 - 耗时=62.1ms, 成功=True
+[调试] 09:53:00.556 - VisionToolWindow.OnParameterChanged开始: 参数=EndRow, 旧值=, 新值=176.96
+[调试] 09:53:00.556 - VisionToolWindow.OnParameterChanged: 同步参数到处理器 直线查找
+[调试] 09:53:00.558 - VisionToolWindow.OnParameterChanged: 实时预览检查 - 应触发=True, 有图像=True
+[调试] 09:53:00.558 - VisionToolWindow.OnParameterChanged: 即将触发实时预览
+[调试] 09:53:00.559 - VisionToolWindow.TriggerRealtimePreview开始: 变更参数=EndRow
+[调试] 09:53:00.559 - VisionToolWindow.TriggerRealtimePreview: 防抖延迟=75ms
+[调试] 09:53:00.560 - VisionToolWindow.TriggerRealtimePreview: 创建新的防抖定时器
+[调试] 09:53:00.560 - VisionToolWindow.TriggerRealtimePreview: 启动防抖定时器，75ms后执行
+[调试] 09:53:00.626 - VisionToolWindow.RealtimePreviewTimer.Tick: 防抖定时器超时，开始执行算法
+[调试] 09:53:00.627 - VisionToolWindow.ExecuteRealtimePreview开始: 变更参数=EndRow
+[调试] 09:53:00.628 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:53:00.628 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:53:00.629 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:53:00.629 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:53:01.191 - VisionToolWindow.OnParameterChanged开始: 参数=StartCol, 旧值=, 新值=90.41
+[调试] 09:53:01.191 - VisionToolWindow.OnParameterChanged: 同步参数到处理器 直线查找
+[调试] 09:53:01.192 - VisionToolWindow.OnParameterChanged: 实时预览检查 - 应触发=True, 有图像=True
+[调试] 09:53:01.192 - VisionToolWindow.OnParameterChanged: 即将触发实时预览
+[调试] 09:53:01.192 - VisionToolWindow.TriggerRealtimePreview开始: 变更参数=StartCol
+[调试] 09:53:01.193 - VisionToolWindow.TriggerRealtimePreview: 防抖延迟=75ms
+[调试] 09:53:01.193 - VisionToolWindow.TriggerRealtimePreview: 创建新的防抖定时器
+[调试] 09:53:01.193 - VisionToolWindow.TriggerRealtimePreview: 启动防抖定时器，75ms后执行
+[调试] 09:53:01.266 - VisionToolWindow.RealtimePreviewTimer.Tick: 防抖定时器超时，开始执行算法
+[调试] 09:53:01.267 - VisionToolWindow.ExecuteRealtimePreview开始: 变更参数=StartCol
+[调试] 09:53:01.268 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:53:01.268 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:53:22.898 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:53:22.899 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:53:22.904 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:53:22.906 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:53:22.908 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:53:22.909 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:53:22.910 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:53:22.911 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:53:22.911 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:53:22.911 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:53:22.934 - VisionToolWindow.ExecuteRealtimeAlgorithm: 算法执行完成 - 耗时=33.7ms, 成功=True
+[调试] 09:53:23.177 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:53:23.178 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:53:23.179 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:53:23.179 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:53:23.180 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:53:23.221 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:53:23.271 - VisionToolWindow.ExecuteRealtimeAlgorithm: 发生异常 - 文件“E:\mySoftware\VisionLite\debug.txt”正由另一进程使用，因此该进程无法访问此文件。
+[调试] 09:53:26.062 - VisionToolWindow.ExecuteRealtimeAlgorithm开始: timerId=0
+[调试] 09:53:26.062 - VisionToolWindow.ExecuteRealtimeAlgorithm: 即将执行算法 直线查找
+[调试] 09:53:26.063 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:53:26.063 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:53:26.064 - LineCaliperProcessor.ProcessAsync开始
+[调试] 09:53:26.064 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:53:26.064 - LineCaliperProcessor.ProcessAsync: 开始参数验证
+[调试] 09:53:26.065 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:53:26.065 - LineCaliperProcessor.DetectEdgesWithCalipers: 即将调用GetImageSize
+[调试] 09:53:26.065 - LineCaliperProcessor.DetectEdgesWithCalipers: GetImageSize成功 - 宽度=512, 高度=512
+[调试] 09:53:26.077 - VisionToolWindow.ExecuteRealtimeAlgorithm: 算法执行完成 - 耗时=14.6ms, 成功=True

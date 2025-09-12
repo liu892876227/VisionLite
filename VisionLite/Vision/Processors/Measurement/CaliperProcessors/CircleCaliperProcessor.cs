@@ -32,13 +32,13 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// <summary>
         /// 圆心行坐标
         /// </summary>
-        [Parameter("圆心Row", "圆心行坐标", Order = 1, Group = "基础参数")]
+        [Parameter("圆心Row", "圆心行坐标", Order = 1, Group = "基础参数", MinValue = 0, MaxValue = 2000)]
         public double CenterRow { get; set; } = 300.0;
 
         /// <summary>
         /// 圆心列坐标
         /// </summary>
-        [Parameter("圆心Col", "圆心列坐标", Order = 2, Group = "基础参数")]
+        [Parameter("圆心Col", "圆心列坐标", Order = 2, Group = "基础参数", MinValue = 0, MaxValue = 2000)]
         public double CenterCol { get; set; } = 300.0;
 
         /// <summary>

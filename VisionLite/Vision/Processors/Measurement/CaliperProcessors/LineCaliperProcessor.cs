@@ -33,25 +33,25 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// <summary>
         /// 直线起点行坐标
         /// </summary>
-        [Parameter("起点Row", "直线起点行坐标", Order = 1, Group = "基础参数")]
+        [Parameter("起点Row", "直线起点行坐标", Order = 1, Group = "基础参数", MinValue = 0, MaxValue = 2000)]
         public double StartRow { get; set; } = 200.0;
 
         /// <summary>
         /// 直线起点列坐标
         /// </summary>
-        [Parameter("起点Col", "直线起点列坐标", Order = 2, Group = "基础参数")]
+        [Parameter("起点Col", "直线起点列坐标", Order = 2, Group = "基础参数", MinValue = 0, MaxValue = 2000)]
         public double StartCol { get; set; } = 200.0;
 
         /// <summary>
         /// 直线终点行坐标
         /// </summary>
-        [Parameter("终点Row", "直线终点行坐标", Order = 3, Group = "基础参数")]
+        [Parameter("终点Row", "直线终点行坐标", Order = 3, Group = "基础参数", MinValue = 0, MaxValue = 2000)]
         public double EndRow { get; set; } = 400.0;
 
         /// <summary>
         /// 直线终点列坐标
         /// </summary>
-        [Parameter("终点Col", "直线终点列坐标", Order = 4, Group = "基础参数")]
+        [Parameter("终点Col", "直线终点列坐标", Order = 4, Group = "基础参数", MinValue = 0, MaxValue = 2000)]
         public double EndCol { get; set; } = 400.0;
 
         /// <summary>

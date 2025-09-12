@@ -23,6 +23,9 @@ namespace VisionLite.Vision.UI.Controls
         private List<ParameterInfo> _currentParameters;
         private Dictionary<string, FrameworkElement> _parameterControls;
         
+        // 事件抑制机制，防止输入框与滑块之间的双重事件触发
+        private bool _isUpdatingSliderFromTextBox = false;
+        
         #endregion
         
         #region 事件定义
@@ -202,8 +205,10 @@ namespace VisionLite.Vision.UI.Controls
                                 }
                                 else if (grandChild is Slider slider)
                                 {
-                                    // 同时更新滑块值
+                                    // 同时更新滑块值（抑制事件触发）
+                                    _isUpdatingSliderFromTextBox = true;
                                     slider.Value = Convert.ToDouble(newValue);
+                                    _isUpdatingSliderFromTextBox = false;
                                 }
                             }
                         }
@@ -431,7 +436,12 @@ namespace VisionLite.Vision.UI.Controls
                         }
                         
                         parameter.Value = value;
+                        
+                        // 抑制滑块事件触发，防止双重事件
+                        _isUpdatingSliderFromTextBox = true;
                         slider.Value = Convert.ToDouble(value);
+                        _isUpdatingSliderFromTextBox = false;
+                        
                         OnParameterChanged(parameter);
                     }
                 };
@@ -448,6 +458,9 @@ namespace VisionLite.Vision.UI.Controls
                 
                 slider.ValueChanged += (s, e) =>
                 {
+                    // 如果是从TextBox更新的，跳过处理，防止双重事件触发
+                    if (_isUpdatingSliderFromTextBox) return;
+                    
                     var value = parameter.ParameterType == ParameterType.Integer 
                         ? (object)(int)slider.Value 
                         : slider.Value;
