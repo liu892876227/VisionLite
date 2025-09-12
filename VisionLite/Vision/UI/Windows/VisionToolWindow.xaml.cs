@@ -395,13 +395,9 @@ namespace VisionLite.Vision.UI.Windows
                 // 立即显示卡尺工具的实时预览（参数面板修改）
                 if (IsROIParameter(e.ParameterName) && _hImage != null)
                 {
-                    if (_currentProcessor is CircleCaliperProcessor)
+                    if (_currentProcessor is CircleCaliperProcessor || _currentProcessor is LineCaliperProcessor)
                     {
                         ShowRealtimeCaliperPreview();
-                    }
-                    else if (_currentProcessor is LineCaliperProcessor)
-                    {
-                        ShowRealtimeLineCaliperPreview();
                     }
                 }
                 
@@ -1719,7 +1715,7 @@ namespace VisionLite.Vision.UI.Windows
                 _interactiveCaliper.OnSelect(OnLineCaliperUpdate);      // 拖动结束：执行算法
 
                 // 初始显示卡尺预览
-                ShowRealtimeLineCaliperPreview();
+                ShowRealtimeCaliperPreview();
 
                 UpdateStatus($"交互式直线卡尺已激活: 起点({startRow:F1},{startCol:F1}) 终点({endRow:F1},{endCol:F1})");
             }
@@ -1821,69 +1817,157 @@ namespace VisionLite.Vision.UI.Windows
         /// <summary>
         /// 显示实时卡尺工具预览（不执行算法，只显示卡尺位置）
         /// </summary>
+        /// <summary>
+        /// 统一的实时卡尺预览方法，支持圆查找和直线查找
+        /// </summary>
         private void ShowRealtimeCaliperPreview()
         {
-            if (_hImage == null || !(_currentProcessor is CircleCaliperProcessor processor)) return;
+            if (_hImage == null || _currentProcessor == null) return;
             
             try
             {
-                // 显示原始图像
-                HalconDisplay.HalconWindow.DispObj(_hImage);
-                
-                // 获取当前ROI参数
-                var centerRow = processor.CenterRow;
-                var centerCol = processor.CenterCol;
-                var radius = processor.ExpectedRadius;
-                
-                // 调用CircleCaliperProcessor的卡尺位置计算方法
-                var calipers = InvokeCalculateCaliperPositions(centerRow, centerCol, radius);
-                
-                // 显示卡尺工具（蓝色线条）
-                if (calipers != null && calipers.Count > 0)
+                // 检查图像对象状态
+                if (_hImage.IsInitialized() == false)
                 {
-                    foreach (var caliper in calipers)
+                    if (_originalImage != null && _originalImage.HImage != null)
                     {
-                        // 绘制每个卡尺的中心线（从startRow,startCol 到 endRow,endCol）
-                        HalconDisplay.HalconWindow.SetColor("blue");
-                        HalconDisplay.HalconWindow.SetLineWidth(1);
-                        HalconDisplay.HalconWindow.DispLine(caliper.StartRow, caliper.StartCol, caliper.EndRow, caliper.EndCol);
+                        _hImage?.Dispose();
+                        _hImage = _originalImage.HImage.Clone();
+                    }
+                    else
+                    {
+                        return;
                     }
                 }
-                
-            }
-            catch (Exception)
-            {
-            }
-        }
-        
-        
-        
-        /// <summary>
-        /// 通过反射调用CircleCaliperProcessor的CalculateCaliperPositions方法
-        /// </summary>
-        private List<dynamic> InvokeCalculateCaliperPositions(double centerRow, double centerCol, double radius)
-        {
-            try
-            {
-                if (!(_currentProcessor is CircleCaliperProcessor processor)) return null;
-                
-                // 通过反射调用私有方法
-                var method = processor.GetType().GetMethod("CalculateCaliperPositions", 
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    
-                if (method != null)
+
+                // 清除旧内容并显示背景图像
+                HalconDisplay.HalconWindow.ClearWindow();
+                HalconDisplay.HalconWindow.DispObj(_hImage);
+
+                // 根据处理器类型选择不同的处理逻辑
+                if (_currentProcessor is CircleCaliperProcessor circleProcessor)
                 {
-                    var result = method.Invoke(processor, new object[] { centerRow, centerCol, radius });
-                    return result as List<dynamic>;
+                    ShowCircleCaliperPreview(circleProcessor);
                 }
-                
-                return null;
+                else if (_currentProcessor is LineCaliperProcessor lineProcessor)
+                {
+                    ShowLineCaliperPreview(lineProcessor);
+                }
             }
             catch (Exception)
             {
-                return null;
+                // 忽略预览显示异常
             }
         }
+
+        /// <summary>
+        /// 显示圆卡尺预览
+        /// </summary>
+        private void ShowCircleCaliperPreview(CircleCaliperProcessor processor)
+        {
+            // 获取当前ROI参数
+            var centerRow = processor.CenterRow;
+            var centerCol = processor.CenterCol;
+            var radius = processor.ExpectedRadius;
+
+            // 创建ROI几何对象
+            var roiGeometry = new VisionLite.Vision.Core.Models.CaliperData.ROIGeometry
+            {
+                RoiType = "circle",
+                Parameters = new Dictionary<string, double>
+                {
+                    ["row"] = centerRow,
+                    ["column"] = centerCol,
+                    ["radius"] = radius
+                }
+            };
+
+            // 1. 计算理想的原始卡尺位置
+            var originalCalipers = processor.CalculateCaliperPositions(_originalImage, roiGeometry);
+
+            // 2. 调用公开的裁剪方法，获取处理结果
+            var processingResult = processor.ProcessCalipersWithBoundaryClipping(originalCalipers, _originalImage.Width, _originalImage.Height);
+
+            // 3. 只使用裁剪后的有效卡尺进行绘制
+            var calipersToDraw = processingResult.ValidCalipers;
+
+            // 显示卡尺工具（蓝色矩形）
+            if (calipersToDraw != null && calipersToDraw.Count > 0)
+            {
+                HalconDisplay.HalconWindow.SetColor("blue");
+                HalconDisplay.HalconWindow.SetLineWidth(1);
+
+                foreach (var caliper in calipersToDraw)
+                {
+                    HOperatorSet.GenRectangle2ContourXld(out HObject caliperContour,
+                        caliper.CenterRow,
+                        caliper.CenterCol,
+                        caliper.Phi,
+                        caliper.Length / 2.0,
+                        caliper.Width / 2.0);
+
+                    HalconDisplay.HalconWindow.DispObj(caliperContour);
+                    caliperContour.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 显示直线卡尺预览
+        /// </summary>
+        private void ShowLineCaliperPreview(LineCaliperProcessor processor)
+        {
+            // 获取当前直线参数
+            var startRow = processor.StartRow;
+            var startCol = processor.StartCol;
+            var endRow = processor.EndRow;
+            var endCol = processor.EndCol;
+
+            // 创建ROI几何对象
+            var roiGeometry = new VisionLite.Vision.Core.Models.CaliperData.ROIGeometry
+            {
+                RoiType = "line",
+                Parameters = new Dictionary<string, double>
+                {
+                    ["row1"] = startRow,
+                    ["column1"] = startCol,
+                    ["row2"] = endRow,
+                    ["column2"] = endCol
+                }
+            };
+
+            // 1. 计算理想的原始卡尺位置
+            var originalCalipers = processor.CalculateCaliperPositions(_originalImage, roiGeometry);
+
+            // 2. 调用公开的裁剪方法，获取处理结果
+            var processingResult = processor.ProcessCalipersWithBoundaryClipping(originalCalipers, _originalImage.Width, _originalImage.Height);
+
+            // 3. 只使用裁剪后的有效卡尺进行绘制
+            var calipersToDraw = processingResult.ValidCalipers;
+
+            // 显示卡尺工具（蓝色矩形）
+            if (calipersToDraw != null && calipersToDraw.Count > 0)
+            {
+                HalconDisplay.HalconWindow.SetColor("blue");
+                HalconDisplay.HalconWindow.SetLineWidth(1);
+
+                foreach (var caliper in calipersToDraw)
+                {
+                    HOperatorSet.GenRectangle2ContourXld(out HObject caliperContour,
+                        caliper.CenterRow,
+                        caliper.CenterCol,
+                        caliper.Phi,
+                        caliper.Length / 2.0,
+                        caliper.Width / 2.0);
+
+                    HalconDisplay.HalconWindow.DispObj(caliperContour);
+                    caliperContour.Dispose();
+                }
+            }
+        }
+        
+        
+        
         
         /// <summary>
         /// 直线卡尺拖拽回调（实时更新参数和预览）
@@ -1901,7 +1985,7 @@ namespace VisionLite.Vision.UI.Windows
                     UpdateLineCaliperParameters(dobj);
                     
                     // 立即显示卡尺工具的实时预览（只显示卡尺位置，不执行算法）
-                    ShowRealtimeLineCaliperPreview();
+                    ShowRealtimeCaliperPreview();
                     
                     // 使用统一防抖机制触发算法执行
                     TriggerUnifiedDebounce("ROI_Dragging");
@@ -1929,7 +2013,7 @@ namespace VisionLite.Vision.UI.Windows
                     UpdateLineCaliperParameters(dobj);
                     
                     // 立即显示卡尺预览
-                    ShowRealtimeLineCaliperPreview();
+                    ShowRealtimeCaliperPreview();
                     
                     // 使用统一防抖机制触发算法执行
                     TriggerUnifiedDebounce("ROI_Update");
@@ -1975,89 +2059,6 @@ namespace VisionLite.Vision.UI.Windows
             }
         }
         
-        /// <summary>
-        /// 显示实时直线卡尺预览（不执行算法，只显示卡尺位置）
-        /// </summary>
-        private void ShowRealtimeLineCaliperPreview()
-        {
-            if (_hImage == null || !(_currentProcessor is LineCaliperProcessor processor)) 
-            {
-                return;
-            }
-            
-            try
-            {
-                // 检查图像对象状态
-                if (_hImage.IsInitialized() == false)
-                {
-                    if (_originalImage != null && _originalImage.HImage != null)
-                    {
-                        _hImage?.Dispose();
-                        _hImage = _originalImage.HImage.Clone();
-                    }
-                    else
-                    {
-                        return;
-                    }
-                }
-
-                // 清除旧内容并显示背景图像
-                HalconDisplay.HalconWindow.ClearWindow();
-                HalconDisplay.HalconWindow.DispObj(_hImage);
-
-                // 获取当前直线参数
-                var startRow = processor.StartRow;
-                var startCol = processor.StartCol;
-                var endRow = processor.EndRow;
-                var endCol = processor.EndCol;
-                
-                // 创建ROI几何对象
-                var roiGeometry = new VisionLite.Vision.Core.Models.CaliperData.ROIGeometry
-                {
-                    RoiType = "line",
-                    Parameters = new Dictionary<string, double>
-                    {
-                        ["row1"] = startRow,
-                        ["column1"] = startCol,
-                        ["row2"] = endRow,
-                        ["column2"] = endCol
-                    }
-                };
-
-                // 1. 计算理想的原始卡尺位置
-                var originalCalipers = processor.CalculateCaliperPositions(_originalImage, roiGeometry);
-
-                // 2. 调用公开的裁剪方法，获取处理结果
-                var processingResult = processor.ProcessCalipersWithBoundaryClipping(originalCalipers, _originalImage.Width, _originalImage.Height);
-
-                // 3. 只使用裁剪后的有效卡尺进行绘制
-                var calipersToDraw = processingResult.ValidCalipers;
-
-                // 显示卡尺工具（蓝色矩形）
-                if (calipersToDraw != null && calipersToDraw.Count > 0)
-                {
-                    HalconDisplay.HalconWindow.SetColor("blue");
-                    HalconDisplay.HalconWindow.SetLineWidth(1);
-
-                    foreach (var caliper in calipersToDraw)
-                    {
-                        HOperatorSet.GenRectangle2ContourXld(out HObject caliperContour,
-                            caliper.CenterRow,
-                            caliper.CenterCol,
-                            caliper.Phi,
-                            caliper.Length / 2.0,
-                            caliper.Width / 2.0);
-
-                        HalconDisplay.HalconWindow.DispObj(caliperContour);
-                        caliperContour.Dispose();
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // 忽略预览显示异常
-            }
-        }
         
         // ResetDebounceTimer 方法已删除，使用统一防抖机制 TriggerUnifiedDebounce
         

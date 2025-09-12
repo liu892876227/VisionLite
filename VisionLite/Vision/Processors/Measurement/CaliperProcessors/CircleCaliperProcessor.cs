@@ -8,6 +8,7 @@ using VisionLite.Vision.Core.Attributes;
 using VisionLite.Vision.Core.Base;
 using VisionLite.Vision.Core.Enums;
 using VisionLite.Vision.Core.Models;
+using static VisionLite.Vision.Core.Models.CaliperData;
 
 namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
 {
@@ -32,13 +33,13 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// <summary>
         /// 圆心行坐标
         /// </summary>
-        [Parameter("圆心Row", "圆心行坐标", Order = 1, Group = "基础参数", MinValue = 0, MaxValue = 2000)]
+        [Parameter("圆心Row", "圆心行坐标", Order = 1, Group = "基础参数", MinValue = -500, MaxValue = 2000)]
         public double CenterRow { get; set; } = 300.0;
 
         /// <summary>
         /// 圆心列坐标
         /// </summary>
-        [Parameter("圆心Col", "圆心列坐标", Order = 2, Group = "基础参数", MinValue = 0, MaxValue = 2000)]
+        [Parameter("圆心Col", "圆心列坐标", Order = 2, Group = "基础参数", MinValue = -500, MaxValue = 2000)]
         public double CenterCol { get; set; } = 300.0;
 
         /// <summary>
@@ -159,7 +160,7 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// <summary>
         /// 卡尺处理结果
         /// </summary>
-        private class CaliperProcessingResult
+        public class CaliperProcessingResult
         {
             public List<CaliperInfo> ValidCalipers { get; set; } = new List<CaliperInfo>();
             public CaliperStatistics Statistics { get; set; } = new CaliperStatistics();
@@ -168,7 +169,7 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// <summary>
         /// 卡尺统计信息
         /// </summary>
-        private class CaliperStatistics
+        public class CaliperStatistics
         {
             public int TotalCalipers { get; set; }
             public int ValidCalipers { get; set; }
@@ -285,7 +286,7 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// <param name="imageWidth">图像宽度</param>
         /// <param name="imageHeight">图像高度</param>
         /// <returns>处理结果</returns>
-        private CaliperProcessingResult ProcessCalipersWithBoundaryClipping(List<CaliperInfo> originalCalipers, 
+        public CaliperProcessingResult ProcessCalipersWithBoundaryClipping(List<CaliperInfo> originalCalipers, 
             int imageWidth, int imageHeight)
         {
             var result = new CaliperProcessingResult();
@@ -506,6 +507,22 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         #endregion
 
         #region 待实现方法（占位符）
+
+        /// <summary>
+        /// 计算卡尺位置（公开方法，供实时预览使用）
+        /// </summary>
+        /// <param name="image">输入图像</param>
+        /// <param name="roiGeometry">ROI几何信息</param>
+        /// <returns>卡尺信息列表</returns>
+        public List<CaliperInfo> CalculateCaliperPositions(VisionImage image, ROIGeometry roiGeometry)
+        {
+            // 使用当前参数或ROI参数
+            double centerRow = roiGeometry?.Parameters.ContainsKey("row") == true ? roiGeometry.Parameters["row"] : CenterRow;
+            double centerCol = roiGeometry?.Parameters.ContainsKey("column") == true ? roiGeometry.Parameters["column"] : CenterCol;
+            double radius = roiGeometry?.Parameters.ContainsKey("radius") == true ? roiGeometry.Parameters["radius"] : ExpectedRadius;
+            
+            return CalculateCaliperPositions(centerRow, centerCol, radius);
+        }
 
         /// <summary>
         /// 计算卡尺位置
