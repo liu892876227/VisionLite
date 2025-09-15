@@ -202,6 +202,18 @@
     <Compile Include="Vision\Processors\Preprocessing\EnhancementProcessors\HistogramEqualizationProcessor.cs" />
     <Compile Include="Vision\Processors\Measurement\CaliperProcessors\CircleCaliperProcessor.cs" />
     <Compile Include="Vision\Processors\Measurement\CaliperProcessors\LineCaliperProcessor.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Core\CalibrationEnums.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Core\NinePointCalibrationData.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Core\TransformCalculator.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Core\NinePointCalibrationProcessor.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Core\GlobalCalibrationManager.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Storage\CalibrationFileManager.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\UI\NinePointCalibrationWindow.xaml.cs">
+      <DependentUpon>NinePointCalibrationWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Vision\Calibration\NinePoint\UI\CalibrationNameDialog.xaml.cs">
+      <DependentUpon>CalibrationNameDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Vision\UI\Controls\ImageDisplayControl.xaml.cs">
       <DependentUpon>ImageDisplayControl.xaml</DependentUpon>
     </Compile>
@@ -263,6 +275,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Vision\UI\Windows\VisionToolWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Vision\Calibration\NinePoint\UI\NinePointCalibrationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Vision\Calibration\NinePoint\UI\CalibrationNameDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

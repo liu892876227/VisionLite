@@ -1,0 +1,205 @@
+{
+  "CalibrationId": "46b771eb-35ab-4a7b-a928-c012065ba7b2",
+  "Name": "默认标定",
+  "Description": "",
+  "PointPairs": [
+    {
+      "PointId": "4496121a-ff6d-4467-b040-d9f747f90e0b",
+      "PointName": "点1",
+      "ImagePoint": {
+        "X": 100.0,
+        "Y": 100.0
+      },
+      "WorldPoint": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "IsSet": true,
+      "FitError": 5.0242958677880805E-15,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:49:50.8138103+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "7e0e6919-513d-47bf-ae53-4f0e3e810444",
+      "PointName": "点2",
+      "ImagePoint": {
+        "X": 300.0,
+        "Y": 100.0
+      },
+      "WorldPoint": {
+        "X": 20.0,
+        "Y": 0.0
+      },
+      "IsSet": true,
+      "FitError": 3.5527136788005009E-15,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:49:52.5074211+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "6570de24-f1c0-4e11-8f63-7ab4c0194e39",
+      "PointName": "点3",
+      "ImagePoint": {
+        "X": 500.0,
+        "Y": 100.0
+      },
+      "WorldPoint": {
+        "X": 40.0,
+        "Y": 0.0
+      },
+      "IsSet": true,
+      "FitError": 3.5527136788005009E-15,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:49:54.255904+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "693e659b-5f01-491f-9ca9-05a09ee3304a",
+      "PointName": "点4",
+      "ImagePoint": {
+        "X": 100.0,
+        "Y": 300.0
+      },
+      "WorldPoint": {
+        "X": 0.0,
+        "Y": 20.0
+      },
+      "IsSet": true,
+      "FitError": 3.5527136788005009E-15,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:49:55.8167345+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "6809e61c-655f-4c60-8eba-f2d453d1bde2",
+      "PointName": "点5",
+      "ImagePoint": {
+        "X": 300.0,
+        "Y": 300.0
+      },
+      "WorldPoint": {
+        "X": 20.0,
+        "Y": 20.0
+      },
+      "IsSet": true,
+      "FitError": 0.0,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:49:57.0376511+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "19483251-cfb6-48fd-92a6-01aed0c3cfd2",
+      "PointName": "点6",
+      "ImagePoint": {
+        "X": 500.0,
+        "Y": 300.0
+      },
+      "WorldPoint": {
+        "X": 40.0,
+        "Y": 20.0
+      },
+      "IsSet": true,
+      "FitError": 0.0,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:49:58.5163799+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "193c7852-9285-4c85-834f-ea467477af91",
+      "PointName": "点7",
+      "ImagePoint": {
+        "X": 100.0,
+        "Y": 500.0
+      },
+      "WorldPoint": {
+        "X": 0.0,
+        "Y": 40.0
+      },
+      "IsSet": true,
+      "FitError": 3.5527136788005009E-15,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:49:59.8443385+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "f5e022ab-2989-44ed-809e-9057a74f7596",
+      "PointName": "点8",
+      "ImagePoint": {
+        "X": 300.0,
+        "Y": 500.0
+      },
+      "WorldPoint": {
+        "X": 20.0,
+        "Y": 40.0
+      },
+      "IsSet": true,
+      "FitError": 0.0,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:50:01.1123479+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "c9ca7335-559c-4363-9ed6-d49e2ecb90f4",
+      "PointName": "点9",
+      "ImagePoint": {
+        "X": 500.0,
+        "Y": 500.0
+      },
+      "WorldPoint": {
+        "X": 40.0,
+        "Y": 40.0
+      },
+      "IsSet": true,
+      "FitError": 0.0,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-15T13:50:02.3112727+08:00",
+      "Notes": ""
+    }
+  ],
+  "TransformMatrix": [
+    [
+      0.099999999999999992,
+      0.0,
+      -9.9999999999999964
+    ],
+    [
+      0.0,
+      0.099999999999999992,
+      -9.9999999999999964
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "InverseTransformMatrix": [
+    [
+      10.0,
+      0.0,
+      99.999999999999972
+    ],
+    [
+      0.0,
+      10.0,
+      99.999999999999972
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "CalibrationError": 2.1372389536655647E-15,
+  "MaxPointError": 5.0242958677880805E-15,
+  "PixelScale": 10.0,
+  "IsValid": true,
+  "CalibrationTime": "2025-09-15T13:50:03.7476434+08:00",
+  "TransformType": "仿射变换",
+  "Unit": 0,
+  "ImagePath": null,
+  "ImageSize": null,
+  "Quality": 0,
+  "ValidPointCount": 9
+}

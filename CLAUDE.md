@@ -130,6 +130,30 @@ VisionLite 包含了完整的视觉处理框架，支持各类图像处理算法
 - **ThresholdProcessors**: 阈值处理器（固定阈值、OTSU、局部方差、局部统计）
 - **MorphologyProcessors**: 形态学处理器（腐蚀、膨胀、开运算、闭运算）  
 - **EnhancementProcessors**: 增强处理器（直方图均衡化）
+- **CaliperProcessors**: 卡尺工具处理器（圆查找、直线查找）
+
+#### 卡尺工具系统
+卡尺工具是VisionLite中的高级测量功能，提供精密的几何测量能力：
+
+##### 核心组件
+- **CircleCaliperProcessor**: 圆查找处理器，使用多个一维卡尺沿圆周检测边缘并拟合圆形
+- **LineCaliperProcessor**: 直线查找处理器，使用多个一维卡尺沿直线检测边缘并拟合直线
+- **CaliperData**: 卡尺数据模型，包含测量矩形、边缘结果、拟合结果等数据结构
+- **CaliperEnums**: 卡尺工具相关枚举，定义边缘极性、选择策略、拟合算法等
+
+##### 关键特性
+- **智能边界裁剪**: 自动处理卡尺超出图像边界的情况，使用Cohen-Sutherland算法进行线段裁剪
+- **多种边缘检测**: 支持正向、负向和全向边缘检测，可配置边缘阈值和选择策略
+- **高精度拟合**: 支持多种拟合算法（代数拟合、几何拟合、Huber拟合、Tukey拟合等）
+- **实时可视化**: 提供Halcon轮廓显示，支持卡尺工具、边缘点、拟合结果的实时显示
+- **参数化配置**: 使用ParameterAttribute特性实现参数的自动UI生成和验证
+
+##### 数据结构
+- **CaliperInfo**: 单个卡尺的几何参数（位置、方向、尺寸）
+- **EdgeResult**: 边缘检测结果，包含边缘点坐标、强度、质量评分
+- **CircleFitResult**: 圆拟合结果，包含圆心、半径、拟合误差、质量评分
+- **LineFitResult**: 直线拟合结果，包含起点、终点、角度、长度、拟合误差
+- **MeasureRectangle**: 测量矩形，封装Halcon测量句柄和几何参数
 
 #### 处理器开发规范
 - 继承 `VisionProcessorBase` 基类
@@ -171,10 +195,20 @@ VisionLite/
 │   │   ├── Interfaces/             # 接口定义
 │   │   ├── Models/                 # 数据模型
 │   │   ├── Base/                   # 基类实现
-│   │   └── Attributes/             # 特性标记
+│   │   ├── Attributes/             # 特性标记
+│   │   ├── Enums/                  # 枚举定义
+│   │   └── Utils/                  # 实用工具
 │   ├── Processors/                 # 算法处理器
-│   │   └── Preprocessing/          # 预处理算法
+│   │   ├── Preprocessing/          # 预处理算法
+│   │   │   ├── FilterProcessors/   # 滤波处理器
+│   │   │   ├── ThresholdProcessors/# 阈值处理器
+│   │   │   ├── MorphologyProcessors/# 形态学处理器
+│   │   │   └── EnhancementProcessors/# 增强处理器
+│   │   └── Measurement/            # 测量算法
+│   │       └── CaliperProcessors/  # 卡尺工具处理器
 │   └── UI/                         # 视觉工具UI
+│       ├── Controls/               # 自定义控件
+│       └── Windows/                # 窗口界面
 ├── MainWindow.xaml(.cs)            # 主窗口
 ├── CameraManagementWindow.xaml(.cs) # 相机管理
 └── VisionLite.csproj               # 项目配置
@@ -186,6 +220,7 @@ VisionLite/
 - ADS 通讯可通过 `AdsConnectionTest` 工具验证连接和变量读写  
 - 相机功能通过 `CameraManagementWindow` 进行设备枚举和连接测试
 - 视觉处理器通过 `VisionToolWindow` 进行算法测试和参数调试
+- 卡尺工具可通过ROI参数或处理器参数设定测量区域，支持实时预览和参数调整
 
 ## 通讯协议支持
 

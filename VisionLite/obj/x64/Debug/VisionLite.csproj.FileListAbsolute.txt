@@ -80,3 +80,7 @@ E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CoreCompileI
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.csproj.CopyComplete
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.exe
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\VisionLite.pdb
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\Calibration\NinePoint\UI\CalibrationNameDialog.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\Calibration\NinePoint\UI\CalibrationNameDialog.g.cs
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\Calibration\NinePoint\UI\NinePointCalibrationWindow.baml
+E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\Vision\Calibration\NinePoint\UI\NinePointCalibrationWindow.g.cs

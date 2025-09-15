@@ -156,6 +156,12 @@
                                       Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
                     
+                    <TreeViewItem Header="标定工具" IsExpanded="True">
+                        <TreeViewItem Header="九点标定" 
+                                      Tag="NinePointCalibration"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                    </TreeViewItem>
+                    
                 </TreeView>
             </GroupBox>
             

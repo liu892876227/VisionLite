@@ -17,6 +17,8 @@ using VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors;
 using VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors;
 using VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors;
 using VisionLite.Vision.Processors.Measurement.CaliperProcessors;
+using VisionLite.Vision.Calibration.NinePoint.Core;
+using VisionLite.Vision.Calibration.NinePoint.UI;
 using VisionLite.Vision.UI.Controls;
 using VisionLite.Vision.Core.Utils;
 
@@ -243,6 +245,18 @@ namespace VisionLite.Vision.UI.Windows
                     throw new InvalidOperationException("直线卡尺处理器参数获取失败");
                 }
                 
+                // 注册九点标定算法
+                var ninePointCalibrationProcessor = new NinePointCalibrationProcessor();
+                var ninePointCalibrationParams = ninePointCalibrationProcessor.GetParameters();
+                if (ninePointCalibrationParams != null)
+                {
+                    _algorithmProcessors["NinePointCalibration"] = ninePointCalibrationProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("九点标定处理器参数获取失败");
+                }
+                
                 
                 // 后续可以通过反射自动加载所有算法
                 // LoadAllProcessorsByReflection();
@@ -348,6 +362,12 @@ namespace VisionLite.Vision.UI.Windows
         {
             if (sender is TreeViewItem item && item.Tag is string algorithmKey)
             {
+                // 对于九点标定，直接打开标定窗口
+                if (algorithmKey == "NinePointCalibration")
+                {
+                    OpenNinePointCalibrationWindow();
+                    return;
+                }
                 
                 SelectAlgorithm(algorithmKey);
                 
@@ -803,6 +823,30 @@ namespace VisionLite.Vision.UI.Windows
             catch (Exception ex)
             {
                 UpdateStatus($"释放资源失败: {ex.Message}", true);
+            }
+        }
+        
+        #endregion
+        
+        #region 九点标定方法
+        
+        /// <summary>
+        /// 打开九点标定窗口
+        /// </summary>
+        private void OpenNinePointCalibrationWindow()
+        {
+            try
+            {
+                var calibrationWindow = new NinePointCalibrationWindow();
+                calibrationWindow.Owner = this;
+                calibrationWindow.ShowDialog();
+                
+                UpdateStatus("九点标定窗口已打开");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开九点标定窗口失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                UpdateStatus("打开九点标定窗口失败", true);
             }
         }
         
