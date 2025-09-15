@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
+using HalconDotNet;
 using VisionLite.Vision.Calibration.NinePoint.Core;
 using VisionLite.Vision.Calibration.NinePoint.Storage;
 
@@ -211,6 +212,10 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             }
         }
         
+        /// <summary>当前加载的图像对象</summary>
+        private HObject _currentImage = null;
+        private HObject _calibrationMarkers = null;
+        
         private void BtnLoadImage_Click(object sender, RoutedEventArgs e)
         {
             var openDialog = new OpenFileDialog
@@ -223,29 +228,212 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             {
                 try
                 {
-                    // 加载并显示图像
-                    var bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(openDialog.FileName);
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
+                    // 使用Halcon加载图像
+                    HOperatorSet.ReadImage(out _currentImage, openDialog.FileName);
                     
-                    // 显示图像
-                    imgDisplay.Source = bitmap;
+                    // 显示图像到Halcon控件（包含标定点标记）
+                    halconWindow.HalconWindow.SetPart(0, 0, -1, -1); // 显示完整图像
+                    RefreshImageDisplay();
+                    
+                    // 隐藏占位符文字
                     txtImagePlaceholder.Visibility = Visibility.Collapsed;
                     
-                    var fileName = System.IO.Path.GetFileName(openDialog.FileName);
-                    UpdateStatusBar($"已加载图像: {fileName} (尺寸: {bitmap.PixelWidth}×{bitmap.PixelHeight})");
+                    // 获取图像尺寸
+                    HOperatorSet.GetImageSize(_currentImage, out HTuple width, out HTuple height);
                     
-                    // 添加鼠标点击事件用于获取坐标
-                    imgDisplay.MouseLeftButtonDown += ImgDisplay_MouseLeftButtonDown;
-                    imgDisplay.MouseMove += ImgDisplay_MouseMove;
+                    var fileName = System.IO.Path.GetFileName(openDialog.FileName);
+                    UpdateStatusBar($"已加载图像: {fileName} (尺寸: {width}×{height})");
+                    
+                    // 添加Halcon窗口的鼠标事件
+                    halconWindow.HMouseDown += HalconWindow_MouseDown;
+                    halconWindow.HMouseMove += HalconWindow_MouseMove;
+                    
+                    // 设置Halcon窗口属性
+                    SetupHalconWindow();
+                    
+                    System.Diagnostics.Debug.WriteLine($"图像加载成功: {fileName}, 尺寸: {width}×{height}");
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"加载图像失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                     UpdateStatusBar("图像加载失败");
+                    System.Diagnostics.Debug.WriteLine($"图像加载失败: {ex.Message}");
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 设置Halcon窗口属性
+        /// </summary>
+        private void SetupHalconWindow()
+        {
+            try
+            {
+                // 设置窗口属性
+                halconWindow.HalconWindow.SetWindowParam("background_color", "black");
+                halconWindow.HalconWindow.SetDraw("margin");
+                halconWindow.HalconWindow.SetLineWidth(2);
+                
+                // 启用鼠标和键盘事件
+                halconWindow.HalconWindow.SetWindowParam("mouse_move_events", "true");
+                halconWindow.HalconWindow.SetWindowParam("mouse_click_events", "true");
+                
+                System.Diagnostics.Debug.WriteLine("Halcon窗口设置完成");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Halcon窗口设置失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Halcon窗口鼠标点击事件
+        /// </summary>
+        private void HalconWindow_MouseDown(object sender, HalconDotNet.HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        {
+            if (_currentImage != null)
+            {
+                try
+                {
+                    var row = e.Row;    // Y坐标
+                    var column = e.Column; // X坐标
+                    
+                    // 检查坐标是否在图像范围内
+                    HOperatorSet.GetImageSize(_currentImage, out HTuple width, out HTuple height);
+                    
+                    if (column >= 0 && column < width && row >= 0 && row < height)
+                    {
+                        // 更新当前点的图像坐标
+                        _isUpdatingUI = true;
+                        nudImageX.Value = (double)column;
+                        nudImageY.Value = (double)row;
+                        _isUpdatingUI = false;
+                        
+                        UpdateStatusBar($"图像坐标: ({(double)column:F1}, {(double)row:F1})");
+                        System.Diagnostics.Debug.WriteLine($"点击坐标: ({(double)column:F2}, {(double)row:F2})");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"鼠标点击事件处理失败: {ex.Message}");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Halcon窗口鼠标移动事件
+        /// </summary>
+        private void HalconWindow_MouseMove(object sender, HalconDotNet.HSmartWindowControlWPF.HMouseEventArgsWPF e)
+        {
+            if (_currentImage != null)
+            {
+                try
+                {
+                    var row = e.Row;    // Y坐标
+                    var column = e.Column; // X坐标
+                    
+                    // 检查坐标是否在图像范围内
+                    HOperatorSet.GetImageSize(_currentImage, out HTuple width, out HTuple height);
+                    
+                    if (column >= 0 && column < width && row >= 0 && row < height)
+                    {
+                        // 在状态栏显示实时坐标
+                        UpdateStatusBar($"鼠标位置: ({(double)column:F1}, {(double)row:F1})");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"鼠标移动事件处理失败: {ex.Message}");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 绘制标定点标记到Halcon显示窗口
+        /// </summary>
+        private void DrawCalibrationMarkers()
+        {
+            if (_currentImage == null || halconWindow?.HalconWindow == null) return;
+            
+            try
+            {
+                // 清除之前的标记
+                if (_calibrationMarkers != null)
+                {
+                    _calibrationMarkers.Dispose();
+                    _calibrationMarkers = null;
+                }
+                
+                // 创建标记容器
+                HOperatorSet.GenEmptyObj(out _calibrationMarkers);
+                
+                // 获取已设置的点
+                var setPoints = _processor.CurrentCalibration.PointPairs.Where(p => p.IsSet).ToList();
+                
+                if (setPoints.Any())
+                {
+                    // 为每个已设置的点创建绿色十字标记
+                    foreach (var point in setPoints)
+                    {
+                        var x = point.ImagePoint.X;
+                        var y = point.ImagePoint.Y;
+                        
+                        // 创建十字标记
+                        CreateCrossMarker(x, y, out HObject crossMarker);
+                        HOperatorSet.ConcatObj(_calibrationMarkers, crossMarker, out HObject tempMarkers);
+                        
+                        _calibrationMarkers.Dispose();
+                        _calibrationMarkers = tempMarkers;
+                        crossMarker.Dispose();
+                    }
+                    
+                    // 设置显示颜色为绿色
+                    halconWindow.HalconWindow.SetColor("green");
+                    halconWindow.HalconWindow.SetLineWidth(2);
+                    
+                    // 显示标记
+                    halconWindow.HalconWindow.DispObj(_calibrationMarkers);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"绘制标定点标记失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 创建十字标记
+        /// </summary>
+        private void CreateCrossMarker(double x, double y, out HObject crossMarker)
+        {
+            var size = 10; // 十字大小
+            
+            // 创建水平线
+            HOperatorSet.GenRegionLine(out HObject hLine, y, x - size, y, x + size);
+            
+            // 创建垂直线
+            HOperatorSet.GenRegionLine(out HObject vLine, y - size, x, y + size, x);
+            
+            // 合并十字线
+            HOperatorSet.Union2(hLine, vLine, out crossMarker);
+            
+            hLine.Dispose();
+            vLine.Dispose();
+        }
+        
+        
+        /// <summary>
+        /// 刷新图像显示（包含标定点标记）
+        /// </summary>
+        private void RefreshImageDisplay()
+        {
+            if (_currentImage != null && halconWindow?.HalconWindow != null)
+            {
+                // 显示图像
+                halconWindow.HalconWindow.DispObj(_currentImage);
+                
+                // 绘制标定点标记
+                DrawCalibrationMarkers();
             }
         }
         
@@ -384,6 +572,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
                 UpdateCalibrationResults();
                 UpdatePointDataGrid();
                 UpdateCurrentPointSelection();
+                
+                // 刷新图像显示（包含标定点标记）
+                RefreshImageDisplay();
             }
             finally
             {
@@ -638,84 +829,16 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
         
         #endregion
         
+        // 注意：此方法已被HalconWindow_MouseDown替代，保留用于向后兼容
         private void ImgDisplay_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (imgDisplay.Source != null)
-            {
-                // 获取鼠标在图像控件中的位置
-                var position = e.GetPosition(imgDisplay);
-                
-                // 获取图像的实际显示尺寸和位置
-                var imageSource = imgDisplay.Source as BitmapSource;
-                if (imageSource != null)
-                {
-                    // 计算图像在控件中的实际显示区域
-                    var scaleX = imageSource.PixelWidth / imgDisplay.ActualWidth;
-                    var scaleY = imageSource.PixelHeight / imgDisplay.ActualHeight;
-                    
-                    // 处理Uniform拉伸模式
-                    var scale = Math.Max(scaleX, scaleY);
-                    var displayWidth = imageSource.PixelWidth / scale;
-                    var displayHeight = imageSource.PixelHeight / scale;
-                    
-                    var offsetX = (imgDisplay.ActualWidth - displayWidth) / 2;
-                    var offsetY = (imgDisplay.ActualHeight - displayHeight) / 2;
-                    
-                    // 转换为图像坐标
-                    var imageX = (position.X - offsetX) * scale;
-                    var imageY = (position.Y - offsetY) * scale;
-                    
-                    // 检查点击是否在图像区域内
-                    if (imageX >= 0 && imageX < imageSource.PixelWidth && imageY >= 0 && imageY < imageSource.PixelHeight)
-                    {
-                        // 更新当前点的图像坐标
-                        nudImageX.Value = Math.Round(imageX, 2);
-                        nudImageY.Value = Math.Round(imageY, 2);
-                        
-                        UpdateStatusBar($"点击坐标: ({imageX:F2}, {imageY:F2})");
-                    }
-                }
-            }
+            // 方法已移除，使用Halcon控件的HalconWindow_MouseDown
         }
         
+        // 注意：此方法已被HalconWindow_MouseMove替代，保留用于向后兼容
         private void ImgDisplay_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            if (imgDisplay.Source != null)
-            {
-                // 获取鼠标在图像控件中的位置
-                var position = e.GetPosition(imgDisplay);
-                
-                // 获取图像的实际显示尺寸和位置
-                var imageSource = imgDisplay.Source as BitmapSource;
-                if (imageSource != null)
-                {
-                    // 计算图像在控件中的实际显示区域
-                    var scaleX = imageSource.PixelWidth / imgDisplay.ActualWidth;
-                    var scaleY = imageSource.PixelHeight / imgDisplay.ActualHeight;
-                    
-                    // 处理Uniform拉伸模式
-                    var scale = Math.Max(scaleX, scaleY);
-                    var displayWidth = imageSource.PixelWidth / scale;
-                    var displayHeight = imageSource.PixelHeight / scale;
-                    
-                    var offsetX = (imgDisplay.ActualWidth - displayWidth) / 2;
-                    var offsetY = (imgDisplay.ActualHeight - displayHeight) / 2;
-                    
-                    // 转换为图像坐标
-                    var imageX = (position.X - offsetX) * scale;
-                    var imageY = (position.Y - offsetY) * scale;
-                    
-                    // 检查鼠标是否在图像区域内
-                    if (imageX >= 0 && imageX < imageSource.PixelWidth && imageY >= 0 && imageY < imageSource.PixelHeight)
-                    {
-                        txtCoordinateDisplay.Text = $"鼠标坐标: ({imageX:F2}, {imageY:F2})";
-                    }
-                    else
-                    {
-                        txtCoordinateDisplay.Text = "鼠标坐标: (-, -)";
-                    }
-                }
-            }
+            // 方法已移除，使用Halcon控件的HalconWindow_MouseMove
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -724,6 +847,19 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             _manager.StatusChanged -= Manager_StatusChanged;
             _manager.CalibrationUpdated -= Manager_CalibrationUpdated;
             _manager.CalibrationListChanged -= Manager_CalibrationListChanged;
+            
+            // 释放Halcon资源
+            if (_currentImage != null)
+            {
+                _currentImage.Dispose();
+                _currentImage = null;
+            }
+            
+            if (_calibrationMarkers != null)
+            {
+                _calibrationMarkers.Dispose();
+                _calibrationMarkers = null;
+            }
         }
     }
 }
