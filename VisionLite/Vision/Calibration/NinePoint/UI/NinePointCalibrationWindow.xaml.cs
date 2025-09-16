@@ -19,6 +19,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
     {
         private NinePointCalibrationProcessor _processor;
         private GlobalCalibrationManager _manager;
+        private GlobalCalibrationService _globalService;
         private int _currentPointIndex = 1;
         private bool _isUpdatingUI = false;
         
@@ -38,6 +39,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
         {
             _processor = new NinePointCalibrationProcessor();
             _manager = GlobalCalibrationManager.Instance;
+            _globalService = GlobalCalibrationService.Instance;
             
             // 初始化点按钮数组
             _pointButtons = new Button[]
@@ -54,19 +56,22 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             _manager.StatusChanged += Manager_StatusChanged;
             _manager.CalibrationUpdated += Manager_CalibrationUpdated;
             _manager.CalibrationListChanged += Manager_CalibrationListChanged;
+            _globalService.CalibrationChanged += GlobalService_CalibrationChanged;
             
             // 设置数据绑定
             DataContext = _processor;
             
             // 初始化界面状态
             UpdateUI();
+            UpdateGlobalCalibrationStatus();
         }
         
         private void InitializeComboBoxes()
         {
-            // 物理单位
-            cmbPhysicalUnit.ItemsSource = Enum.GetValues(typeof(PhysicalUnit));
-            cmbPhysicalUnit.SelectedItem = PhysicalUnit.Millimeter;
+            // 物理单位 - 只支持毫米，禁用下拉框
+            cmbPhysicalUnit.ItemsSource = new[] { "毫米" };
+            cmbPhysicalUnit.SelectedIndex = 0;
+            cmbPhysicalUnit.IsEnabled = false;
         }
         
         private void LoadInitialData()
@@ -486,6 +491,48 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             }
         }
         
+        private void BtnApplyCalibration_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // 检查当前是否有有效的标定
+                if (_manager.CurrentCalibration == null)
+                {
+                    MessageBox.Show("没有可用的标定配置，请先选择一个标定配置。", "提示", 
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                
+                if (!_manager.CurrentCalibration.IsValid)
+                {
+                    MessageBox.Show($"标定配置 '{_manager.CurrentCalibration.Name}' 无效，请先完成标定计算。", "提示", 
+                                  MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                
+                // 应用标定到全局服务
+                var success = _globalService.ApplyCalibration(_manager.CurrentCalibration);
+                
+                if (success)
+                {
+                    UpdateStatusBar($"标定 '{_manager.CurrentCalibration.Name}' 已成功应用");
+                }
+                else
+                {
+                    UpdateStatusBar("标定应用失败");
+                    MessageBox.Show("标定应用失败，请检查标定数据的有效性。", "错误", 
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusBar($"应用标定时发生错误: {ex.Message}");
+                MessageBox.Show($"应用标定时发生错误: {ex.Message}", "错误", 
+                              MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"应用标定异常: {ex}");
+            }
+        }
+        
         private void BtnResetCalibration_Click(object sender, RoutedEventArgs e)
         {
             var result = MessageBox.Show("确定要重置当前标定吗？", "确认", 
@@ -572,6 +619,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
                 UpdateCalibrationResults();
                 UpdatePointDataGrid();
                 UpdateCurrentPointSelection();
+                UpdateGlobalCalibrationStatus();
                 
                 // 刷新图像显示（包含标定点标记）
                 RefreshImageDisplay();
@@ -687,9 +735,11 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             _manager.CreateNewCalibration(name, description);
             _processor.CalibrationName = name;
             _processor.ClearCalibrationPoints();
-            
+
             RefreshCalibrationList();
             cmbCalibrations.SelectedItem = name;
+            // 手动更新标定名称文本框
+            txtCalibrationName.Text = name;
             UpdateUI();
             UpdateStatusBar($"创建新标定: {name}");
         }
@@ -701,7 +751,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
                 _processor.CurrentCalibration = _manager.CurrentCalibration;
                 _processor.CalibrationName = _manager.CurrentCalibration.Name;
                 _processor.Unit = _manager.CurrentCalibration.Unit;
-                cmbPhysicalUnit.SelectedItem = _processor.Unit;
+                // 手动更新标定名称文本框
+                txtCalibrationName.Text = _manager.CurrentCalibration.Name;
+                // 物理单位固定为毫米，无需设置
             }
         }
         
@@ -840,6 +892,56 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
         {
             // 方法已移除，使用Halcon控件的HalconWindow_MouseMove
         }
+        
+        /// <summary>
+        /// 全局标定服务状态变更事件处理
+        /// </summary>
+        private void GlobalService_CalibrationChanged(object sender, CalibrationChangedEventArgs e)
+        {
+            // 在UI线程中更新状态显示
+            if (Dispatcher.CheckAccess())
+            {
+                UpdateGlobalCalibrationStatus();
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(new Action(UpdateGlobalCalibrationStatus));
+            }
+        }
+        
+        /// <summary>
+        /// 更新全局标定状态显示
+        /// </summary>
+        private void UpdateGlobalCalibrationStatus()
+        {
+            try
+            {
+                if (txtGlobalCalibrationStatus != null)
+                {
+                    txtGlobalCalibrationStatus.Text = _globalService.CalibrationStatus;
+                    
+                    // 根据状态设置颜色
+                    if (_globalService.IsCalibrationActive)
+                    {
+                        txtGlobalCalibrationStatus.Foreground = new SolidColorBrush(Colors.DarkGreen);
+                    }
+                    else
+                    {
+                        txtGlobalCalibrationStatus.Foreground = new SolidColorBrush(Colors.DarkRed);
+                    }
+                }
+                
+                // 更新应用标定按钮的可用性
+                if (btnApplyCalibration != null)
+                {
+                    btnApplyCalibration.IsEnabled = _manager.CurrentCalibration?.IsValid == true;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"更新全局标定状态失败: {ex.Message}");
+            }
+        }
 
         private void Window_Closed(object sender, EventArgs e)
         {
@@ -847,6 +949,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             _manager.StatusChanged -= Manager_StatusChanged;
             _manager.CalibrationUpdated -= Manager_CalibrationUpdated;
             _manager.CalibrationListChanged -= Manager_CalibrationListChanged;
+            _globalService.CalibrationChanged -= GlobalService_CalibrationChanged;
             
             // 释放Halcon资源
             if (_currentImage != null)

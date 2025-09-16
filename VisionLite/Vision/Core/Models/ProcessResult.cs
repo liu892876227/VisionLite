@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using VisionLite.Vision.Calibration.NinePoint.Core;
 
 namespace VisionLite.Vision.Core.Models
 {
@@ -60,6 +61,17 @@ namespace VisionLite.Vision.Core.Models
         /// 额外的元数据
         /// </summary>
         public Dictionary<string, object> Metadata { get; set; }
+        
+        /// <summary>
+        /// 标定结果数据
+        /// 当算法启用标定功能时，包含图像坐标到物理坐标的变换结果
+        /// </summary>
+        public CalibrationResultData CalibrationResult { get; set; }
+        
+        /// <summary>
+        /// 是否包含标定结果
+        /// </summary>
+        public bool HasCalibrationResult => CalibrationResult?.HasData == true;
         
         /// <summary>
         /// 构造函数
@@ -134,6 +146,29 @@ namespace VisionLite.Vision.Core.Models
         }
         
         /// <summary>
+        /// 设置标定结果
+        /// </summary>
+        /// <param name="calibrationResult">标定结果数据</param>
+        public void SetCalibrationResult(CalibrationResultData calibrationResult)
+        {
+            CalibrationResult = calibrationResult;
+        }
+        
+        /// <summary>
+        /// 获取标定结果摘要
+        /// </summary>
+        /// <returns>标定结果摘要字符串</returns>
+        public string GetCalibrationSummary()
+        {
+            if (!HasCalibrationResult)
+                return "无标定结果";
+            
+            return $"标定: {CalibrationResult.CalibrationName}, " +
+                   $"坐标点数: {CalibrationResult.ImageCoordinates.Count}, " +
+                   $"单位: {CalibrationResult.Unit}";
+        }
+        
+        /// <summary>
         /// 获取结果摘要
         /// </summary>
         /// <returns>结果摘要字符串</returns>
@@ -141,7 +176,14 @@ namespace VisionLite.Vision.Core.Models
         {
             if (Success)
             {
-                return $"处理成功 - 耗时: {ProcessingTime.TotalMilliseconds:F2}ms, 测量项: {Measurements.Count}, 几何元素: {GeometryElements.Count}";
+                var summary = $"处理成功 - 耗时: {ProcessingTime.TotalMilliseconds:F2}ms, 测量项: {Measurements.Count}, 几何元素: {GeometryElements.Count}";
+                
+                if (HasCalibrationResult)
+                {
+                    summary += $", {GetCalibrationSummary()}";
+                }
+                
+                return summary;
             }
             else
             {

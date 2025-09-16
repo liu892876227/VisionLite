@@ -266,14 +266,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
 
         private string GetUnitDescription()
         {
-            return Unit switch
-            {
-                PhysicalUnit.Millimeter => "毫米",
-                PhysicalUnit.Micrometer => "微米",
-                PhysicalUnit.Inch => "英寸",
-                PhysicalUnit.Pixel => "像素",
-                _ => "未知"
-            };
+            return "毫米";
         }
 
         private string GetQualityDescription()

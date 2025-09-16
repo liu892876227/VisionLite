@@ -11,16 +11,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
     public enum PhysicalUnit
     {
         [Description("毫米")]
-        Millimeter,
-        
-        [Description("微米")]
-        Micrometer,
-        
-        [Description("英寸")]
-        Inch,
-        
-        [Description("像素")]
-        Pixel
+        Millimeter
     }
 
     /// <summary>

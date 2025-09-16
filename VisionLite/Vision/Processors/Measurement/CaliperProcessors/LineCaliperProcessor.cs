@@ -8,6 +8,7 @@ using VisionLite.Vision.Core.Attributes;
 using VisionLite.Vision.Core.Base;
 using VisionLite.Vision.Core.Enums;
 using VisionLite.Vision.Core.Models;
+using VisionLite.Vision.Calibration.NinePoint.Core;
 using static VisionLite.Vision.Core.Models.CaliperData;
 
 namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
@@ -125,6 +126,12 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// </summary>
         [Parameter("显示拟合直线", "是否显示拟合的直线", Order = 16, Group = "显示参数")]
         public bool ShowFittedLine { get; set; } = true;
+
+        /// <summary>
+        /// 显示标定结果
+        /// </summary>
+        [Parameter("显示标定结果", "是否显示标定后的物理坐标结果", Order = 17, Group = "显示参数")]
+        public bool ShowCalibrationResult { get; set; } = false;
 
         #endregion
 
@@ -559,6 +566,40 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                         ["角度"] = $"{lineFit.AngleDegrees:F2}°"
                     };
 
+                    // 添加标定结果到测量数据（如果启用）
+                    if (ShowCalibrationResult && lineFit.Success)
+                    {
+                        var globalService = GlobalCalibrationService.Instance;
+                        if (globalService.IsCalibrationActive)
+                        {
+                            try
+                            {
+                                var startImagePoint = new Point2D(lineFit.StartColumn, lineFit.StartRow);
+                                var endImagePoint = new Point2D(lineFit.EndColumn, lineFit.EndRow);
+                                var startWorldPoint = globalService.TransformImageToWorld(startImagePoint);
+                                var endWorldPoint = globalService.TransformImageToWorld(endImagePoint);
+                                
+                                measurements["标定状态"] = "已激活";
+                                measurements["标定名称"] = globalService.ActiveCalibration.Name;
+                                measurements["物理起点X"] = Math.Round(startWorldPoint.X, 3);
+                                measurements["物理起点Y"] = Math.Round(startWorldPoint.Y, 3);
+                                measurements["物理终点X"] = Math.Round(endWorldPoint.X, 3);
+                                measurements["物理终点Y"] = Math.Round(endWorldPoint.Y, 3);
+                                measurements["物理长度"] = Math.Round(CalibrationTransform.CalculateDistance(startWorldPoint, endWorldPoint), 3);
+                                measurements["物理单位"] = PhysicalUnitHelper.GetChineseDescription(globalService.ActiveCalibration.Unit);
+                                measurements["标定误差"] = Math.Round(globalService.ActiveCalibration.CalibrationError, 6);
+                            }
+                            catch (Exception ex)
+                            {
+                                measurements["标定状态"] = $"坐标变换失败: {ex.Message}";
+                            }
+                        }
+                        else
+                        {
+                            measurements["标定状态"] = "未应用标定";
+                        }
+                    }
+
                     // 创建输出图像
                     var outputImage = image.Clone();
 
@@ -577,6 +618,24 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                         result.GeometryElements.AddRange(geometryElements);
                     }
                     result.AddMetadata("EdgeResults", edges);
+                    
+                    // 处理标定结果（如果启用）
+                    if (ShowCalibrationResult && lineFit.Success)
+                    {
+                        try
+                        {
+                            var calibrationData = CreateCalibrationResult(lineFit);
+                            if (calibrationData != null)
+                            {
+                                result.SetCalibrationResult(calibrationData);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"创建标定结果失败: {ex.Message}");
+                            // 不影响主要处理流程，只记录错误
+                        }
+                    }
                     
                     // 停止计时并设置执行时间
                     stopwatch.Stop();
@@ -983,6 +1042,47 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
             {
                 // 捕获HTupleVoid异常或其他访问异常，返回空数组
                 return new double[0];
+            }
+        }
+
+        /// <summary>
+        /// 创建标定结果数据
+        /// </summary>
+        /// <param name="lineFit">直线拟合结果</param>
+        /// <returns>标定结果数据，如果无活动标定则返回null</returns>
+        private CalibrationResultData CreateCalibrationResult(LineFitResult lineFit)
+        {
+            var globalService = GlobalCalibrationService.Instance;
+            
+            if (!globalService.IsCalibrationActive || !lineFit.Success)
+                return null;
+            
+            try
+            {
+                // 图像坐标点（直线起点和终点）
+                var startImagePoint = new Point2D(lineFit.StartColumn, lineFit.StartRow);
+                var endImagePoint = new Point2D(lineFit.EndColumn, lineFit.EndRow);
+                
+                // 转换为物理坐标
+                var startWorldPoint = globalService.TransformImageToWorld(startImagePoint);
+                var endWorldPoint = globalService.TransformImageToWorld(endImagePoint);
+                
+                // 创建标定结果
+                var calibrationData = new CalibrationResultData
+                {
+                    ImageCoordinates = new List<Point2D> { startImagePoint, endImagePoint },
+                    WorldCoordinates = new List<Point2D> { startWorldPoint, endWorldPoint },
+                    CalibrationName = globalService.ActiveCalibration.Name,
+                    Unit = globalService.ActiveCalibration.Unit,
+                    TransformError = globalService.ActiveCalibration.CalibrationError
+                };
+                
+                return calibrationData;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"直线查找标定结果创建失败: {ex.Message}");
+                return null;
             }
         }
 

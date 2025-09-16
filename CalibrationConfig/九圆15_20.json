@@ -1,0 +1,205 @@
+{
+  "CalibrationId": "28cb759f-b882-4122-97c6-42f76ea0f939",
+  "Name": "九圆15_20",
+  "Description": "",
+  "PointPairs": [
+    {
+      "PointId": "3f9493c2-308b-4b73-88f9-1c2080b7ea77",
+      "PointName": "点1",
+      "ImagePoint": {
+        "X": 504.556,
+        "Y": 287.107
+      },
+      "WorldPoint": {
+        "X": 0.0,
+        "Y": 0.0
+      },
+      "IsSet": true,
+      "FitError": 0.15737424286984625,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:51:36.6849686+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "bb509949-fef1-4dc8-99d6-b41382ebea1f",
+      "PointName": "点2",
+      "ImagePoint": {
+        "X": 748.236,
+        "Y": 286.386
+      },
+      "WorldPoint": {
+        "X": 20.0,
+        "Y": 0.0
+      },
+      "IsSet": true,
+      "FitError": 0.31987836038313544,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:52:08.6515433+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "e5174843-150b-4b96-bd8a-1917b5fc6b47",
+      "PointName": "点3",
+      "ImagePoint": {
+        "X": 1003.907,
+        "Y": 285.569
+      },
+      "WorldPoint": {
+        "X": 40.0,
+        "Y": 0.0
+      },
+      "IsSet": true,
+      "FitError": 0.1639253574295737,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:52:32.7580723+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "73b5df67-2008-4d1c-b39a-6f92dc22f9cd",
+      "PointName": "点4",
+      "ImagePoint": {
+        "X": 505.261,
+        "Y": 531.408
+      },
+      "WorldPoint": {
+        "X": 0.0,
+        "Y": 20.0
+      },
+      "IsSet": true,
+      "FitError": 0.16544926481332864,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:53:02.9563967+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "d972ed22-2323-48a6-8709-1724615590e5",
+      "PointName": "点5",
+      "ImagePoint": {
+        "X": 748.772,
+        "Y": 530.704
+      },
+      "WorldPoint": {
+        "X": 20.0,
+        "Y": 20.0
+      },
+      "IsSet": true,
+      "FitError": 0.32582130000535192,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:54:10.6765495+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "132e33dc-e1bc-420d-8206-b517259cd54c",
+      "PointName": "点6",
+      "ImagePoint": {
+        "X": 1004.448,
+        "Y": 529.934
+      },
+      "WorldPoint": {
+        "X": 40.0,
+        "Y": 20.0
+      },
+      "IsSet": true,
+      "FitError": 0.15820948038431898,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:54:51.8393873+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "67b12541-d136-49bd-bb84-bae26f4ec5f3",
+      "PointName": "点7",
+      "ImagePoint": {
+        "X": 505.972,
+        "Y": 775.234
+      },
+      "WorldPoint": {
+        "X": 0.0,
+        "Y": 40.0
+      },
+      "IsSet": true,
+      "FitError": 0.17430362219313961,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:56:04.5116787+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "fc3d4bfe-dace-471a-939e-5329ec52882a",
+      "PointName": "点8",
+      "ImagePoint": {
+        "X": 749.418,
+        "Y": 774.837
+      },
+      "WorldPoint": {
+        "X": 20.0,
+        "Y": 40.0
+      },
+      "IsSet": true,
+      "FitError": 0.32271615838749057,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:56:34.2133122+08:00",
+      "Notes": ""
+    },
+    {
+      "PointId": "8a62cf93-816a-4caf-8a3b-280003a34913",
+      "PointName": "点9",
+      "ImagePoint": {
+        "X": 1004.963,
+        "Y": 774.058
+      },
+      "WorldPoint": {
+        "X": 40.0,
+        "Y": 40.0
+      },
+      "IsSet": true,
+      "FitError": 0.15067284537222486,
+      "Confidence": 1.0,
+      "CreatedTime": "2025-09-16T08:56:58.2141612+08:00",
+      "Notes": ""
+    }
+  ],
+  "TransformMatrix": [
+    [
+      0.080115784740474622,
+      -0.00019960729736469206,
+      -40.208219019792928
+    ],
+    [
+      0.00022926514277751223,
+      0.08190692141474866,
+      -23.630928359604319
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "InverseTransformMatrix": [
+    [
+      12.48184773309562,
+      0.030418282717584792,
+      502.59167968373595
+    ],
+    [
+      -0.034937860601119454,
+      12.208895278635206,
+      287.10274052820716
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "CalibrationError": 0.21537229242648998,
+  "MaxPointError": 0.32582130000535192,
+  "PixelScale": 12.344834081866843,
+  "IsValid": true,
+  "CalibrationTime": "2025-09-16T08:57:01.9980489+08:00",
+  "TransformType": "仿射变换",
+  "Unit": 0,
+  "ImagePath": null,
+  "ImageSize": null,
+  "Quality": 1,
+  "ValidPointCount": 9
+}

@@ -8,6 +8,7 @@ using VisionLite.Vision.Core.Attributes;
 using VisionLite.Vision.Core.Base;
 using VisionLite.Vision.Core.Enums;
 using VisionLite.Vision.Core.Models;
+using VisionLite.Vision.Calibration.NinePoint.Core;
 using static VisionLite.Vision.Core.Models.CaliperData;
 
 namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
@@ -125,6 +126,12 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
         /// </summary>
         [Parameter("显示拟合圆", "是否显示拟合的圆", Order = 16, Group = "显示选项")]
         public bool ShowFittedCircle { get; set; } = true;
+
+        /// <summary>
+        /// 显示标定结果
+        /// </summary>
+        [Parameter("显示标定结果", "是否显示标定后的物理坐标结果", Order = 17, Group = "显示选项")]
+        public bool ShowCalibrationResult { get; set; } = false;
 
         #endregion
 
@@ -490,11 +497,29 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                 // 步骤7：创建测量数据
                 var measurements = CreateMeasurements(fitResult, allEdgePoints.Count, processedCalipers.Statistics);
 
-                // 步骤7：创建成功结果并保存轮廓数据
+                // 步骤8：创建成功结果并保存轮廓数据
                 stopwatch.Stop();
                 var result = CreateSuccessResult(outputImage, stopwatch.Elapsed, measurements);
                 stopwatch.Start(); // 重新启动以便在主方法中正常停止
                 result.AddMetadata("HalconDisplayContours", displayContours);
+
+                // 步骤9：处理标定结果（如果启用）
+                if (ShowCalibrationResult && fitResult.IsValid)
+                {
+                    try
+                    {
+                        var calibrationData = CreateCalibrationResult(fitResult);
+                        if (calibrationData != null)
+                        {
+                            result.SetCalibrationResult(calibrationData);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"创建标定结果失败: {ex.Message}");
+                        // 不影响主要处理流程，只记录错误
+                    }
+                }
 
                 return result;
             }
@@ -937,6 +962,43 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
                     // 拟合质量
                     measurements["拟合误差"] = Math.Round(fitResult.FitError, 6);
                     measurements["拟合评分"] = Math.Round(1.0 / (1.0 + fitResult.FitError), 6);
+                    
+                    // 添加标定结果到测量数据（如果启用）
+                    if (ShowCalibrationResult)
+                    {
+                        var globalService = GlobalCalibrationService.Instance;
+                        if (globalService.IsCalibrationActive)
+                        {
+                            try
+                            {
+                                var imagePoint = new Point2D(fitResult.CenterCol, fitResult.CenterRow);
+                                var worldPoint = globalService.TransformImageToWorld(imagePoint);
+                                
+                                // 计算像素到物理单位的比例因子（基于X轴变换）
+                                var scaleFactor = CalculateScaleFactor(globalService);
+                                var physicalRadius = fitResult.Radius * scaleFactor;
+                                
+                                measurements["标定状态"] = "已激活";
+                                measurements["标定名称"] = globalService.ActiveCalibration.Name;
+                                measurements["物理圆心X"] = Math.Round(worldPoint.X, 3);
+                                measurements["物理圆心Y"] = Math.Round(worldPoint.Y, 3);
+                                measurements["物理半径"] = Math.Round(physicalRadius, 3);
+                                measurements["物理直径"] = Math.Round(physicalRadius * 2.0, 3);
+                                measurements["物理周长"] = Math.Round(2.0 * Math.PI * physicalRadius, 3);
+                                measurements["物理面积"] = Math.Round(Math.PI * physicalRadius * physicalRadius, 3);
+                                measurements["物理单位"] = PhysicalUnitHelper.GetChineseDescription(globalService.ActiveCalibration.Unit);
+                                measurements["标定误差"] = Math.Round(globalService.ActiveCalibration.CalibrationError, 6);
+                            }
+                            catch (Exception ex)
+                            {
+                                measurements["标定状态"] = $"坐标变换失败: {ex.Message}";
+                            }
+                        }
+                        else
+                        {
+                            measurements["标定状态"] = "未应用标定";
+                        }
+                    }
                 }
                 else
                 {
@@ -949,6 +1011,76 @@ namespace VisionLite.Vision.Processors.Measurement.CaliperProcessors
             {
                 measurements["错误"] = ex.Message;
                 return measurements;
+            }
+        }
+
+        /// <summary>
+        /// 计算像素到物理单位的比例因子
+        /// 通过变换矩阵估算比例，用于从像素尺寸转换到物理尺寸
+        /// </summary>
+        /// <param name="globalService">全局标定服务</param>
+        /// <returns>像素到物理单位的比例因子</returns>
+        private double CalculateScaleFactor(GlobalCalibrationService globalService)
+        {
+            try
+            {
+                // 使用两个相邻像素点来计算比例因子
+                var point1 = new Point2D(0.0, 0.0);
+                var point2 = new Point2D(1.0, 0.0);  // X方向上相距1像素的点
+                
+                var worldPoint1 = globalService.TransformImageToWorld(point1);
+                var worldPoint2 = globalService.TransformImageToWorld(point2);
+                
+                // 计算物理距离 / 像素距离 = 比例因子
+                var physicalDistance = Math.Sqrt(Math.Pow(worldPoint2.X - worldPoint1.X, 2) + Math.Pow(worldPoint2.Y - worldPoint1.Y, 2));
+                var pixelDistance = 1.0;  // 1像素
+                
+                return physicalDistance / pixelDistance;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"计算比例因子失败: {ex.Message}");
+                // 如果计算失败，返回默认值1.0（即不进行转换）
+                return 1.0;
+            }
+        }
+
+        /// <summary>
+        /// 创建标定结果数据
+        /// </summary>
+        /// <param name="fitResult">圆拟合结果</param>
+        /// <returns>标定结果数据，如果无活动标定则返回null</returns>
+        private CalibrationResultData CreateCalibrationResult(CircleFitResult fitResult)
+        {
+            var globalService = GlobalCalibrationService.Instance;
+            
+            if (!globalService.IsCalibrationActive || !fitResult.IsValid)
+                return null;
+            
+            try
+            {
+                // 图像坐标点（圆心）
+                var imagePoint = new Point2D(fitResult.CenterCol, fitResult.CenterRow);
+                
+                // 转换为物理坐标
+                var worldPoint = globalService.TransformImageToWorld(imagePoint);
+                
+                // 创建标定结果
+                var calibrationData = new CalibrationResultData
+                {
+                    ImageCoordinates = new List<Point2D> { imagePoint },
+                    WorldCoordinates = new List<Point2D> { worldPoint },
+                    CalibrationName = globalService.ActiveCalibration.Name,
+                    Unit = globalService.ActiveCalibration.Unit,
+                    TransformError = globalService.ActiveCalibration.CalibrationError
+                };
+                
+                return calibrationData;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"圆查找标定结果创建失败: {ex.Message}");
+                return null;
             }
         }
 

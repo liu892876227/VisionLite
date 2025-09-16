@@ -207,6 +207,9 @@
     <Compile Include="Vision\Calibration\NinePoint\Core\TransformCalculator.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Core\NinePointCalibrationProcessor.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Core\GlobalCalibrationManager.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Core\GlobalCalibrationService.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Core\CalibrationTransform.cs" />
+    <Compile Include="Vision\Calibration\NinePoint\Core\PhysicalUnitHelper.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Storage\CalibrationFileManager.cs" />
     <Compile Include="Vision\Calibration\NinePoint\UI\NinePointCalibrationWindow.xaml.cs">
       <DependentUpon>NinePointCalibrationWindow.xaml</DependentUpon>
