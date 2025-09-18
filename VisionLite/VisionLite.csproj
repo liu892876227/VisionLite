@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{72EA0E94-63CA-4E7F-A305-EDAB14D1B7A7}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <RootNamespace>VisionLite</RootNamespace>
     <AssemblyName>VisionLite</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -186,7 +186,9 @@
     <Compile Include="Vision\Core\Enums\CaliperEnums.cs" />
     <Compile Include="Vision\Core\Enums\RealtimePreviewEnums.cs" />
     <Compile Include="Vision\Core\Attributes\ParameterAttribute.cs" />
+    <Compile Include="Vision\Core\Enums\ROIInteractionEnums.cs" />
     <Compile Include="Vision\Core\Utils\ReflectionCache.cs" />
+    <Compile Include="Vision\Core\Utils\ImageMatchingROIManager.cs" />
     <Compile Include="Vision\Core\Base\VisionProcessorBase.cs" />
     <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\GaussianFilterProcessor.cs" />
     <Compile Include="Vision\Processors\Preprocessing\FilterProcessors\MedianFilterProcessor.cs" />
@@ -202,6 +204,12 @@
     <Compile Include="Vision\Processors\Preprocessing\EnhancementProcessors\HistogramEqualizationProcessor.cs" />
     <Compile Include="Vision\Processors\Measurement\CaliperProcessors\CircleCaliperProcessor.cs" />
     <Compile Include="Vision\Processors\Measurement\CaliperProcessors\LineCaliperProcessor.cs" />
+    <Compile Include="Vision\Processors\ImageMatching\Models\ImageMatchingEnums.cs" />
+    <Compile Include="Vision\Processors\ImageMatching\Models\MatchInstance.cs" />
+    <Compile Include="Vision\Processors\ImageMatching\ImageMatchingProcessorBase.cs" />
+    <Compile Include="Vision\Processors\ImageMatching\GrayValueMatchingProcessor.cs" />
+    <Compile Include="Vision\Processors\ImageMatching\ShapeMatchingProcessor.cs" />
+    <Compile Include="Vision\Processors\ImageMatching\FeaturePointMatchingProcessor.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Core\CalibrationEnums.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Core\NinePointCalibrationData.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Core\TransformCalculator.cs" />

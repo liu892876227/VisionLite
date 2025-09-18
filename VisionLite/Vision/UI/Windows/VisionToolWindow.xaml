@@ -156,12 +156,24 @@
                                       Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
                     
+                    <TreeViewItem Header="图像匹配" IsExpanded="True">
+                        <TreeViewItem Header="灰度匹配"
+                                      Tag="GrayValueMatching"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="形状匹配"
+                                      Tag="ShapeMatching"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="特征点匹配"
+                                      Tag="FeaturePointMatching"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                    </TreeViewItem>
+
                     <TreeViewItem Header="标定工具" IsExpanded="True">
-                        <TreeViewItem Header="九点标定" 
+                        <TreeViewItem Header="九点标定"
                                       Tag="NinePointCalibration"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
-                    
+
                 </TreeView>
             </GroupBox>
             
@@ -187,8 +199,11 @@
                 
                 <!-- Halcon显示控件 -->
                 <Border Grid.Row="1" BorderBrush="#FFCCCCCC" BorderThickness="1" Background="Black">
-                    <halcon:HSmartWindowControlWPF x:Name="HalconDisplay" 
-                                                   Background="Black"/>
+                    <halcon:HSmartWindowControlWPF x:Name="HalconDisplay"
+                                                   Background="Black"
+                                                   MouseDown="HalconDisplay_MouseDown"
+                                                   MouseMove="HalconDisplay_MouseMove"
+                                                   MouseUp="HalconDisplay_MouseUp"/>
                 </Border>
                 
                 <!-- ROI信息显示覆盖层 -->

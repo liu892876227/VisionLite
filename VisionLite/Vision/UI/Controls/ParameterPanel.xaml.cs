@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using VisionLite.Vision.Core.Interfaces;
 using VisionLite.Vision.Core.Models;
+using VisionLite.Vision.Core.Enums;
 using VisionLite.Vision.Processors.Preprocessing.FilterProcessors;
 
 namespace VisionLite.Vision.UI.Controls
@@ -44,7 +45,38 @@ namespace VisionLite.Vision.UI.Controls
         /// 参数重置事件
         /// </summary>
         public event EventHandler ParametersReset;
-        
+
+        /// <summary>
+        /// ROI模式变化事件
+        /// </summary>
+        public event Action<ROIInteractionMode> ROIModeChanged;
+
+        /// <summary>
+        /// 切换到搜索ROI请求事件
+        /// </summary>
+        public event Action SwitchToSearchROIRequested;
+
+        /// <summary>
+        /// 切换到模板ROI请求事件
+        /// </summary>
+        public event Action SwitchToTemplateROIRequested;
+
+
+        #endregion
+
+        #region ROI控制属性
+
+        /// <summary>
+        /// 是否显示ROI控制面板
+        /// </summary>
+        public bool ShowROIControls
+        {
+            get { return ROIControlPanel.Visibility == Visibility.Visible; }
+            set { ROIControlPanel.Visibility = value ? Visibility.Visible : Visibility.Collapsed; }
+        }
+
+        private ROIInteractionMode _currentROIMode = ROIInteractionMode.TemplateROI;
+
         #endregion
         
         #region 构造函数
@@ -71,17 +103,26 @@ namespace VisionLite.Vision.UI.Controls
             try
             {
                 _currentProcessor = processor;
-                
+
                 if (processor != null)
                 {
                     TitleText.Text = $"{processor.ProcessorName} - 参数配置";
                     _currentParameters = processor.GetParameters();
                     CreateParameterControls();
+
+                    // 根据处理器类型控制ROI面板显示
+                    UpdateROIControlVisibility(processor);
                 }
                 else
                 {
                     TitleText.Text = "参数配置";
                     ClearParameterControls();
+
+                    // 隐藏ROI面板
+                    if (ROIControlPanel != null)
+                    {
+                        ROIControlPanel.Visibility = Visibility.Collapsed;
+                    }
                 }
             }
             catch (Exception ex)
@@ -90,7 +131,80 @@ namespace VisionLite.Vision.UI.Controls
                 ClearParameterControls();
             }
         }
-        
+
+        /// <summary>
+        /// 根据处理器类型更新ROI控制面板的可见性
+        /// </summary>
+        private void UpdateROIControlVisibility(IVisionProcessor processor)
+        {
+            if (ROIControlPanel == null) return;
+
+            // 检查是否为图像匹配类型的处理器
+            bool isImageMatchingProcessor = IsImageMatchingProcessor(processor);
+
+            // 只有图像匹配处理器才显示ROI控制面板
+            ROIControlPanel.Visibility = isImageMatchingProcessor ? Visibility.Visible : Visibility.Collapsed;
+
+            // 如果是图像匹配处理器，重置ROI面板为初始状态
+            if (isImageMatchingProcessor)
+            {
+                ResetROIControlsToDefault();
+            }
+
+            System.Diagnostics.Debug.WriteLine($"处理器 {processor.ProcessorName} 的ROI面板可见性: {ROIControlPanel.Visibility}");
+        }
+
+        /// <summary>
+        /// 重置ROI控制面板到默认状态
+        /// </summary>
+        private void ResetROIControlsToDefault()
+        {
+            try
+            {
+                // 重置单选按钮：模板ROI选中，搜索ROI未选中
+                if (TemplateROIRadio != null)
+                {
+                    TemplateROIRadio.IsChecked = true;
+                }
+
+                if (SearchROIRadio != null)
+                {
+                    SearchROIRadio.IsChecked = false;
+                }
+
+                // 重置ROI模式
+                _currentROIMode = ROIInteractionMode.TemplateROI;
+
+                // 重置指令文本
+                if (ROIInstructionText != null)
+                {
+                    ROIInstructionText.Text = "拖拽编辑模板ROI区域的位置和大小";
+                }
+
+                System.Diagnostics.Debug.WriteLine("ROI控制面板已重置为默认状态：模板ROI选中");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"重置ROI控制面板失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 判断是否为图像匹配类型的处理器
+        /// </summary>
+        private bool IsImageMatchingProcessor(IVisionProcessor processor)
+        {
+            if (processor == null) return false;
+
+            // 通过命名空间或类型名判断是否为图像匹配处理器
+            var processorType = processor.GetType();
+            var namespaceName = processorType.Namespace;
+            var typeName = processorType.Name;
+
+            // 图像匹配处理器位于ImageMatching命名空间下
+            return namespaceName != null && namespaceName.Contains("ImageMatching");
+        }
+
         /// <summary>
         /// 应用参数到处理器
         /// </summary>
@@ -827,7 +941,59 @@ namespace VisionLite.Vision.UI.Controls
         {
             ApplyParametersToProcessor();
         }
-        
+
+        /// <summary>
+        /// 模板ROI单选钮选中事件
+        /// </summary>
+        private void TemplateROIRadio_Checked(object sender, RoutedEventArgs e)
+        {
+            _currentROIMode = ROIInteractionMode.TemplateROI;
+
+            // 防止初始化时控件还未加载完成
+            if (ROIInstructionText != null)
+            {
+                ROIInstructionText.Text = "拖拽编辑模板ROI区域的位置和大小";
+            }
+
+            // 通知外部切换到模板ROI编辑状态
+            SwitchToTemplateROIRequested?.Invoke();
+
+            // 同时触发模式变化事件（用于其他监听者）
+            ROIModeChanged?.Invoke(_currentROIMode);
+        }
+
+        /// <summary>
+        /// 搜索ROI单选钮选中事件
+        /// </summary>
+        private void SearchROIRadio_Checked(object sender, RoutedEventArgs e)
+        {
+            _currentROIMode = ROIInteractionMode.SearchROI;
+
+            // 防止初始化时控件还未加载完成
+            if (ROIInstructionText != null)
+            {
+                ROIInstructionText.Text = "拖拽编辑搜索ROI区域的位置和大小";
+            }
+
+            // 通知外部切换到搜索ROI编辑状态
+            SwitchToSearchROIRequested?.Invoke();
+
+            // 同时触发模式变化事件（用于其他监听者）
+            ROIModeChanged?.Invoke(_currentROIMode);
+        }
+
+        #endregion
+
+        #region ROI控制方法
+
+        /// <summary>
+        /// 自动切换到搜索ROI模式
+        /// </summary>
+        public void SwitchToSearchROI()
+        {
+            SearchROIRadio.IsChecked = true;
+        }
+
         #endregion
     }
     

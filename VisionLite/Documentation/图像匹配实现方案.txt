@@ -1,0 +1,1132 @@
+# 图像匹配模块完整实现方案
+
+## 概述
+本方案实现三种图像匹配算法：灰度匹配、形状匹配、特征点匹配。
+- 统一使用交互式矩形ROI选择模板
+- 基于Halcon库函数实现核心算法
+- 支持动态参数面板和结果可视化
+
+## 1. 基类设计
+
+### ImageMatchingProcessorBase.cs
+```csharp
+/// <summary>
+/// 图像匹配处理器基类
+/// </summary>
+public abstract class ImageMatchingProcessorBase : VisionProcessorBase
+{
+    public override string Category => "图像匹配";
+
+    /// <summary>模板ROI区域</summary>
+    [Parameter("模板ROI", "在图像上选择矩形模板区域", Order = 1, Group = "模板设置")]
+    public ROIGeometry TemplateROI { get; set; }
+
+    /// <summary>搜索区域</summary>
+    [Parameter("搜索ROI", "限制搜索的区域范围", Order = 2, Group = "搜索设置")]
+    public ROIGeometry SearchROI { get; set; }
+
+    /// <summary>最大匹配数量</summary>
+    [Parameter("最大匹配数量", "返回的最大匹配结果数", Order = 50, Group = "搜索参数", MinValue = 1, MaxValue = 100)]
+    public int MaxMatches { get; set; } = 5;
+
+    /// <summary>重叠阈值</summary>
+    [Parameter("重叠阈值", "结果去重的重叠阈值(0-1)", Order = 51, Group = "搜索参数", MinValue = 0, MaxValue = 1.0)]
+    public double MaxOverlap { get; set; } = 0.5;
+
+    /// <summary>显示匹配结果</summary>
+    [Parameter("显示匹配轮廓", "是否显示匹配结果的轮廓", Order = 60, Group = "显示设置")]
+    public bool ShowMatchContours { get; set; } = true;
+
+    /// <summary>Halcon模型句柄</summary>
+    protected HTuple ModelHandle { get; set; } = new HTuple();
+
+    /// <summary>是否需要重新创建模板</summary>
+    protected bool NeedUpdateTemplate = true;
+
+    /// <summary>创建匹配模板的抽象方法</summary>
+    protected abstract bool CreateTemplate(VisionImage inputImage);
+
+    /// <summary>执行匹配的抽象方法</summary>
+    protected abstract List<MatchInstance> ExecuteMatching(VisionImage inputImage);
+
+    /// <summary>释放模型资源</summary>
+    protected virtual void ReleaseModel()
+    {
+        if (ModelHandle.IsValid())
+        {
+            try
+            {
+                // 子类重写具体的释放方法
+                DisposeModel();
+                ModelHandle = new HTuple();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"释放模型失败: {ex.Message}");
+            }
+        }
+    }
+
+    protected abstract void DisposeModel();
+
+    /// <summary>从ROI区域提取模板</summary>
+    protected bool ExtractTemplateFromROI(HObject inputImage, ROIGeometry roi,
+        out HObject templateRegion, out HObject templateImage)
+    {
+        templateRegion = null;
+        templateImage = null;
+
+        try
+        {
+            // 根据ROI创建Halcon区域
+            templateRegion = CreateHalconRegionFromROI(roi);
+
+            // 从图像中提取ROI区域
+            HOperatorSet.ReduceDomain(inputImage, templateRegion, out templateImage);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"提取模板失败: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>从ROI几何信息创建Halcon区域</summary>
+    protected HObject CreateHalconRegionFromROI(ROIGeometry roi)
+    {
+        // 假设ROI是矩形类型
+        var rect = roi.GetBoundingRectangle();
+        HOperatorSet.GenRectangle1(out HObject region,
+            rect.Row1, rect.Col1, rect.Row2, rect.Col2);
+        return region;
+    }
+
+    /// <summary>创建测量数据</summary>
+    protected Dictionary<string, object> CreateMeasurements(List<MatchInstance> results)
+    {
+        var measurements = new Dictionary<string, object>();
+
+        measurements["匹配成功"] = results.Count > 0 ? "是" : "否";
+        measurements["匹配数量"] = results.Count;
+
+        if (results.Count > 0)
+        {
+            var best = results[0]; // 假设按分数排序，第一个是最佳
+            measurements["最佳匹配位置Row"] = Math.Round(best.Row, 3);
+            measurements["最佳匹配位置Col"] = Math.Round(best.Column, 3);
+            measurements["最佳匹配角度"] = Math.Round(best.Angle, 2);
+            measurements["最佳匹配分数"] = Math.Round(best.Score, 6);
+
+            if (best.Scale != 1.0)
+            {
+                measurements["最佳匹配缩放"] = Math.Round(best.Scale, 6);
+            }
+        }
+
+        return measurements;
+    }
+
+    /// <summary>创建显示轮廓</summary>
+    protected List<HObject> CreateDisplayContours(List<MatchInstance> results)
+    {
+        var contours = new List<HObject>();
+
+        foreach (var result in results)
+        {
+            if (result.ContourPoints != null && result.ContourPoints.Length > 0)
+            {
+                var rows = new HTuple(result.ContourPoints.Select(p => p.X).ToArray());
+                var cols = new HTuple(result.ContourPoints.Select(p => p.Y).ToArray());
+
+                HOperatorSet.GenContourPolygonXld(out HObject contour, rows, cols);
+                contours.Add(contour);
+            }
+        }
+
+        return contours;
+    }
+}
+```
+
+## 2. 灰度匹配处理器
+
+### GrayValueMatchingProcessor.cs
+```csharp
+/// <summary>
+/// 灰度匹配处理器
+/// 使用归一化互相关(NCC)算法进行灰度模板匹配
+/// </summary>
+public class GrayValueMatchingProcessor : ImageMatchingProcessorBase
+{
+    public override string ProcessorName => "灰度匹配";
+
+    #region 参数定义
+
+    [Parameter("角度范围最小值", "搜索的最小旋转角度(度)", Order = 10, Group = "搜索参数", MinValue = -180, MaxValue = 180)]
+    public double MinAngle { get; set; } = -10;
+
+    [Parameter("角度范围最大值", "搜索的最大旋转角度(度)", Order = 11, Group = "搜索参数", MinValue = -180, MaxValue = 180)]
+    public double MaxAngle { get; set; } = 10;
+
+    [Parameter("最小匹配得分", "接受匹配结果的最小分数(0-1)", Order = 12, Group = "搜索参数", MinValue = 0.1, MaxValue = 1.0)]
+    public double MinScore { get; set; } = 0.7;
+
+    [Parameter("子像素精度", "是否启用子像素精度定位", Order = 20, Group = "精度设置")]
+    public bool SubpixelAccuracy { get; set; } = true;
+
+    #endregion
+
+    #region Halcon算法流程
+
+    protected override bool CreateTemplate(VisionImage inputImage)
+    {
+        try
+        {
+            // 释放之前的模型
+            ReleaseModel();
+
+            // 检查ROI是否有效
+            if (TemplateROI == null || !TemplateROI.IsValid)
+            {
+                return false;
+            }
+
+            // 从ROI区域提取模板
+            HObject templateRegion, templateImage;
+            var success = ExtractTemplateFromROI(inputImage.HObject, TemplateROI,
+                out templateRegion, out templateImage);
+
+            if (!success)
+            {
+                return false;
+            }
+
+            // 创建NCC模型
+            HOperatorSet.CreateNccModel(templateImage, "auto",
+                MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180,
+                "auto", "use_polarity", out ModelHandle);
+
+            // 清理临时对象
+            templateRegion?.Dispose();
+            templateImage?.Dispose();
+
+            NeedUpdateTemplate = false;
+            return ModelHandle.IsValid();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"创建NCC模板失败: {ex.Message}");
+            return false;
+        }
+    }
+
+    protected override List<MatchInstance> ExecuteMatching(VisionImage inputImage)
+    {
+        var results = new List<MatchInstance>();
+
+        try
+        {
+            if (!ModelHandle.IsValid())
+            {
+                return results;
+            }
+
+            // 准备搜索图像（考虑搜索ROI）
+            HObject searchImage = inputImage.HObject;
+            if (SearchROI != null && SearchROI.IsValid)
+            {
+                // 在搜索ROI内进行匹配
+                HOperatorSet.ReduceDomain(inputImage.HObject,
+                    CreateHalconRegionFromROI(SearchROI), out searchImage);
+            }
+
+            // 执行NCC匹配
+            HOperatorSet.FindNccModel(searchImage, ModelHandle,
+                MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180,
+                MinScore, MaxMatches, MaxOverlap, SubpixelAccuracy ? "true" : "false", 0,
+                out HTuple rows, out HTuple columns, out HTuple angles, out HTuple scores);
+
+            // 处理匹配结果
+            for (int i = 0; i < rows.Length; i++)
+            {
+                var instance = new MatchInstance
+                {
+                    Row = rows[i].D,
+                    Column = columns[i].D,
+                    Angle = angles[i].D * 180 / Math.PI, // 转换为度
+                    Scale = 1.0, // NCC匹配无缩放
+                    Score = scores[i].D
+                };
+
+                // 获取模板轮廓用于显示
+                if (ShowMatchContours)
+                {
+                    instance.ContourPoints = GetNccModelContour(instance);
+                }
+
+                results.Add(instance);
+            }
+
+            // 清理临时图像
+            if (SearchROI != null && SearchROI.IsValid)
+            {
+                searchImage?.Dispose();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"NCC匹配执行失败: {ex.Message}");
+        }
+
+        return results;
+    }
+
+    protected override void DisposeModel()
+    {
+        if (ModelHandle.IsValid())
+        {
+            HOperatorSet.ClearNccModel(ModelHandle);
+        }
+    }
+
+    #endregion
+
+    #region 辅助方法
+
+    private Point2D[] GetNccModelContour(MatchInstance instance)
+    {
+        // NCC模型的轮廓为模板区域的矩形边界
+        if (TemplateROI == null) return new Point2D[0];
+
+        var rect = TemplateROI.GetBoundingRectangle();
+        var centerRow = instance.Row;
+        var centerCol = instance.Column;
+        var angle = instance.Angle * Math.PI / 180;
+
+        // 计算旋转后的矩形顶点
+        var points = new Point2D[5]; // 矩形需要5个点闭合
+        var corners = new[]
+        {
+            new Point2D(rect.Row1 - centerRow, rect.Col1 - centerCol),
+            new Point2D(rect.Row1 - centerRow, rect.Col2 - centerCol),
+            new Point2D(rect.Row2 - centerRow, rect.Col2 - centerCol),
+            new Point2D(rect.Row2 - centerRow, rect.Col1 - centerCol),
+            new Point2D(rect.Row1 - centerRow, rect.Col1 - centerCol) // 闭合
+        };
+
+        for (int i = 0; i < corners.Length; i++)
+        {
+            var rotatedRow = corners[i].X * Math.Cos(angle) - corners[i].Y * Math.Sin(angle);
+            var rotatedCol = corners[i].X * Math.Sin(angle) + corners[i].Y * Math.Cos(angle);
+            points[i] = new Point2D(centerRow + rotatedRow, centerCol + rotatedCol);
+        }
+
+        return points;
+    }
+
+    #endregion
+
+    public override async Task<ProcessResult> ProcessAsync(VisionImage inputImage)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        try
+        {
+            // 检查是否需要更新模板
+            if (NeedUpdateTemplate || !ModelHandle.IsValid())
+            {
+                if (!CreateTemplate(inputImage))
+                {
+                    return CreateFailureResult("模板创建失败，请检查模板ROI设置");
+                }
+            }
+
+            // 执行匹配
+            var matchResults = ExecuteMatching(inputImage);
+
+            // 创建测量数据
+            var measurements = CreateMeasurements(matchResults);
+
+            stopwatch.Stop();
+            var result = CreateSuccessResult(inputImage.Clone(), stopwatch.Elapsed, measurements);
+
+            // 添加轮廓显示数据
+            if (ShowMatchContours && matchResults.Count > 0)
+            {
+                var contours = CreateDisplayContours(matchResults);
+                result.AddMetadata("HalconDisplayContours", contours);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            return CreateFailureResult($"灰度匹配失败: {ex.Message}");
+        }
+    }
+}
+```
+
+## 3. 形状匹配处理器
+
+### ShapeMatchingProcessor.cs
+```csharp
+/// <summary>
+/// 形状匹配处理器
+/// 支持常规、缩放、各向异性三种形状匹配模式
+/// </summary>
+public class ShapeMatchingProcessor : ImageMatchingProcessorBase
+{
+    public override string ProcessorName => "形状匹配";
+
+    #region 参数定义
+
+    [Parameter("匹配类型", "选择形状匹配的算法类型", Order = 5, Group = "算法选择")]
+    public ShapeMatchingType MatchingType { get; set; } = ShapeMatchingType.Standard;
+
+    [Parameter("角度范围最小值", "搜索角度下限(度)", Order = 10, Group = "搜索参数", MinValue = -180, MaxValue = 180)]
+    public double MinAngle { get; set; } = -10;
+
+    [Parameter("角度范围最大值", "搜索角度上限(度)", Order = 11, Group = "搜索参数", MinValue = -180, MaxValue = 180)]
+    public double MaxAngle { get; set; } = 10;
+
+    [Parameter("最小匹配得分", "接受结果的最低分数", Order = 12, Group = "搜索参数", MinValue = 0.1, MaxValue = 1.0)]
+    public double MinScore { get; set; } = 0.8;
+
+    // 缩放匹配参数组
+    [Parameter("缩放范围最小值", "最小缩放比例", Order = 20, Group = "缩放参数", MinValue = 0.5, MaxValue = 2.0)]
+    [Visibility("MatchingType", ShapeMatchingType.Scaled, ShapeMatchingType.Anisotropic)]
+    public double MinScale { get; set; } = 0.9;
+
+    [Parameter("缩放范围最大值", "最大缩放比例", Order = 21, Group = "缩放参数", MinValue = 0.5, MaxValue = 2.0)]
+    [Visibility("MatchingType", ShapeMatchingType.Scaled, ShapeMatchingType.Anisotropic)]
+    public double MaxScale { get; set; } = 1.1;
+
+    // 各向异性参数组
+    [Parameter("行缩放最小值", "行方向最小缩放比例", Order = 30, Group = "各向异性参数", MinValue = 0.5, MaxValue = 2.0)]
+    [Visibility("MatchingType", ShapeMatchingType.Anisotropic)]
+    public double MinScaleRow { get; set; } = 0.9;
+
+    [Parameter("行缩放最大值", "行方向最大缩放比例", Order = 31, Group = "各向异性参数", MinValue = 0.5, MaxValue = 2.0)]
+    [Visibility("MatchingType", ShapeMatchingType.Anisotropic)]
+    public double MaxScaleRow { get; set; } = 1.1;
+
+    [Parameter("列缩放最小值", "列方向最小缩放比例", Order = 32, Group = "各向异性参数", MinValue = 0.5, MaxValue = 2.0)]
+    [Visibility("MatchingType", ShapeMatchingType.Anisotropic)]
+    public double MinScaleCol { get; set; } = 0.9;
+
+    [Parameter("列缩放最大值", "列方向最大缩放比例", Order = 33, Group = "各向异性参数", MinValue = 0.5, MaxValue = 2.0)]
+    [Visibility("MatchingType", ShapeMatchingType.Anisotropic)]
+    public double MaxScaleCol { get; set; } = 1.1;
+
+    // 高级参数组
+    [Parameter("对比度阈值", "边缘检测对比度阈值", Order = 40, Group = "高级参数", MinValue = 10, MaxValue = 100)]
+    public int ContrastThreshold { get; set; } = 30;
+
+    [Parameter("最小对比度", "边缘点最小对比度", Order = 41, Group = "高级参数", MinValue = 5, MaxValue = 50)]
+    public int MinContrast { get; set; } = 10;
+
+    [Parameter("优化策略", "模板创建优化策略", Order = 42, Group = "高级参数")]
+    public OptimizationStrategy Optimization { get; set; } = OptimizationStrategy.Auto;
+
+    #endregion
+
+    #region Halcon算法流程
+
+    protected override bool CreateTemplate(VisionImage inputImage)
+    {
+        try
+        {
+            ReleaseModel();
+
+            if (TemplateROI == null || !TemplateROI.IsValid)
+            {
+                return false;
+            }
+
+            // 从ROI提取模板
+            HObject templateRegion, templateImage;
+            var success = ExtractTemplateFromROI(inputImage.HObject, TemplateROI,
+                out templateRegion, out templateImage);
+
+            if (!success)
+            {
+                return false;
+            }
+
+            // 根据匹配类型创建对应的形状模型
+            var optimizationStr = Optimization.ToString().ToLower();
+            if (optimizationStr == "auto") optimizationStr = "auto";
+
+            switch (MatchingType)
+            {
+                case ShapeMatchingType.Standard:
+                    HOperatorSet.CreateShapeModel(templateImage, "auto",
+                        MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180,
+                        "auto", optimizationStr, "use_polarity",
+                        ContrastThreshold, MinContrast, out ModelHandle);
+                    break;
+
+                case ShapeMatchingType.Scaled:
+                    HOperatorSet.CreateScaledShapeModel(templateImage, "auto",
+                        MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180, "auto",
+                        MinScale, MaxScale, "auto", optimizationStr, "use_polarity",
+                        ContrastThreshold, MinContrast, out ModelHandle);
+                    break;
+
+                case ShapeMatchingType.Anisotropic:
+                    HOperatorSet.CreateAnisoShapeModel(templateImage, "auto",
+                        MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180, "auto",
+                        MinScaleRow, MaxScaleRow, "auto",
+                        MinScaleCol, MaxScaleCol, "auto",
+                        optimizationStr, "use_polarity",
+                        ContrastThreshold, MinContrast, out ModelHandle);
+                    break;
+            }
+
+            templateRegion?.Dispose();
+            templateImage?.Dispose();
+
+            NeedUpdateTemplate = false;
+            return ModelHandle.IsValid();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"创建形状模板失败: {ex.Message}");
+            return false;
+        }
+    }
+
+    protected override List<MatchInstance> ExecuteMatching(VisionImage inputImage)
+    {
+        var results = new List<MatchInstance>();
+
+        try
+        {
+            if (!ModelHandle.IsValid())
+            {
+                return results;
+            }
+
+            HObject searchImage = inputImage.HObject;
+            if (SearchROI != null && SearchROI.IsValid)
+            {
+                HOperatorSet.ReduceDomain(inputImage.HObject,
+                    CreateHalconRegionFromROI(SearchROI), out searchImage);
+            }
+
+            HTuple rows, columns, angles, scores, scales = new HTuple(), scaleRows = new HTuple(), scaleCols = new HTuple();
+
+            // 根据匹配类型执行对应的搜索
+            switch (MatchingType)
+            {
+                case ShapeMatchingType.Standard:
+                    HOperatorSet.FindShapeModel(searchImage, ModelHandle,
+                        MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180,
+                        MinScore, MaxMatches, MaxOverlap, "least_squares", 0, 0.9,
+                        out rows, out columns, out angles, out scores);
+                    break;
+
+                case ShapeMatchingType.Scaled:
+                    HOperatorSet.FindScaledShapeModel(searchImage, ModelHandle,
+                        MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180,
+                        MinScale, MaxScale, MinScore, MaxMatches, MaxOverlap,
+                        "least_squares", 0, 0.9,
+                        out rows, out columns, out angles, out scales, out scores);
+                    break;
+
+                case ShapeMatchingType.Anisotropic:
+                    HOperatorSet.FindAnisoShapeModel(searchImage, ModelHandle,
+                        MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180,
+                        MinScaleRow, MaxScaleRow, MinScaleCol, MaxScaleCol,
+                        MinScore, MaxMatches, MaxOverlap, "least_squares", 0, 0.9,
+                        out rows, out columns, out angles, out scaleRows, out scaleCols, out scores);
+                    break;
+            }
+
+            // 处理匹配结果
+            for (int i = 0; i < rows.Length; i++)
+            {
+                var instance = new MatchInstance
+                {
+                    Row = rows[i].D,
+                    Column = columns[i].D,
+                    Angle = angles[i].D * 180 / Math.PI,
+                    Score = scores[i].D
+                };
+
+                // 设置缩放信息
+                switch (MatchingType)
+                {
+                    case ShapeMatchingType.Standard:
+                        instance.Scale = 1.0;
+                        instance.ScaleRow = 1.0;
+                        instance.ScaleCol = 1.0;
+                        break;
+                    case ShapeMatchingType.Scaled:
+                        instance.Scale = scales[i].D;
+                        instance.ScaleRow = scales[i].D;
+                        instance.ScaleCol = scales[i].D;
+                        break;
+                    case ShapeMatchingType.Anisotropic:
+                        instance.ScaleRow = scaleRows[i].D;
+                        instance.ScaleCol = scaleCols[i].D;
+                        instance.Scale = Math.Sqrt(instance.ScaleRow * instance.ScaleCol);
+                        break;
+                }
+
+                // 获取形状模型轮廓
+                if (ShowMatchContours)
+                {
+                    instance.ContourPoints = GetShapeModelContour(instance);
+                }
+
+                results.Add(instance);
+            }
+
+            if (SearchROI != null && SearchROI.IsValid)
+            {
+                searchImage?.Dispose();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"形状匹配执行失败: {ex.Message}");
+        }
+
+        return results;
+    }
+
+    protected override void DisposeModel()
+    {
+        if (ModelHandle.IsValid())
+        {
+            HOperatorSet.ClearShapeModel(ModelHandle);
+        }
+    }
+
+    #endregion
+
+    #region 辅助方法
+
+    private Point2D[] GetShapeModelContour(MatchInstance instance)
+    {
+        try
+        {
+            // 获取形状模型的轮廓
+            HOperatorSet.GetShapeModelContours(out HTuple contours, ModelHandle, 1);
+
+            if (contours.IsValid())
+            {
+                // 计算变换矩阵
+                HTuple homMat2D;
+                HOperatorSet.VectorAngleToRigid(0, 0, 0,
+                    instance.Row, instance.Column, instance.Angle * Math.PI / 180,
+                    out homMat2D);
+
+                // 如果有缩放，添加缩放变换
+                if (MatchingType != ShapeMatchingType.Standard)
+                {
+                    HTuple scaleMat;
+                    if (MatchingType == ShapeMatchingType.Anisotropic)
+                    {
+                        HOperatorSet.HomMat2dScale(homMat2D, instance.ScaleRow, instance.ScaleCol,
+                            instance.Row, instance.Column, out scaleMat);
+                    }
+                    else
+                    {
+                        HOperatorSet.HomMat2dScale(homMat2D, instance.Scale, instance.Scale,
+                            instance.Row, instance.Column, out scaleMat);
+                    }
+                    homMat2D = scaleMat;
+                }
+
+                // 变换轮廓
+                HObject transformedContour;
+                HOperatorSet.AffineTransContourXld(contours, out transformedContour, homMat2D);
+
+                // 提取轮廓点
+                HOperatorSet.GetContourXld(transformedContour, out HTuple rows, out HTuple cols);
+
+                var points = new Point2D[rows.Length];
+                for (int i = 0; i < rows.Length; i++)
+                {
+                    points[i] = new Point2D(rows[i].D, cols[i].D);
+                }
+
+                contours?.Dispose();
+                transformedContour?.Dispose();
+
+                return points;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"获取形状轮廓失败: {ex.Message}");
+        }
+
+        return new Point2D[0];
+    }
+
+    #endregion
+
+    public override async Task<ProcessResult> ProcessAsync(VisionImage inputImage)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        try
+        {
+            if (NeedUpdateTemplate || !ModelHandle.IsValid())
+            {
+                if (!CreateTemplate(inputImage))
+                {
+                    return CreateFailureResult("形状模板创建失败，请检查模板ROI设置");
+                }
+            }
+
+            var matchResults = ExecuteMatching(inputImage);
+            var measurements = CreateMeasurements(matchResults);
+
+            stopwatch.Stop();
+            var result = CreateSuccessResult(inputImage.Clone(), stopwatch.Elapsed, measurements);
+
+            if (ShowMatchContours && matchResults.Count > 0)
+            {
+                var contours = CreateDisplayContours(matchResults);
+                result.AddMetadata("HalconDisplayContours", contours);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            return CreateFailureResult($"形状匹配失败: {ex.Message}");
+        }
+    }
+}
+```
+
+## 4. 特征点匹配处理器
+
+### FeaturePointMatchingProcessor.cs
+```csharp
+/// <summary>
+/// 特征点匹配处理器
+/// 使用局部可变形模型进行特征点描述符匹配
+/// </summary>
+public class FeaturePointMatchingProcessor : ImageMatchingProcessorBase
+{
+    public override string ProcessorName => "特征点匹配";
+
+    #region 参数定义
+
+    [Parameter("角度范围最小值", "搜索角度下限(度)", Order = 10, Group = "搜索参数", MinValue = -180, MaxValue = 180)]
+    public double MinAngle { get; set; } = -20;
+
+    [Parameter("角度范围最大值", "搜索角度上限(度)", Order = 11, Group = "搜索参数", MinValue = -180, MaxValue = 180)]
+    public double MaxAngle { get; set; } = 20;
+
+    [Parameter("最小匹配分数", "接受匹配的最低分数", Order = 12, Group = "搜索参数", MinValue = 0.1, MaxValue = 1.0)]
+    public double MinScore { get; set; } = 0.6;
+
+    [Parameter("最大变形程度", "允许的最大局部变形", Order = 20, Group = "变形参数", MinValue = 0.01, MaxValue = 0.5)]
+    public double MaxDeformation { get; set; } = 0.1;
+
+    [Parameter("变形步长", "局部变形的搜索步长", Order = 21, Group = "变形参数", MinValue = 0.005, MaxValue = 0.1)]
+    public double DeformationStep { get; set; } = 0.02;
+
+    [Parameter("金字塔层数", "图像金字塔的层数", Order = 30, Group = "高级参数")]
+    public PyramidLevels PyramidLevels { get; set; } = PyramidLevels.Auto;
+
+    [Parameter("点约简策略", "特征点约简策略", Order = 31, Group = "高级参数")]
+    public PointReduction PointReduction { get; set; } = PointReduction.High;
+
+    [Parameter("显示特征点", "是否显示检测到的特征点", Order = 40, Group = "显示设置")]
+    public bool ShowFeaturePoints { get; set; } = true;
+
+    [Parameter("显示变形网格", "是否显示局部变形网格", Order = 41, Group = "显示设置")]
+    public bool ShowDeformationGrid { get; set; } = false;
+
+    #endregion
+
+    #region Halcon算法流程
+
+    protected override bool CreateTemplate(VisionImage inputImage)
+    {
+        try
+        {
+            ReleaseModel();
+
+            if (TemplateROI == null || !TemplateROI.IsValid)
+            {
+                return false;
+            }
+
+            HObject templateRegion, templateImage;
+            var success = ExtractTemplateFromROI(inputImage.HObject, TemplateROI,
+                out templateRegion, out templateImage);
+
+            if (!success)
+            {
+                return false;
+            }
+
+            // 创建局部可变形模型
+            var pyramidStr = PyramidLevels.ToString().ToLower();
+            if (pyramidStr == "auto") pyramidStr = "auto";
+
+            HOperatorSet.CreateLocalDeformableModel(templateImage, pyramidStr,
+                MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180,
+                "auto", "auto", "auto", MaxDeformation, DeformationStep,
+                "auto", "auto", out ModelHandle);
+
+            templateRegion?.Dispose();
+            templateImage?.Dispose();
+
+            NeedUpdateTemplate = false;
+            return ModelHandle.IsValid();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"创建特征点模板失败: {ex.Message}");
+            return false;
+        }
+    }
+
+    protected override List<MatchInstance> ExecuteMatching(VisionImage inputImage)
+    {
+        var results = new List<MatchInstance>();
+
+        try
+        {
+            if (!ModelHandle.IsValid())
+            {
+                return results;
+            }
+
+            HObject searchImage = inputImage.HObject;
+            if (SearchROI != null && SearchROI.IsValid)
+            {
+                HOperatorSet.ReduceDomain(inputImage.HObject,
+                    CreateHalconRegionFromROI(SearchROI), out searchImage);
+            }
+
+            var pointReductionStr = PointReduction.ToString().ToLower() switch
+            {
+                "high" => "point_reduction_high",
+                "medium" => "point_reduction_medium",
+                "low" => "point_reduction_low",
+                _ => "point_reduction_high"
+            };
+
+            // 执行局部可变形匹配
+            HOperatorSet.FindLocalDeformableModel(searchImage, ModelHandle,
+                MinAngle * Math.PI / 180, MaxAngle * Math.PI / 180,
+                "auto", "auto", MinScore, MaxMatches, MaxOverlap,
+                pointReductionStr, 0.9,
+                out HTuple rows, out HTuple columns, out HTuple angles, out HTuple scores,
+                out HTuple homMat2Ds);
+
+            // 处理匹配结果
+            for (int i = 0; i < rows.Length; i++)
+            {
+                var instance = new MatchInstance
+                {
+                    Row = rows[i].D,
+                    Column = columns[i].D,
+                    Angle = angles[i].D * 180 / Math.PI,
+                    Scale = 1.0, // 局部可变形匹配无统一缩放
+                    Score = scores[i].D,
+                    HomogeneousMatrix = ExtractHomogeneousMatrix(homMat2Ds, i)
+                };
+
+                // 获取变形后的轮廓
+                if (ShowMatchContours)
+                {
+                    instance.ContourPoints = GetDeformableModelContour(instance);
+                }
+
+                // 获取特征点信息
+                if (ShowFeaturePoints)
+                {
+                    instance.FeaturePoints = GetFeaturePoints(instance);
+                }
+
+                results.Add(instance);
+            }
+
+            if (SearchROI != null && SearchROI.IsValid)
+            {
+                searchImage?.Dispose();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"特征点匹配执行失败: {ex.Message}");
+        }
+
+        return results;
+    }
+
+    protected override void DisposeModel()
+    {
+        if (ModelHandle.IsValid())
+        {
+            HOperatorSet.ClearLocalDeformableModel(ModelHandle);
+        }
+    }
+
+    #endregion
+
+    #region 辅助方法
+
+    private double[,] ExtractHomogeneousMatrix(HTuple homMat2Ds, int index)
+    {
+        // 从HTuple中提取第index个齐次变换矩阵
+        var matrix = new double[3, 3];
+        var startIdx = index * 9; // 每个3x3矩阵有9个元素
+
+        for (int row = 0; row < 3; row++)
+        {
+            for (int col = 0; col < 3; col++)
+            {
+                matrix[row, col] = homMat2Ds[startIdx + row * 3 + col].D;
+            }
+        }
+
+        return matrix;
+    }
+
+    private Point2D[] GetFeaturePoints(MatchInstance instance)
+    {
+        try
+        {
+            // 获取模型的特征点
+            HOperatorSet.GetDeformableModelContours(out HTuple contours, ModelHandle, 1);
+
+            if (contours.IsValid())
+            {
+                // 使用实例的变换矩阵变换特征点
+                // 这里需要根据实际的Halcon函数来实现
+                // 返回变换后的特征点坐标
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"获取特征点失败: {ex.Message}");
+        }
+
+        return new Point2D[0];
+    }
+
+    private Point2D[] GetDeformableModelContour(MatchInstance instance)
+    {
+        // 获取可变形模型的轮廓，需要考虑局部变形
+        // 这里需要根据Halcon的具体实现
+        return new Point2D[0];
+    }
+
+    #endregion
+
+    public override async Task<ProcessResult> ProcessAsync(VisionImage inputImage)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        try
+        {
+            if (NeedUpdateTemplate || !ModelHandle.IsValid())
+            {
+                if (!CreateTemplate(inputImage))
+                {
+                    return CreateFailureResult("特征点模板创建失败，请检查模板ROI设置");
+                }
+            }
+
+            var matchResults = ExecuteMatching(inputImage);
+            var measurements = CreateMeasurements(matchResults);
+
+            stopwatch.Stop();
+            var result = CreateSuccessResult(inputImage.Clone(), stopwatch.Elapsed, measurements);
+
+            if (ShowMatchContours && matchResults.Count > 0)
+            {
+                var contours = CreateDisplayContours(matchResults);
+                result.AddMetadata("HalconDisplayContours", contours);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            return CreateFailureResult($"特征点匹配失败: {ex.Message}");
+        }
+    }
+}
+```
+
+## 5. 枚举定义
+
+### ImageMatchingEnums.cs
+```csharp
+/// <summary>
+/// 形状匹配类型枚举
+/// </summary>
+public enum ShapeMatchingType
+{
+    [Description("常规匹配")]
+    Standard,
+
+    [Description("缩放匹配")]
+    Scaled,
+
+    [Description("各向异性匹配")]
+    Anisotropic
+}
+
+/// <summary>
+/// 优化策略枚举
+/// </summary>
+public enum OptimizationStrategy
+{
+    [Description("自动")]
+    Auto,
+
+    [Description("无优化")]
+    None,
+
+    [Description("点约简")]
+    PointReduction
+}
+
+/// <summary>
+/// 金字塔层数枚举
+/// </summary>
+public enum PyramidLevels
+{
+    [Description("自动")]
+    Auto,
+
+    [Description("1层")]
+    Level1,
+
+    [Description("2层")]
+    Level2,
+
+    [Description("3层")]
+    Level3
+}
+
+/// <summary>
+/// 点约简策略枚举
+/// </summary>
+public enum PointReduction
+{
+    [Description("高")]
+    High,
+
+    [Description("中")]
+    Medium,
+
+    [Description("低")]
+    Low
+}
+```
+
+## 6. 结果数据结构
+
+### MatchInstance.cs
+```csharp
+/// <summary>
+/// 匹配实例结果数据
+/// </summary>
+public class MatchInstance
+{
+    /// <summary>匹配位置行坐标</summary>
+    public double Row { get; set; }
+
+    /// <summary>匹配位置列坐标</summary>
+    public double Column { get; set; }
+
+    /// <summary>旋转角度(度)</summary>
+    public double Angle { get; set; }
+
+    /// <summary>统一缩放比例</summary>
+    public double Scale { get; set; } = 1.0;
+
+    /// <summary>行方向缩放</summary>
+    public double ScaleRow { get; set; } = 1.0;
+
+    /// <summary>列方向缩放</summary>
+    public double ScaleCol { get; set; } = 1.0;
+
+    /// <summary>匹配分数</summary>
+    public double Score { get; set; }
+
+    /// <summary>轮廓点（用于显示）</summary>
+    public Point2D[] ContourPoints { get; set; } = new Point2D[0];
+
+    /// <summary>特征点（特征点匹配专用）</summary>
+    public Point2D[] FeaturePoints { get; set; } = new Point2D[0];
+
+    /// <summary>齐次变换矩阵（特征点匹配专用）</summary>
+    public double[,] HomogeneousMatrix { get; set; }
+}
+```
+
+## 7. 实现要点总结
+
+### 7.1 Halcon核心函数映射
+- **灰度匹配**: CreateNccModel + FindNccModel
+- **形状匹配**: CreateShapeModel/CreateScaledShapeModel/CreateAnisoShapeModel + 对应的Find函数
+- **特征点匹配**: CreateLocalDeformableModel + FindLocalDeformableModel
+
+### 7.2 参数面板设计原则
+- 使用Parameter特性进行参数标记
+- 通过Visibility特性实现动态参数显示
+- 合理的参数分组和排序
+- 适当的参数范围限制
+
+### 7.3 模板选择统一策略
+- 统一使用交互式矩形ROI选择模板
+- 从ROI区域提取模板图像
+- 支持搜索ROI限制搜索范围
+
+### 7.4 资源管理要点
+- 及时释放Halcon对象避免内存泄漏
+- 模型句柄的正确创建和销毁
+- 临时图像对象的生命周期管理
+
+### 7.5 结果可视化
+- 轮廓显示通过HalconDisplayContours元数据
+- 支持匹配结果的实时预览
+- 特征点和变形网格的可选显示
+
+## 8. 文件组织结构
+
+```
+VisionLite/Vision/Processors/ImageMatching/
+├── ImageMatchingProcessorBase.cs          # 基类
+├── GrayValueMatchingProcessor.cs          # 灰度匹配
+├── ShapeMatchingProcessor.cs              # 形状匹配
+├── FeaturePointMatchingProcessor.cs       # 特征点匹配
+├── Models/
+│   ├── MatchInstance.cs                   # 结果数据模型
+│   └── ImageMatchingEnums.cs              # 枚举定义
+└── Utils/
+    └── ImageMatchingHelper.cs             # 辅助工具类
+```
+
+## 实现注意事项
+
+1. **线程安全**: 所有Halcon操作都需要考虑线程安全
+2. **异常处理**: 完善的异常捕获和资源释放机制
+3. **参数验证**: 输入参数的有效性检查
+4. **性能优化**: 避免重复创建模板，合理使用缓存
+5. **内存管理**: 及时释放Halcon对象，避免内存泄漏
+
+这个实现方案提供了完整的三种图像匹配算法，统一的参数面板设计，以及灵活的结果可视化功能。

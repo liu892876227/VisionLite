@@ -69,15 +69,50 @@
         
         <!-- 参数列表 -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel x:Name="ParametersPanel" Margin="10">
-                <!-- 无参数提示 -->
-                <TextBlock x:Name="NoParametersText" 
-                           Text="请选择一个算法以配置参数" 
-                           HorizontalAlignment="Center" 
-                           VerticalAlignment="Center"
-                           FontStyle="Italic"
-                           Foreground="Gray"
-                           Margin="20"/>
+            <StackPanel Margin="10">
+                <!-- ROI控制面板 -->
+                <Border x:Name="ROIControlPanel" Visibility="Collapsed"
+                        Background="#FFF0F8FF" BorderBrush="#FF4682B4" BorderThickness="1"
+                        Margin="0,0,0,10" Padding="10" CornerRadius="3">
+                    <StackPanel>
+                        <TextBlock Text="ROI设置" FontWeight="Bold" FontSize="14"
+                                   Foreground="#FF4682B4" Margin="0,0,0,8"/>
+
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton x:Name="TemplateROIRadio" Content="模板ROI"
+                                         IsChecked="True" GroupName="ROIMode" Margin="0,2"
+                                         Checked="TemplateROIRadio_Checked"/>
+                            <TextBlock Text="在图像上框选要学习的模板区域"
+                                       FontSize="11" Foreground="Gray" Margin="20,0,0,8"/>
+
+                            <RadioButton x:Name="SearchROIRadio" Content="搜索ROI"
+                                         GroupName="ROIMode" Margin="0,2"
+                                         Checked="SearchROIRadio_Checked"/>
+                            <TextBlock Text="在图像上框选要搜索的区域"
+                                       FontSize="11" Foreground="Gray" Margin="20,0,0,8"/>
+                        </StackPanel>
+
+                        <Border Background="#FFFAFAFA" BorderBrush="#FFDDDDDD" BorderThickness="1"
+                                Padding="8" Margin="0,8,0,0" CornerRadius="2">
+                            <TextBlock x:Name="ROIInstructionText"
+                                       Text="拖拽绘制ROI区域，右键确认"
+                                       FontSize="11" Foreground="#FF666666"
+                                       TextWrapping="Wrap"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- 算法参数面板 -->
+                <StackPanel x:Name="ParametersPanel">
+                    <!-- 无参数提示 -->
+                    <TextBlock x:Name="NoParametersText"
+                               Text="请选择一个算法以配置参数"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               FontStyle="Italic"
+                               Foreground="Gray"
+                               Margin="20"/>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
         

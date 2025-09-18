@@ -1,7 +1,7 @@
 ﻿VisionLite
 
 
-exe
+winexe
 C#
 .cs
 E:\mySoftware\VisionLite\VisionLite\obj\x64\Debug\
@@ -12,7 +12,7 @@ DEBUG;TRACE
 E:\mySoftware\VisionLite\VisionLite\App.xaml
 11-1709471572
 
-82-830395036
+90-601288245
 37-838753569
 CameraIcon.xaml;CameraManagementWindow.xaml;Communication\SimpleCommunicationWindow.xaml;Communication\SimpleAddConnectionWindow.xaml;MainWindow.xaml;ToolbarIcons.xaml;Vision\UI\Controls\ImageDisplayControl.xaml;Vision\UI\Controls\ParameterPanel.xaml;Vision\UI\Windows\VisionToolWindow.xaml;Vision\Calibration\NinePoint\UI\NinePointCalibrationWindow.xaml;Vision\Calibration\NinePoint\UI\CalibrationNameDialog.xaml;
 

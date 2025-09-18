@@ -12,15 +12,16 @@ using HalconDotNet;
 using VisionLite.Vision.Core.Interfaces;
 using VisionLite.Vision.Core.Models;
 using VisionLite.Vision.Core.Enums;
+using VisionLite.Vision.Core.Utils;
 using VisionLite.Vision.Processors.Preprocessing.FilterProcessors;
 using VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors;
 using VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors;
 using VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors;
 using VisionLite.Vision.Processors.Measurement.CaliperProcessors;
+using VisionLite.Vision.Processors.ImageMatching;
 using VisionLite.Vision.Calibration.NinePoint.Core;
 using VisionLite.Vision.Calibration.NinePoint.UI;
 using VisionLite.Vision.UI.Controls;
-using VisionLite.Vision.Core.Utils;
 
 namespace VisionLite.Vision.UI.Windows
 {
@@ -47,7 +48,13 @@ namespace VisionLite.Vision.UI.Windows
         
         // 保存最近的处理结果用于重新显示轮廓
         private ProcessResult _lastProcessResult;
-        
+
+        // ROI交互管理
+        // ROI管理器（使用可编辑的HDrawingObject）
+        private ImageMatchingROIManager _roiManager;
+        private bool _isImageMatchingMode = false;
+        private string _currentAlgorithmKey;
+
         #endregion
         
         #region 构造函数
@@ -60,8 +67,10 @@ namespace VisionLite.Vision.UI.Windows
             InitializeComponent();
             _algorithmProcessors = new Dictionary<string, IVisionProcessor>();
             InitializeAlgorithms();
-            
-            
+
+            // 初始化ROI管理器
+            InitializeROIManager();
+
             // 设置窗口加载事件
             this.Loaded += VisionToolWindow_Loaded;
         }
@@ -256,8 +265,44 @@ namespace VisionLite.Vision.UI.Windows
                 {
                     throw new InvalidOperationException("九点标定处理器参数获取失败");
                 }
-                
-                
+
+                // 注册灰度匹配处理器
+                var grayValueMatchingProcessor = new GrayValueMatchingProcessor();
+                var grayValueMatchingParams = grayValueMatchingProcessor.GetParameters();
+                if (grayValueMatchingParams != null)
+                {
+                    _algorithmProcessors["GrayValueMatching"] = grayValueMatchingProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("灰度匹配处理器参数获取失败");
+                }
+
+                // 注册形状匹配处理器
+                var shapeMatchingProcessor = new ShapeMatchingProcessor();
+                var shapeMatchingParams = shapeMatchingProcessor.GetParameters();
+                if (shapeMatchingParams != null)
+                {
+                    _algorithmProcessors["ShapeMatching"] = shapeMatchingProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("形状匹配处理器参数获取失败");
+                }
+
+                // 注册特征点匹配处理器
+                var featurePointMatchingProcessor = new FeaturePointMatchingProcessor();
+                var featurePointMatchingParams = featurePointMatchingProcessor.GetParameters();
+                if (featurePointMatchingParams != null)
+                {
+                    _algorithmProcessors["FeaturePointMatching"] = featurePointMatchingProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("特征点匹配处理器参数获取失败");
+                }
+
+
                 // 后续可以通过反射自动加载所有算法
                 // LoadAllProcessorsByReflection();
             }
@@ -266,7 +311,25 @@ namespace VisionLite.Vision.UI.Windows
                 MessageBox.Show($"初始化算法失败: {ex.Message}\n\n详细信息: {ex}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
+        /// <summary>
+        /// 初始化ROI管理器
+        /// </summary>
+        private void InitializeROIManager()
+        {
+            // 初始化ROI管理器（使用可编辑的HDrawingObject）
+            _roiManager = new ImageMatchingROIManager();
+            _roiManager.TemplateROICompleted += OnTemplateROICompleted;
+            _roiManager.SearchROICompleted += OnSearchROICompleted;
+            _roiManager.ROIUpdated += OnROIUpdated;
+
+            // 绑定参数面板的ROI相关事件
+            AlgorithmParameterPanel.ROIModeChanged += OnParameterPanelROIModeChanged;
+            AlgorithmParameterPanel.SwitchToSearchROIRequested += OnSwitchToSearchROIRequested;
+            AlgorithmParameterPanel.SwitchToTemplateROIRequested += OnSwitchToTemplateROIRequested;
+            AlgorithmParameterPanel.ParametersApplied += OnParametersApplied;
+        }
+
         /// <summary>
         /// 窗口加载完成事件处理
         /// </summary>
@@ -293,6 +356,8 @@ namespace VisionLite.Vision.UI.Windows
                 if (HalconDisplay != null)
                 {
                     // HDrawingObject交互将在需要时初始化
+                    // 初始化ROI管理器的Halcon窗口
+                    _roiManager?.Initialize(HalconDisplay.HalconWindow);
                 }
                 
                 // 窗口关闭事件
@@ -362,15 +427,22 @@ namespace VisionLite.Vision.UI.Windows
         {
             if (sender is TreeViewItem item && item.Tag is string algorithmKey)
             {
+                // 检查是否为图像匹配算法
+                if (IsImageMatchingAlgorithm(algorithmKey))
+                {
+                    StartImageMatchingROIWorkflow(algorithmKey);
+                    return;
+                }
+
                 // 对于九点标定，直接打开标定窗口
                 if (algorithmKey == "NinePointCalibration")
                 {
                     OpenNinePointCalibrationWindow();
                     return;
                 }
-                
+
                 SelectAlgorithm(algorithmKey);
-                
+
                 // 对于圆查找算法，初始化交互式圆形卡尺
                 if (algorithmKey == "CircleCaliper")
                 {
@@ -782,10 +854,42 @@ namespace VisionLite.Vision.UI.Windows
         }
         
         /// <summary>
+        /// 切换到搜索ROI请求事件
+        /// </summary>
+        private void OnSwitchToSearchROIRequested()
+        {
+            _roiManager?.SwitchToSearchROI();
+        }
+
+        /// <summary>
+        /// 切换到模板ROI请求事件
+        /// </summary>
+        private void OnSwitchToTemplateROIRequested()
+        {
+            _roiManager?.SwitchToTemplateROI();
+        }
+
+        /// <summary>
         /// 参数应用事件
         /// </summary>
         private async void OnParametersApplied(object sender, EventArgs e)
         {
+            // 应用所有ROI设置
+            _roiManager?.ApplyAllROI();
+
+            // 直接设置处理器的ROI数据（确保数据传递）
+            if (_currentProcessor is ImageMatchingProcessorBase processor && _roiManager != null)
+            {
+                if (_roiManager.TemplateROI != null)
+                {
+                    processor.TemplateROI = _roiManager.TemplateROI;
+                }
+                if (_roiManager.SearchROI != null)
+                {
+                    processor.SearchROI = _roiManager.SearchROI;
+                }
+            }
+
             // 参数应用后自动执行算法
             if (_originalImage != null && _currentProcessor != null)
             {
@@ -889,7 +993,13 @@ namespace VisionLite.Vision.UI.Windows
                 // 更新界面状态
                 UpdateImageInfo();
                 UpdateStatus($"图像加载成功: {Path.GetFileName(imagePath)}");
-                
+
+                // 如果处于图像匹配模式，更新ROI管理器的当前图像
+                if (_isImageMatchingMode && _roiManager != null)
+                {
+                    _roiManager.SetCurrentImage(_originalImage);
+                }
+
                 // 启用执行按钮（如果有选中的算法）
                 UpdateButtonStates();
             }
@@ -916,12 +1026,15 @@ namespace VisionLite.Vision.UI.Windows
                 
                 if (_algorithmProcessors.TryGetValue(algorithmKey, out var processor))
                 {
-                    
+
                     // 算法切换时自动清理之前的状态
                     ResetToInitialState();
-                    
+
                     _currentProcessor = processor;
                     CurrentAlgorithmText.Text = processor.ProcessorName;
+
+                    // 在ResetToInitialState之后设置当前算法键
+                    _currentAlgorithmKey = algorithmKey;
                     
                     
                     // 设置参数面板
@@ -1589,28 +1702,46 @@ namespace VisionLite.Vision.UI.Windows
                     }
                     _interactiveCaliper = null;
                 }
+
+                // 3. 清除图像匹配ROI管理器
+                if (_roiManager != null)
+                {
+                    try
+                    {
+                        _roiManager.ClearAllROI();
+                        System.Diagnostics.Debug.WriteLine("已清理图像匹配ROI管理器");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"清理ROI管理器失败: {ex.Message}");
+                    }
+                }
                 
-                // 3. 切换到原始图像模式
+                // 4. 切换到原始图像模式
                 OriginalImageMode.IsChecked = true;
                 if (_hImage != null)
                 {
                     HalconDisplay.HalconWindow.DispObj(_hImage);
                 }
-                
-                // 4. 清除结果信息面板
+
+                // 5. 清除结果信息面板
                 ClearResultInfo();
-                
-                // 5. 重置UI状态
+
+                // 6. 重置UI状态
                 SaveResultButton.IsEnabled = false;
                 ProcessingTimeText.Text = "";
-                
-                // 6. 停止并清理统一防抖定时器
+
+                // 7. 重置当前算法记录
+                _currentAlgorithmKey = null;
+                _isImageMatchingMode = false;
+
+                // 8. 停止并清理统一防抖定时器
                 if (_unifiedDebounceTimer != null)
                 {
                     _unifiedDebounceTimer.Stop();
                 }
                 _isRealtimeProcessing = false;
-                
+
                 UpdateStatus("已切换算法，状态已重置");
             }
             catch (Exception ex)
@@ -2232,7 +2363,7 @@ namespace VisionLite.Vision.UI.Windows
                     {
                     }
 
-                    // 后显示模型轮廓（红色圆圈，更醒目）
+                    // 后显示模型轮廓（绿色匹配框，醒目显示）
                     if (displayContours.ModelContour != null)
                     {
                         try
@@ -2240,7 +2371,7 @@ namespace VisionLite.Vision.UI.Windows
                             // 检查HALCON对象是否有效
                             if (displayContours.ModelContour.IsInitialized() && displayContours.ModelContour.CountObj() > 0)
                             {
-                                HalconDisplay.HalconWindow.SetColor("red");
+                                HalconDisplay.HalconWindow.SetColor("green");
                                 HalconDisplay.HalconWindow.SetLineWidth(3);
                                 HalconDisplay.HalconWindow.DispObj(displayContours.ModelContour);
                             }
@@ -2412,15 +2543,174 @@ namespace VisionLite.Vision.UI.Windows
             if (color == Colors.Orange) return "orange";
             if (color == Colors.Purple) return "magenta";
             if (color == Colors.Cyan) return "cyan";
-            
+
             // 默认返回红色
             return "red";
         }
-        
-        
+
         #endregion
-        
-        
+
+        #region ROI交互方法
+
+        /// <summary>
+        /// 判断是否为图像匹配算法
+        /// </summary>
+        private bool IsImageMatchingAlgorithm(string algorithmKey)
+        {
+            return algorithmKey == "GrayValueMatching" ||
+                   algorithmKey == "ShapeMatching" ||
+                   algorithmKey == "FeaturePointMatching";
+        }
+
+        /// <summary>
+        /// 开始图像匹配ROI工作流程
+        /// </summary>
+        private void StartImageMatchingROIWorkflow(string algorithmKey)
+        {
+            if (_originalImage == null)
+            {
+                MessageBox.Show("请先加载图像", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            SelectAlgorithm(algorithmKey);
+            _isImageMatchingMode = true;
+            _roiManager.SetCurrentImage(_originalImage);
+            _roiManager.SetROIMode(ROIInteractionMode.TemplateROI);
+
+            // 显示ROI控制面板
+            AlgorithmParameterPanel.ShowROIControls = true;
+
+            UpdateStatus("请在参数面板选择ROI类型，然后在图像上绘制ROI区域", false);
+        }
+
+        /// <summary>
+        /// 参数面板ROI模式变化事件处理
+        /// </summary>
+        private void OnParameterPanelROIModeChanged(ROIInteractionMode mode)
+        {
+            if (_roiManager == null) return;
+
+            // 统一使用SetROIMode方法，它会自动处理模式切换逻辑
+            _roiManager.SetROIMode(mode);
+            RefreshROIDisplay();
+        }
+
+        /// <summary>
+        /// 模板ROI完成事件处理
+        /// </summary>
+        private void OnTemplateROICompleted(CaliperData.ROIGeometry templateROI)
+        {
+            if (_currentProcessor is ImageMatchingProcessorBase processor)
+            {
+                processor.TemplateROI = templateROI;
+                // 强制重新创建模板
+                processor.NeedUpdateTemplate = true;
+                System.Diagnostics.Debug.WriteLine("模板ROI更新，设置NeedUpdateTemplate = true");
+            }
+
+            RefreshROIDisplay();
+            UpdateStatus("模板ROI已确认，可以通过参数面板切换到搜索ROI模式", false);
+        }
+
+        /// <summary>
+        /// 搜索ROI完成事件处理
+        /// </summary>
+        private void OnSearchROICompleted(CaliperData.ROIGeometry searchROI)
+        {
+            if (_currentProcessor is ImageMatchingProcessorBase processor)
+            {
+                processor.SearchROI = searchROI;
+            }
+
+            RefreshROIDisplay();
+            UpdateStatus("搜索ROI设置完成，可以执行图像匹配算法", false);
+        }
+
+        /// <summary>
+        /// ROI更新事件处理
+        /// </summary>
+        private void OnROIUpdated()
+        {
+            // 当ROI被拖拽或编辑时，需要重新创建模板
+            if (_currentProcessor is ImageMatchingProcessorBase processor)
+            {
+                processor.NeedUpdateTemplate = true;
+                System.Diagnostics.Debug.WriteLine("ROI已更新，设置NeedUpdateTemplate = true");
+            }
+
+            RefreshROIDisplay();
+        }
+
+        /// <summary>
+        /// 刷新ROI显示（HDrawingObject自动管理显示）
+        /// </summary>
+        private void RefreshROIDisplay()
+        {
+            // HDrawingObject会自动管理所有的ROI显示
+            // 不需要手动重绘，只需要确保背景图像正确显示
+            try
+            {
+                var window = HalconDisplay.HalconWindow;
+                if (_hImage != null)
+                {
+                    window.ClearWindow();
+                    window.DispObj(_hImage);
+                    // HDrawingObject会自动重新显示
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"刷新ROI显示失败: {ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// Halcon控件鼠标按下事件（仅处理ROI确认）
+        /// </summary>
+        private void HalconDisplay_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            // HDrawingObject会自动处理所有的ROI交互，这里只需要处理右键确认
+        }
+
+        /// <summary>
+        /// Halcon控件鼠标移动事件（HDrawingObject自动处理）
+        /// </summary>
+        private void HalconDisplay_MouseMove(object sender, MouseEventArgs e)
+        {
+            // HDrawingObject会自动处理所有的ROI交互
+        }
+
+        /// <summary>
+        /// Halcon控件鼠标抬起事件（已移除右键确认逻辑）
+        /// </summary>
+        private void HalconDisplay_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            // HDrawingObject会自动处理所有的ROI交互
+            // 新的流程通过参数面板的单选钮切换ROI模式
+        }
+
+        /// <summary>
+        /// 将屏幕坐标转换为图像坐标
+        /// </summary>
+        private (double Row, double Col) ConvertScreenToImageCoordinates(Point screenPoint)
+        {
+            try
+            {
+                var window = HalconDisplay.HalconWindow;
+                window.ConvertCoordinatesWindowToImage(screenPoint.X, screenPoint.Y, out double row, out double col);
+                return (row, col);
+            }
+            catch
+            {
+                return (screenPoint.Y, screenPoint.X);
+            }
+        }
+
+        #endregion
+
+
         #endregion
     }
 }
