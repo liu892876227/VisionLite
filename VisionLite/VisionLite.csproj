@@ -209,7 +209,10 @@
     <Compile Include="Vision\Processors\ImageMatching\ImageMatchingProcessorBase.cs" />
     <Compile Include="Vision\Processors\ImageMatching\GrayValueMatchingProcessor.cs" />
     <Compile Include="Vision\Processors\ImageMatching\ShapeMatchingProcessor.cs" />
-    <Compile Include="Vision\Processors\ImageMatching\FeaturePointMatchingProcessor.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\EdgeProcessors\EdgeDetectionEnums.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\EdgeProcessors\CannyEdgeDetector.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\EdgeProcessors\SobelEdgeDetector.cs" />
+    <Compile Include="Vision\Processors\Preprocessing\EdgeProcessors\LaplacianEdgeDetector.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Core\CalibrationEnums.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Core\NinePointCalibrationData.cs" />
     <Compile Include="Vision\Calibration\NinePoint\Core\TransformCalculator.cs" />

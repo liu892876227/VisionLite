@@ -463,7 +463,7 @@ namespace VisionLite.Vision.Core.Utils
                 var color = mode == ROIInteractionMode.TemplateROI ? "red" : "blue";
                 _currentDrawingObject.SetDrawingObjectParams("color", color);
                 _currentDrawingObject.SetDrawingObjectParams("line_width", 3);
-                _currentDrawingObject.SetDrawingObjectParams("marker_size", 10);
+                _currentDrawingObject.SetDrawingObjectParams("marker_size", 15);
 
                 // 附加到窗口
                 _halconWindow.AttachDrawingObjectToWindow(_currentDrawingObject);

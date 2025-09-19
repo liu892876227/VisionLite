@@ -1,4 +1,5 @@
 using VisionLite.Vision.Calibration.NinePoint.Core;
+using HalconDotNet;
 
 namespace VisionLite.Vision.Processors.ImageMatching.Models
 {
@@ -31,10 +32,27 @@ namespace VisionLite.Vision.Processors.ImageMatching.Models
         /// <summary>轮廓点（用于显示）</summary>
         public Point2D[] ContourPoints { get; set; } = new Point2D[0];
 
-        /// <summary>特征点（特征点匹配专用）</summary>
-        public Point2D[] FeaturePoints { get; set; } = new Point2D[0];
 
-        /// <summary>齐次变换矩阵（特征点匹配专用）</summary>
-        public double[,] HomogeneousMatrix { get; set; }
+        /// <summary>矫正后的图像（局部可变形模型专用）</summary>
+        public HObject RectifiedImage { get; set; }
+
+        /// <summary>变形向量场（局部可变形模型专用）</summary>
+        public HObject VectorField { get; set; }
+
+        /// <summary>变形轮廓（局部可变形模型专用）</summary>
+        public HObject DeformedContours { get; set; }
+
+        /// <summary>变形网格点（用于可视化显示）</summary>
+        public Point2D[] DeformationGridPoints { get; set; } = new Point2D[0];
+
+        /// <summary>
+        /// 清理Halcon资源
+        /// </summary>
+        public void Dispose()
+        {
+            RectifiedImage?.Dispose();
+            VectorField?.Dispose();
+            DeformedContours?.Dispose();
+        }
     }
 }

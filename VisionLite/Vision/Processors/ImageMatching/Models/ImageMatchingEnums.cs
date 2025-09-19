@@ -58,4 +58,26 @@ namespace VisionLite.Vision.Processors.ImageMatching.Models
         [Description("高级约简")]
         High
     }
+
+    /// <summary>
+    /// 局部可变形模型结果类型
+    /// </summary>
+    public enum DeformableResultType
+    {
+        [Description("仅匹配结果")]
+        MatchOnly,
+
+        [Description("矫正图像")]
+        RectifiedImage,
+
+        [Description("变形向量场")]
+        VectorField,
+
+        [Description("变形轮廓")]
+        DeformedContours,
+
+        [Description("完整结果")]
+        All
+    }
+
 }

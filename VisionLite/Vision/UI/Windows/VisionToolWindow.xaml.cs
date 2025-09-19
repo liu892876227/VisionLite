@@ -17,6 +17,7 @@ using VisionLite.Vision.Processors.Preprocessing.FilterProcessors;
 using VisionLite.Vision.Processors.Preprocessing.ThresholdProcessors;
 using VisionLite.Vision.Processors.Preprocessing.MorphologyProcessors;
 using VisionLite.Vision.Processors.Preprocessing.EnhancementProcessors;
+using VisionLite.Vision.Processors.Preprocessing.EdgeProcessors;
 using VisionLite.Vision.Processors.Measurement.CaliperProcessors;
 using VisionLite.Vision.Processors.ImageMatching;
 using VisionLite.Vision.Calibration.NinePoint.Core;
@@ -290,18 +291,41 @@ namespace VisionLite.Vision.UI.Windows
                     throw new InvalidOperationException("形状匹配处理器参数获取失败");
                 }
 
-                // 注册特征点匹配处理器
-                var featurePointMatchingProcessor = new FeaturePointMatchingProcessor();
-                var featurePointMatchingParams = featurePointMatchingProcessor.GetParameters();
-                if (featurePointMatchingParams != null)
+                // 注册Canny边缘检测处理器
+                var cannyProcessor = new CannyEdgeDetector();
+                var cannyParams = cannyProcessor.GetParameters();
+                if (cannyParams != null)
                 {
-                    _algorithmProcessors["FeaturePointMatching"] = featurePointMatchingProcessor;
+                    _algorithmProcessors["CannyEdge"] = cannyProcessor;
                 }
                 else
                 {
-                    throw new InvalidOperationException("特征点匹配处理器参数获取失败");
+                    throw new InvalidOperationException("Canny边缘检测处理器参数获取失败");
                 }
 
+                // 注册Sobel边缘检测处理器
+                var sobelProcessor = new SobelEdgeDetector();
+                var sobelParams = sobelProcessor.GetParameters();
+                if (sobelParams != null)
+                {
+                    _algorithmProcessors["SobelEdge"] = sobelProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Sobel边缘检测处理器参数获取失败");
+                }
+
+                // 注册Laplacian边缘检测处理器
+                var laplacianProcessor = new LaplacianEdgeDetector();
+                var laplacianParams = laplacianProcessor.GetParameters();
+                if (laplacianParams != null)
+                {
+                    _algorithmProcessors["LaplacianEdge"] = laplacianProcessor;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Laplacian边缘检测处理器参数获取失败");
+                }
 
                 // 后续可以通过反射自动加载所有算法
                 // LoadAllProcessorsByReflection();
@@ -1238,7 +1262,7 @@ namespace VisionLite.Vision.UI.Windows
             if (_hImage != null)
             {
                 HalconDisplay.HalconWindow.DispObj(_hImage);
-                HalconDisplay.HalconWindow.SetPart(0, 0, -1, -1);
+                // 保持用户当前的显示区域，不自动调用SetPart(0,0,-1,-1)
             }
             
             SaveResultButton.IsEnabled = false;
@@ -1513,13 +1537,13 @@ namespace VisionLite.Vision.UI.Windows
                 {
                     HalconDisplay.HalconWindow.ClearWindow();
                     HalconDisplay.HalconWindow.DispObj(_hImage);
-                    HalconDisplay.HalconWindow.SetPart(0, 0, -1, -1);
+                    // 保持用户当前的显示区域
                 }
                 else if (ResultImageMode.IsChecked == true && _hResultImage != null)
                 {
                     HalconDisplay.HalconWindow.ClearWindow();
                     HalconDisplay.HalconWindow.DispObj(_hResultImage);
-                    HalconDisplay.HalconWindow.SetPart(0, 0, -1, -1);
+                    // 保持用户当前的显示区域
                     
                     // 重新显示轮廓（如果有最近的处理结果）
                     if (_lastProcessResult != null && _lastProcessResult.Success)
@@ -1812,8 +1836,8 @@ namespace VisionLite.Vision.UI.Windows
                     HDrawingObject.HDrawingObjectType.CIRCLE,
                     centerRow, centerCol, initialRadius);
 
-                // 设置样式 - 绿色圆圈，便于识别
-                _interactiveCaliper.SetDrawingObjectParams("color", "green");
+                // 设置样式 - 红色圆圈，便于识别
+                _interactiveCaliper.SetDrawingObjectParams("color", "red");
                 _interactiveCaliper.SetDrawingObjectParams("line_width", 2);
                 _interactiveCaliper.SetDrawingObjectParams("marker_size", 15);
 
@@ -1876,8 +1900,8 @@ namespace VisionLite.Vision.UI.Windows
                     HDrawingObject.HDrawingObjectType.LINE,
                     startRow, startCol, endRow, endCol);
 
-                // 设置样式 - 绿色直线，便于识别
-                _interactiveCaliper.SetDrawingObjectParams("color", "green");
+                // 设置样式 - 红色直线，便于识别
+                _interactiveCaliper.SetDrawingObjectParams("color", "red");
                 _interactiveCaliper.SetDrawingObjectParams("line_width", 2);
                 _interactiveCaliper.SetDrawingObjectParams("marker_size", 15);
 
@@ -2558,8 +2582,7 @@ namespace VisionLite.Vision.UI.Windows
         private bool IsImageMatchingAlgorithm(string algorithmKey)
         {
             return algorithmKey == "GrayValueMatching" ||
-                   algorithmKey == "ShapeMatching" ||
-                   algorithmKey == "FeaturePointMatching";
+                   algorithmKey == "ShapeMatching";
         }
 
         /// <summary>

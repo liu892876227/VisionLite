@@ -163,8 +163,17 @@
                         <TreeViewItem Header="形状匹配"
                                       Tag="ShapeMatching"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
-                        <TreeViewItem Header="特征点匹配"
-                                      Tag="FeaturePointMatching"
+                    </TreeViewItem>
+
+                    <TreeViewItem Header="边缘检测" IsExpanded="True">
+                        <TreeViewItem Header="Canny边缘检测"
+                                      Tag="CannyEdge"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="Sobel边缘检测"
+                                      Tag="SobelEdge"
+                                      Style="{StaticResource AlgorithmItemStyle}"/>
+                        <TreeViewItem Header="Laplacian边缘检测"
+                                      Tag="LaplacianEdge"
                                       Style="{StaticResource AlgorithmItemStyle}"/>
                     </TreeViewItem>
 

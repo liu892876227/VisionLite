@@ -26,7 +26,7 @@ namespace VisionLite.Vision.Processors.ImageMatching
 
         /// <summary>最大匹配数量</summary>
         [Parameter("最大匹配数量", "返回的最大匹配结果数", Order = 50, Group = "搜索参数", MinValue = 1, MaxValue = 100)]
-        public int MaxMatches { get; set; } = 5;
+        public int MaxMatches { get; set; } = 10;
 
         /// <summary>重叠阈值</summary>
         [Parameter("重叠阈值", "结果去重的重叠阈值(0-1)", Order = 51, Group = "搜索参数", MinValue = 0, MaxValue = 1.0)]
