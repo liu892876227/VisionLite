@@ -69,11 +69,11 @@
     </Reference>
     <Reference Include="halcondotnet, Version=24.11.1.1, Culture=neutral, PublicKeyToken=4973bed59ddbf2b8, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Study\MVTec\HALCON-24.11-Progress-Steady\bin\dotnet35\halcondotnet.dll</HintPath>
+      <HintPath>..\lib\halcondotnet.dll</HintPath>
     </Reference>
     <Reference Include="MvCameraControl.Net, Version=3.4.0.1, Culture=neutral, PublicKeyToken=52fddfb3f94be800, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Study\MVS\Development\DotNet\win64\MvCameraControl.Net.dll</HintPath>
+      <HintPath>..\lib\MvCameraControl.Net.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -116,10 +116,11 @@
     </Reference>
     <Reference Include="TwinCAT.Ads, Version=4.3.32.0, Culture=neutral, PublicKeyToken=180016cd49e5e8c3, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\testdll\倍福引用包\TwinCAT.Ads.dll</HintPath>
+      <HintPath>..\lib\TwinCAT.Ads.dll</HintPath>
     </Reference>
-    <Reference Include="TwinCAT.Ads.Reactive">
-      <HintPath>..\testdll\倍福引用包\TwinCAT.Ads.Reactive.dll</HintPath>
+    <Reference Include="TwinCAT.Ads.Reactive, Version=4.3.0.0, Culture=neutral, PublicKeyToken=180016cd49e5e8c3, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\TwinCAT.Ads.Reactive.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
