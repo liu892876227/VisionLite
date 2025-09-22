@@ -300,7 +300,7 @@ namespace VisionLite.Vision.Processors.ImageMatching
                         return null;
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"获取到形状模型轮廓数量: {contourCount.I}");
+                   
 
                     // 创建仿射变换矩阵
                     HTuple homMat2D;
@@ -343,13 +343,11 @@ namespace VisionLite.Vision.Processors.ImageMatching
                         return null;
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"变换后轮廓数量: {transformedCount.I}");
-
                     // 返回变换后的轮廓对象（不释放）
                     contours?.Dispose();
                     return transformedContour;
                 }
-                catch (Exception ex)
+                catch 
                 {
                     // 发生异常时释放资源
                     contours?.Dispose();

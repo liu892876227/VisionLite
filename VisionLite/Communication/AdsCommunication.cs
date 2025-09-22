@@ -38,10 +38,7 @@ namespace VisionLite.Communication
         /// </summary>
         private bool _disposed = false;
 
-        /// <summary>
-        /// 连接检测变量名（可选，用于心跳检测）
-        /// </summary>
-        private string _heartbeatVariable = "";
+        
 
         #endregion
 

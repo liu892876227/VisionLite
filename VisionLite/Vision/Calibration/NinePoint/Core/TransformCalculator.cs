@@ -26,14 +26,12 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 var validPairs = pointPairs.Where(p => p.IsSet).ToList();
                 if (validPairs.Count < 4)
                 {
-                    System.Diagnostics.Debug.WriteLine($"标定点数量不足: {validPairs.Count} < 4");
                     return false;
                 }
 
                 // 检查点位分布
                 if (!ValidatePointDistribution(validPairs))
                 {
-                    System.Diagnostics.Debug.WriteLine("点位分布不合理，可能共线或重复");
                     return false;
                 }
 
@@ -43,27 +41,10 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 var worldRows = validPairs.Select(p => p.WorldPoint.Y).ToArray();
                 var worldCols = validPairs.Select(p => p.WorldPoint.X).ToArray();
 
-                // 输出调试信息
-                System.Diagnostics.Debug.WriteLine("图像坐标:");
-                for (int i = 0; i < validPairs.Count; i++)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  点{i+1}: ({imageCols[i]:F2}, {imageRows[i]:F2})");
-                }
-                System.Diagnostics.Debug.WriteLine("世界坐标:");
-                for (int i = 0; i < validPairs.Count; i++)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  点{i+1}: ({worldCols[i]:F3}, {worldRows[i]:F3})");
-                }
 
                 // 使用Halcon计算单应性矩阵
                 HTuple homMat2D = null;
                 bool halconSuccess = false;
-                
-                // 额外验证输入数据的有效性
-                System.Diagnostics.Debug.WriteLine($"输入数据验证:");
-                System.Diagnostics.Debug.WriteLine($"  点数量: {validPairs.Count}");
-                System.Diagnostics.Debug.WriteLine($"  图像坐标范围: X[{imageCols.Min():F2}, {imageCols.Max():F2}], Y[{imageRows.Min():F2}, {imageRows.Max():F2}]");
-                System.Diagnostics.Debug.WriteLine($"  世界坐标范围: X[{worldCols.Min():F3}, {worldCols.Max():F3}], Y[{worldRows.Min():F3}, {worldRows.Max():F3}]");
                 
                 try
                 {
@@ -71,19 +52,11 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                     var imageRowsTuple = new HTuple(imageRows);
                     var worldColsTuple = new HTuple(worldCols);
                     var worldRowsTuple = new HTuple(worldRows);
-                    
-                    System.Diagnostics.Debug.WriteLine($"HTuple创建成功:");
-                    System.Diagnostics.Debug.WriteLine($"  ImageCols Length: {imageColsTuple.Length}");
-                    System.Diagnostics.Debug.WriteLine($"  ImageRows Length: {imageRowsTuple.Length}");
-                    System.Diagnostics.Debug.WriteLine($"  WorldCols Length: {worldColsTuple.Length}");
-                    System.Diagnostics.Debug.WriteLine($"  WorldRows Length: {worldRowsTuple.Length}");
 
                     HOperatorSet.VectorToHomMat2d(
                         imageColsTuple, imageRowsTuple,
                         worldColsTuple, worldRowsTuple,
                         out homMat2D);
-
-                    System.Diagnostics.Debug.WriteLine("VectorToHomMat2d调用成功");
 
                     // 检查矩阵有效性
                     if (homMat2D != null && (homMat2D.Length == 9 || homMat2D.Length == 6))
@@ -96,80 +69,46 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                             if (double.IsNaN(matrixArray[i]) || double.IsInfinity(matrixArray[i]))
                             {
                                 hasInvalidValues = true;
-                                System.Diagnostics.Debug.WriteLine($"矩阵元素[{i}]无效: {matrixArray[i]}");
                             }
                         }
                         
                         if (!hasInvalidValues)
                         {
-                            // 输出矩阵调试信息
-                            System.Diagnostics.Debug.WriteLine($"Halcon矩阵元素: {string.Join(", ", matrixArray.Select(x => x.ToString("F6")))}");
-                            System.Diagnostics.Debug.WriteLine($"矩阵长度: {homMat2D.Length} (期望9个元素为单应性矩阵，6个元素为仿射矩阵)");
-                            
                             // 根据Halcon返回的矩阵类型进行处理
                             if (homMat2D.Length == 6)
                             {
                                 // Halcon返回的是仿射变换矩阵(2x3)，这对于规则网格数据是合适的
-                                System.Diagnostics.Debug.WriteLine("Halcon返回仿射变换矩阵，直接使用");
                                 ConvertAffineToHomography(homMat2D, transformMatrix);
                             }
                             else if (homMat2D.Length == 9)
                             {
                                 // 完整的3x3单应性矩阵
-                                System.Diagnostics.Debug.WriteLine("Halcon返回完整单应性矩阵");
                                 ConvertHtupleToMatrix(homMat2D, transformMatrix);
                             }
                             else
                             {
-                                System.Diagnostics.Debug.WriteLine($"未知的矩阵格式，长度: {homMat2D.Length}");
                                 return false;
                             }
                             
                             // 检查矩阵的行列式
                             double det = CalculateDeterminant3x3(transformMatrix);
-                            System.Diagnostics.Debug.WriteLine($"变换矩阵行列式: {det}");
-                            
+
                             if (Math.Abs(det) > 1e-10)
                             {
-                                System.Diagnostics.Debug.WriteLine("Halcon矩阵计算成功");
                                 halconSuccess = true;
                             }
-                            else
-                            {
-                                System.Diagnostics.Debug.WriteLine($"矩阵行列式过小，可能奇异: {det}");
-                            }
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine("矩阵包含无效值(NaN或无穷大)");
-                        }
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Halcon返回的矩阵结构无效:");
-                        System.Diagnostics.Debug.WriteLine($"  homMat2D为null: {homMat2D == null}");
-                        System.Diagnostics.Debug.WriteLine($"  Length: {homMat2D?.Length ?? 0}");
-                        if (homMat2D != null && homMat2D.Length > 0)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"  实际矩阵值: {string.Join(", ", homMat2D.DArr)}");
                         }
                     }
                 }
                 catch (Exception halconEx)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Halcon VectorToHomMat2d 调用异常:");
-                    System.Diagnostics.Debug.WriteLine($"  异常类型: {halconEx.GetType().Name}");
-                    System.Diagnostics.Debug.WriteLine($"  异常消息: {halconEx.Message}");
-                    if (halconEx.InnerException != null)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"  内部异常: {halconEx.InnerException.Message}");
-                    }
+                    // Halcon矩阵计算失败（重要错误）
+                    Console.WriteLine($"[VisionLite] Halcon矩阵计算失败: {halconEx.Message}");
                 }
                 
                 // 如果Halcon失败，返回错误
                 if (!halconSuccess)
                 {
-                    System.Diagnostics.Debug.WriteLine("Halcon单应性矩阵计算失败");
                     return false;
                 }
 
@@ -184,22 +123,20 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                     // Halcon逆矩阵计算失败，手动计算
                     if (!InvertMatrix3x3(transformMatrix, inverseMatrix))
                     {
-                        System.Diagnostics.Debug.WriteLine("逆矩阵计算失败");
                         return false;
                     }
                 }
 
-                System.Diagnostics.Debug.WriteLine("单应性矩阵计算成功");
                 return true;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"单应性矩阵计算失败: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"详细错误: {ex}");
+                // 单应性矩阵计算失败（重要错误）
+                Console.WriteLine($"[VisionLite] 单应性矩阵计算失败: {ex.Message}");
                 return false;
             }
         }
-        
+
         /// <summary>
         /// 计算仿射变换矩阵
         /// </summary>
@@ -274,7 +211,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"仿射矩阵计算失败: {ex.Message}");
+                Console.WriteLine($"[VisionLite] 仿射变换计算失败: {ex.Message}");
                 return false;
             }
         }
@@ -380,7 +317,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                     
                     if (dist1 < 1.0 || dist2 < 0.001) // 图像坐标相差小于1像素或世界坐标相差小于0.001mm
                     {
-                        System.Diagnostics.Debug.WriteLine($"点{i+1}和点{j+1}过于接近");
                         return false;
                     }
                 }
@@ -406,7 +342,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 
                 if (nonCollinearCount == 0)
                 {
-                    System.Diagnostics.Debug.WriteLine("所有点都共线");
                     return false;
                 }
             }
@@ -472,11 +407,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             homographyMatrix[2, 0] = 0.0;      // 0
             homographyMatrix[2, 1] = 0.0;      // 0
             homographyMatrix[2, 2] = 1.0;      // 1
-            
-            System.Diagnostics.Debug.WriteLine("仿射矩阵转换为单应性矩阵:");
-            System.Diagnostics.Debug.WriteLine($"  [{homographyMatrix[0, 0]:F6}, {homographyMatrix[0, 1]:F6}, {homographyMatrix[0, 2]:F6}]");
-            System.Diagnostics.Debug.WriteLine($"  [{homographyMatrix[1, 0]:F6}, {homographyMatrix[1, 1]:F6}, {homographyMatrix[1, 2]:F6}]");
-            System.Diagnostics.Debug.WriteLine($"  [{homographyMatrix[2, 0]:F6}, {homographyMatrix[2, 1]:F6}, {homographyMatrix[2, 2]:F6}]");
         }
 
         private static double[] SolveLeastSquares(double[,] A, double[] B)
@@ -517,8 +447,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 // 求解线性方程组
                 return GaussianElimination(AtA, AtB);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[VisionLite] 最小二乘求解失败: {ex.Message}");
                 return null;
             }
         }
@@ -613,8 +544,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[VisionLite] 3x3矩阵求逆失败: {ex.Message}");
                 return false;
             }
         }

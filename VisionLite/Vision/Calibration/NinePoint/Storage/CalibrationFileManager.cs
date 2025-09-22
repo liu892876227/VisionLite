@@ -43,12 +43,13 @@ namespace VisionLite.Vision.Calibration.NinePoint.Storage
                 
                 var json = JsonConvert.SerializeObject(exportData, Formatting.Indented);
                 await Task.Run(() => File.WriteAllText(filePath, json));
-                
+
                 return true;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"导出标定数据失败: {ex.Message}");
+                // 文件导出失败（重要错误）
+                Console.WriteLine($"[VisionLite] 标定数据导出失败: {ex.Message}");
                 return false;
             }
         }
@@ -85,7 +86,8 @@ namespace VisionLite.Vision.Calibration.NinePoint.Storage
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"导入标定数据失败: {ex.Message}");
+                // 文件导入失败（重要错误）
+                Console.WriteLine($"[VisionLite] 标定数据导入失败: {ex.Message}");
                 return null;
             }
         }
@@ -113,7 +115,8 @@ namespace VisionLite.Vision.Calibration.NinePoint.Storage
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"创建备份失败: {ex.Message}");
+                // 备份创建失败（重要错误）
+                Console.WriteLine($"[VisionLite] 创建标定备份失败: {ex.Message}");
                 return false;
             }
         }
@@ -165,9 +168,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.Storage
                 // 按创建时间降序排列
                 backupFiles.Sort((a, b) => b.CreatedTime.CompareTo(a.CreatedTime));
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"获取备份文件列表失败: {ex.Message}");
+                // 获取备份文件列表失败（不重要，使用匿名catch）
             }
             
             return backupFiles;
@@ -225,9 +228,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.Storage
                     
                     return deletedCount;
                 }
-                catch (Exception ex)
+                catch
                 {
-                    System.Diagnostics.Debug.WriteLine($"清理备份文件失败: {ex.Message}");
+                    // 清理备份文件失败（不重要，使用匿名catch）
                     return 0;
                 }
             });
@@ -269,7 +272,8 @@ namespace VisionLite.Vision.Calibration.NinePoint.Storage
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"批量导出标定数据失败: {ex.Message}");
+                // 批量导出失败（重要错误）
+                Console.WriteLine($"[VisionLite] 批量导出标定数据失败: {ex.Message}");
                 return false;
             }
         }
@@ -303,7 +307,8 @@ namespace VisionLite.Vision.Calibration.NinePoint.Storage
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"获取文件信息失败: {ex.Message}");
+                // 获取文件信息失败（重要错误）
+                Console.WriteLine($"[VisionLite] 获取标定文件信息失败: {ex.Message}");
                 return null;
             }
         }
@@ -340,9 +345,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.Storage
                 if (File.Exists(filePath))
                     File.Delete(filePath);
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine($"删除备份文件失败 {filePath}: {ex.Message}");
+                // 删除备份文件失败（不重要，使用匿名catch）
             }
         }
         

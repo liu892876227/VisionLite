@@ -69,7 +69,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 // 触发标定变更事件
                 CalibrationChanged?.Invoke(this, new CalibrationChangedEventArgs(value, IsCalibrationActive));
                 
-                System.Diagnostics.Debug.WriteLine($"标定状态变更: {(IsCalibrationActive ? "已激活" : "已清除")} - {value?.Name ?? "无"}");
             }
         }
         
@@ -83,6 +82,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
         
         /// <summary>标定变更事件</summary>
         public event EventHandler<CalibrationChangedEventArgs> CalibrationChanged;
+
+        /// <summary>错误消息事件</summary>
+        public event EventHandler<string> ErrorOccurred;
         
         private GlobalCalibrationService()
         {
@@ -98,18 +100,15 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
         {
             if (calibration == null)
             {
-                System.Diagnostics.Debug.WriteLine("应用标定失败: 标定配置为空");
                 return false;
             }
             
             if (!calibration.IsValid)
             {
-                System.Diagnostics.Debug.WriteLine($"应用标定失败: 标定配置无效 - {calibration.Name}");
                 return false;
             }
             
             ActiveCalibration = calibration;
-            System.Diagnostics.Debug.WriteLine($"标定应用成功: {calibration.Name}");
             return true;
         }
         
@@ -119,7 +118,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
         public void ClearCalibration()
         {
             ActiveCalibration = null;
-            System.Diagnostics.Debug.WriteLine("已清除标定配置");
         }
         
         /// <summary>
@@ -131,7 +129,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
         {
             if (!IsCalibrationActive)
             {
-                System.Diagnostics.Debug.WriteLine("坐标变换失败: 无活动标定配置");
                 return imagePoint; // 返回原坐标作为降级处理
             }
             
@@ -141,7 +138,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"图像到物理坐标变换失败: {ex.Message}");
+                ErrorOccurred?.Invoke(this, $"图像坐标转换失败: {ex.Message}");
                 return imagePoint; // 返回原坐标作为降级处理
             }
         }
@@ -155,7 +152,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
         {
             if (!IsCalibrationActive)
             {
-                System.Diagnostics.Debug.WriteLine("坐标变换失败: 无活动标定配置");
                 return worldPoint; // 返回原坐标作为降级处理
             }
             
@@ -165,7 +161,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"物理到图像坐标变换失败: {ex.Message}");
+                ErrorOccurred?.Invoke(this, $"物理坐标转换失败: {ex.Message}");
                 return worldPoint; // 返回原坐标作为降级处理
             }
         }
@@ -186,7 +182,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"批量坐标变换失败: {ex.Message}");
+                ErrorOccurred?.Invoke(this, $"批量坐标转换失败: {ex.Message}");
                 return imagePoints.ToList(); // 返回原坐标作为降级处理
             }
         }

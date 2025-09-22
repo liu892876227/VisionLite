@@ -39,6 +39,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
         
         /// <summary>标定列表变化事件</summary>
         public event EventHandler CalibrationListChanged;
+
+        /// <summary>错误消息事件</summary>
+        public event EventHandler<string> ErrorOccurred;
         
         private GlobalCalibrationManager()
         {
@@ -112,7 +115,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"删除标定文件失败: {ex.Message}");
+                    ErrorOccurred?.Invoke(this, $"删除标定文件失败: {ex.Message}");
                 }
             }
             
@@ -134,7 +137,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
         {
             if (calibration == null || string.IsNullOrEmpty(calibration.Name))
             {
-                System.Diagnostics.Debug.WriteLine("保存失败：标定数据为null或名称为空");
                 return false;
             }
                 
@@ -144,23 +146,18 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 EnsureDataDirectoryExists();
                 
                 var filePath = GetCalibrationFilePath(calibration.Name);
-                System.Diagnostics.Debug.WriteLine($"准备保存标定到: {filePath}");
                 
                 var json = JsonConvert.SerializeObject(calibration, Formatting.Indented);
-                System.Diagnostics.Debug.WriteLine($"序列化JSON完成，长度: {json.Length}");
                 
                 await Task.Run(() => File.WriteAllText(filePath, json));
-                System.Diagnostics.Debug.WriteLine($"文件写入完成");
                 
                 // 验证文件是否真的创建了
                 if (File.Exists(filePath))
                 {
                     var fileInfo = new FileInfo(filePath);
-                    System.Diagnostics.Debug.WriteLine($"文件保存成功，大小: {fileInfo.Length} 字节");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("警告：文件写入后检查发现文件不存在！");
                 }
                 
                 SavedCalibrations[calibration.Name] = calibration;
@@ -170,7 +167,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"保存标定数据失败: {ex.Message}");
+                ErrorOccurred?.Invoke(this, $"保存标定数据失败: {ex.Message}");
                 return false;
             }
         }
@@ -198,7 +195,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"加载标定数据失败: {ex.Message}");
+                ErrorOccurred?.Invoke(this, $"加载标定数据失败: {ex.Message}");
                 return null;
             }
         }
@@ -283,7 +280,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 // exe路径: E:\mySoftware\VisionLite\VisionLite\bin\x64\Debug\VisionLite.exe
                 // 项目根: E:\mySoftware\VisionLite
                 var exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                System.Diagnostics.Debug.WriteLine($"可执行文件目录: {exeDirectory}");
                 
                 // 往上四层：Debug -> x64 -> bin -> VisionLite(项目) -> VisionLite(解决方案根)
                 var projectRoot = Directory.GetParent(exeDirectory)?.Parent?.Parent?.Parent?.Parent?.FullName;
@@ -291,13 +287,10 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 if (!string.IsNullOrEmpty(projectRoot) && Directory.Exists(projectRoot))
                 {
                     var calibrationPath = Path.Combine(projectRoot, "CalibrationConfig");
-                    System.Diagnostics.Debug.WriteLine($"计算出的项目根目录: {projectRoot}");
-                    System.Diagnostics.Debug.WriteLine($"标定配置路径: {calibrationPath}");
                     return calibrationPath;
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("无法找到项目根目录，使用备选方案");
                     // 备选方案：使用相对路径
                     var relativePath = Path.Combine(exeDirectory, "..", "..", "..", "..", "CalibrationConfig");
                     return Path.GetFullPath(relativePath);
@@ -305,7 +298,8 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"获取项目根路径失败: {ex.Message}");
+                Console.WriteLine($"[VisionLite] 获取项目根目录标定路径失败: {ex.Message}");
+                // 静态方法中无法触发事件，错误将在调用方处理
                 // 最后的备选方案：使用当前目录
                 return Path.Combine(Directory.GetCurrentDirectory(), "CalibrationConfig");
             }
@@ -318,27 +312,23 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 if (!Directory.Exists(CalibrationDataPath))
                 {
                     Directory.CreateDirectory(CalibrationDataPath);
-                    System.Diagnostics.Debug.WriteLine($"创建标定配置目录: {CalibrationDataPath}");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"标定配置目录已存在: {CalibrationDataPath}");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"创建标定配置目录失败: {ex.Message}");
-                
+                ErrorOccurred?.Invoke(this, $"创建标定配置目录失败: {ex.Message}");
                 // 如果创建失败，回退到临时目录
                 CalibrationDataPath = Path.Combine(Path.GetTempPath(), "VisionLite", "CalibrationConfig");
                 try
                 {
                     Directory.CreateDirectory(CalibrationDataPath);
-                    System.Diagnostics.Debug.WriteLine($"使用临时目录: {CalibrationDataPath}");
                 }
                 catch
                 {
-                    System.Diagnostics.Debug.WriteLine("标定配置目录创建完全失败");
+                    // 创建临时目录失败，忽略错误
                 }
             }
         }
@@ -366,13 +356,13 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"加载标定文件失败 {file}: {ex.Message}");
+                        ErrorOccurred?.Invoke(this, $"加载标定文件失败 {System.IO.Path.GetFileName(file)}: {ex.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"加载标定目录失败: {ex.Message}");
+                ErrorOccurred?.Invoke(this, $"加载标定目录失败: {ex.Message}");
             }
         }
         
@@ -380,7 +370,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
         {
             var fileName = $"{name}.json";
             var fullPath = Path.Combine(CalibrationDataPath, fileName);
-            System.Diagnostics.Debug.WriteLine($"计算文件路径: CalibrationDataPath={CalibrationDataPath}, fileName={fileName}, fullPath={fullPath}");
             return fullPath;
         }
         

@@ -52,7 +52,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                     // 验证输入图像
                     if (inputImage == null)
                     {
-                        System.Diagnostics.Debug.WriteLine("输入图像为null，使用虚拟图像进行标定");
                         // 创建一个虚拟图像用于标定计算（九点标定不依赖实际图像内容）
                         inputImage = CreateDummyImage();
                     }
@@ -74,6 +73,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine($"[VisionLite] 标定处理异常: {ex.Message}");
                     stopwatch.Stop();
                     return CreateFailureResult($"标定失败: {ex.Message}");
                 }
@@ -182,6 +182,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[VisionLite] 标定计算异常: {ex.Message}");
                 result.ErrorMessage = $"标定计算异常: {ex.Message}";
                 return result;
             }
@@ -360,7 +361,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"创建虚拟图像失败: {ex.Message}");
+                Console.WriteLine($"[VisionLite] 创建虚拟图像失败: {ex.Message}");
                 return null;
             }
         }

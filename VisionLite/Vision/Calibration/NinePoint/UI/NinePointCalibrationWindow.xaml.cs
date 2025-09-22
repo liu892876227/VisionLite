@@ -56,7 +56,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             _manager.StatusChanged += Manager_StatusChanged;
             _manager.CalibrationUpdated += Manager_CalibrationUpdated;
             _manager.CalibrationListChanged += Manager_CalibrationListChanged;
+            _manager.ErrorOccurred += Manager_ErrorOccurred;
             _globalService.CalibrationChanged += GlobalService_CalibrationChanged;
+            _globalService.ErrorOccurred += GlobalService_ErrorOccurred;
             
             // 设置数据绑定
             DataContext = _processor;
@@ -256,13 +258,11 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
                     // 设置Halcon窗口属性
                     SetupHalconWindow();
                     
-                    System.Diagnostics.Debug.WriteLine($"图像加载成功: {fileName}, 尺寸: {width}×{height}");
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"加载图像失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                     UpdateStatusBar("图像加载失败");
-                    System.Diagnostics.Debug.WriteLine($"图像加载失败: {ex.Message}");
                 }
             }
         }
@@ -282,12 +282,11 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
                 // 启用鼠标和键盘事件
                 halconWindow.HalconWindow.SetWindowParam("mouse_move_events", "true");
                 halconWindow.HalconWindow.SetWindowParam("mouse_click_events", "true");
-                
-                System.Diagnostics.Debug.WriteLine("Halcon窗口设置完成");
+
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Halcon窗口设置失败: {ex.Message}");
+                UpdateStatusBar($"设置Halcon窗口属性失败: {ex.Message}");
             }
         }
         
@@ -315,12 +314,11 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
                         _isUpdatingUI = false;
                         
                         UpdateStatusBar($"图像坐标: ({(double)column:F1}, {(double)row:F1})");
-                        System.Diagnostics.Debug.WriteLine($"点击坐标: ({(double)column:F2}, {(double)row:F2})");
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"鼠标点击事件处理失败: {ex.Message}");
+                    UpdateStatusBar($"鼠标点击事件处理失败: {ex.Message}");
                 }
             }
         }
@@ -348,7 +346,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"鼠标移动事件处理失败: {ex.Message}");
+                    UpdateStatusBar($"鼠标移动事件处理失败: {ex.Message}");
                 }
             }
         }
@@ -402,7 +400,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"绘制标定点标记失败: {ex.Message}");
+                UpdateStatusBar($"绘制标定点标记失败: {ex.Message}");
             }
         }
         
@@ -529,7 +527,6 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
                 UpdateStatusBar($"应用标定时发生错误: {ex.Message}");
                 MessageBox.Show($"应用标定时发生错误: {ex.Message}", "错误", 
                               MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"应用标定异常: {ex}");
             }
         }
         
@@ -894,6 +891,36 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
         }
         
         /// <summary>
+        /// 管理器错误事件处理
+        /// </summary>
+        private void Manager_ErrorOccurred(object sender, string errorMessage)
+        {
+            if (Dispatcher.CheckAccess())
+            {
+                UpdateStatusBar($"错误: {errorMessage}");
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(new Action(() => UpdateStatusBar($"错误: {errorMessage}")));
+            }
+        }
+
+        /// <summary>
+        /// 全局服务错误事件处理
+        /// </summary>
+        private void GlobalService_ErrorOccurred(object sender, string errorMessage)
+        {
+            if (Dispatcher.CheckAccess())
+            {
+                UpdateStatusBar($"服务错误: {errorMessage}");
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(new Action(() => UpdateStatusBar($"服务错误: {errorMessage}")));
+            }
+        }
+
+        /// <summary>
         /// 全局标定服务状态变更事件处理
         /// </summary>
         private void GlobalService_CalibrationChanged(object sender, CalibrationChangedEventArgs e)
@@ -939,7 +966,7 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"更新全局标定状态失败: {ex.Message}");
+                UpdateStatusBar($"更新全局标定状态失败: {ex.Message}");
             }
         }
 
@@ -949,7 +976,9 @@ namespace VisionLite.Vision.Calibration.NinePoint.UI
             _manager.StatusChanged -= Manager_StatusChanged;
             _manager.CalibrationUpdated -= Manager_CalibrationUpdated;
             _manager.CalibrationListChanged -= Manager_CalibrationListChanged;
+            _manager.ErrorOccurred -= Manager_ErrorOccurred;
             _globalService.CalibrationChanged -= GlobalService_CalibrationChanged;
+            _globalService.ErrorOccurred -= GlobalService_ErrorOccurred;
             
             // 释放Halcon资源
             if (_currentImage != null)

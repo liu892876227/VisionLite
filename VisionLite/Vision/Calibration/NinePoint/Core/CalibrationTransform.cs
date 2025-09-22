@@ -87,8 +87,8 @@ namespace VisionLite.Vision.Calibration.NinePoint.Core
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"坐标点变换失败: {point} - {ex.Message}");
-                    // 变换失败时添加原坐标作为降级处理
+                    // 坐标变换失败，记录到控制台（重要错误）
+                    Console.WriteLine($"[VisionLite] 坐标变换失败 {point}: {ex.Message}");
                     transformedPoints.Add(new Point2D(point.X, point.Y));
                 }
             }

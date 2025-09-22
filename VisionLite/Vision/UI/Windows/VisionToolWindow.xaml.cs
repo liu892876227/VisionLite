@@ -2629,7 +2629,7 @@ namespace VisionLite.Vision.UI.Windows
                 processor.TemplateROI = templateROI;
                 // 强制重新创建模板
                 processor.NeedUpdateTemplate = true;
-                System.Diagnostics.Debug.WriteLine("模板ROI更新，设置NeedUpdateTemplate = true");
+                
             }
 
             RefreshROIDisplay();
@@ -2659,7 +2659,7 @@ namespace VisionLite.Vision.UI.Windows
             if (_currentProcessor is ImageMatchingProcessorBase processor)
             {
                 processor.NeedUpdateTemplate = true;
-                System.Diagnostics.Debug.WriteLine("ROI已更新，设置NeedUpdateTemplate = true");
+                
             }
 
             RefreshROIDisplay();
